@@ -13,7 +13,7 @@ All vectors implement the following interfaces:
 
   `new(x, y, ...)`: Constructs a new vector from components.
 
-  `dup(u)`: Constructs a new vector by broadcasting all its components.
+  `dup(u)`: Constructs a new vector by splatting to its components.
 
   `zero()`: Constructs a new zero vector.
 
@@ -49,9 +49,17 @@ All vectors implement the following interfaces:
 
   `xyz(self)`: Drops the `w` component from `Vec4`.
 
-* Casting vector component types
+* Transformations
 
   `cast<U>(self)`: Casts to a vector of type `U` with the same dimensions.
+
+  `map<F>(self, F)`: Maps a callable over the components.
+
+  `map2<F>(self, rhs, F)`: Maps a callable over the components side by side.
+
+  `reduce<F>(self, F)`: Reduces the vector.
+
+  `fold<F>(self, acc, F)`: Folds the vector.
 
 * Conversions
 
@@ -75,9 +83,9 @@ All vectors implement the following interfaces:
 
   `dist(self, to)`: Calculates the euclidean distance to another vector given `Float` components.
 
-  `norm(self)`: Normalizes the vector given `Float` components. Undefined for zero length vectors.
+  `norm(self)`: Normalizes the vector given `Float` components.
 
-  `resize(self, len)`: Scales the vector such that its length equals the given value given `Float` components. Undefined for zero length vectors.
+  `resize(self, len)`: Scales the vector such that its length equals the given value given `Float` components.
 
   `hadd(self)`: Horizontal adds all components.
 
@@ -97,6 +105,28 @@ All vectors implement the following interfaces:
 
      `cross(self, rhs)`: Calculates the 3D cross product.
 
+* Comparison masks
+
+  `mask<F>(self, F)`: Creates a mask by applying the callable `F` to each component.
+
+  `masked<F>(self, rhs, F)`: Creates a mask by applying the callable `F` to each component on the left and righthand side.
+
+  `is_finite(self)`: Masks if the component is finite.
+
+  `eq(self, rhs)`: Masks if the components are equal.
+
+  `ne(self, rhs)`: Masks if the components are not equal.
+
+  `lt(self, rhs)`: Masks if the lefthand side components are less than the righthand side.
+
+  `le(self, rhs)`: Masks if the lefthand side components are less than or equal the righthand side.
+
+  `gt(self, rhs)`: Masks if the lefthand side components are greater than the righthand side.
+
+  `ge(self, rhs)`: Masks if the lefthand side components are greater than or equal the righthand side.
+
+  `select(self, rhs, mask)`: Combines two vectors based on the mask, selecting components from the lefthand side if `true` and righthand side if `false`.
+
 * Operators
 
   `abs(self)`: Component wise absolute value.
@@ -113,16 +143,24 @@ All vectors implement the following interfaces:
 
   `Neg`: Negates the vector component wise.
 
-  `Mul`: Multiply by scalar.
+  `Mul`: Multiply by scalar or vector.
 
-  `Div`: Divide by scalar.
+  `Div`: Divide by scalar or vector.
 
-  `Rem`: Remainder by scalar.
+  `Rem`: Remainder by scalar or vector.
 */
 
 use ::std::{fmt, mem, ops};
 
 use ::num::{Scalar, Zero, One, Abs, Min, Max, Float, Cast};
+use ::mask::{Mask2, Mask3, Mask4};
+
+// /// A 1-dimensional vector.
+// #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+// #[repr(C)]
+// pub struct Vec1<T> {
+// 	pub x: T,
+// }
 
 /// A 2-dimensional vector.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -154,7 +192,7 @@ pub struct Vec4<T> {
 macro_rules! unit {
 	(Vec1) => {
 		/// A unit vector in the `x` direction.
-		pub fn unit_x() -> Vec1<T> where T: Zero + One { Vec1 { x: Scalar::one() } }
+		pub fn unit_x() -> Vec1<T> where T: Zero + One { Vec1 { x: T::one() } }
 	};
 	(Vec2) => {
 		/// A unit vector in the `x` direction.
@@ -261,97 +299,98 @@ macro_rules! ops {
 	(Vec4) => {};
 }
 
-macro_rules! display {
-	(Vec1) => {
-		impl<T: fmt::Display> fmt::Display for Vec1<T> {
-			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-				write!(f, "({})", self.x)
-			}
-		}
-	};
-	(Vec2) => {
-		impl<T: fmt::Display> fmt::Display for Vec2<T> {
-			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-				write!(f, "({}, {})", self.x, self.y)
-			}
-		}
-	};
-	(Vec3) => {
-		impl<T: fmt::Display> fmt::Display for Vec3<T> {
-			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-				write!(f, "({}, {}, {})", self.x, self.y, self.z)
-			}
-		}
-	};
-	(Vec4) => {
-		impl<T: fmt::Display> fmt::Display for Vec4<T> {
-			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-				write!(f, "({}, {}, {}, {})", self.x, self.y, self.z, self.w)
-			}
-		}
-	};
+macro_rules! fmt_str {
+	(Vec1) => ("({})");
+	(Vec2) => ("({}, {})");
+	(Vec3) => ("({}, {}, {})");
+	(Vec4) => ("({}, {}, {}, {})");
+	(Vec1 .*) => ("({:.*})");
+	(Vec2 .*) => ("({:.*}, {:.*})");
+	(Vec3 .*) => ("({:.*}, {:.*}, {:.*})");
+	(Vec4 .*) => ("({:.*}, {:.*}, {:.*}, {:.*})");
 }
 
 // This may or may not be horrible abuse of the `macro_rules!` system :)
 macro_rules! vec {
-	($ty:ident { $($field:ident $I:tt $T:ident),+ } $N:expr) => {
+	($vec:ident $mask:ident $N:tt { $($field:ident $I:tt $T:ident),+ }) => {
 
 		//----------------------------------------------------------------
 		// Constructors
 
-		impl<T> $ty<T> {
+		impl<T> $vec<T> {
 			/// Constructs a new vector from components.
-			pub fn new($($field: T),+) -> $ty<T> {
-				$ty { $($field: $field),+ }
+			pub fn new($($field: T),+) -> $vec<T> {
+				$vec { $($field: $field),+ }
 			}
 			/// Constructs a new vector by broadcasting to all its components.
-			pub fn dup(u: T) -> $ty<T> where T: Copy {
-				$ty { $($field: u),+ }
+			pub fn dup(u: T) -> $vec<T> where T: Copy {
+				$vec { $($field: u),+ }
 			}
 			/// Constructs a new zero vector.
-			pub fn zero() -> $ty<T> where T: Zero {
-				$ty { $($field: Zero::zero()),+ }
+			pub fn zero() -> $vec<T> where T: Zero {
+				$vec { $($field: Zero::zero()),+ }
 			}
 		}
 
-		impl<T> $ty<T> {
-			unit!($ty);
+		impl<T> $vec<T> {
+			unit!($vec);
 		}
-		impl<T> $ty<T> {
-			set!($ty);
+		impl<T> $vec<T> {
+			set!($vec);
 		}
-		impl<T> $ty<T> {
-			cvt!($ty);
+		impl<T> $vec<T> {
+			cvt!($vec);
 		}
-		
+
+		//----------------------------------------------------------------
+		// Transformations
+
+		impl<T> $vec<T> {
+			/// Casts to a vector of different type with the same dimensions.
+			pub fn cast<U>(self) -> $vec<U> where T: Cast<U> {
+				$vec { $($field: self.$field.cast()),+ }
+			}
+			/// Maps a callable over the components.
+			pub fn map<F: FnMut(T) -> T>(self, mut f: F) -> $vec<T> {
+				$vec { $($field: f(self.$field)),+ }
+			}
+			/// Maps a callable over the components side by side.
+			pub fn map2<F: FnMut(T, T) -> T>(self, rhs: $vec<T>, mut f: F) -> $vec<T> {
+				$vec { $($field: f(self.$field, rhs.$field)),+ }
+			}
+			/// Reduces the vector.
+			pub fn reduce<F: Fn(T, T) -> T>(self, f: F) -> T {
+				// These will end up nested without temporaries which won't work with `FnMut`...
+				fold!(f, $(self.$field),+)
+			}
+			/// Folds the vector.
+			pub fn fold<F: Fn(T, T) -> T>(self, acc: T, f: F) -> T {
+				// These will end up nested without temporaries which won't work with `FnMut`...
+				fold!(f, acc, $(self.$field),+)
+			}
+		}
+
 		//----------------------------------------------------------------
 		// Conversions
 
-		impl<T> $ty<T> {
-			/// Casts to a vector of different type with the same dimensions.
-			pub fn cast<U>(self) -> $ty<U> where T: Cast<U> {
-				$ty { $($field: self.$field.cast()),+ }
+		impl<T> From<($($T,)+)> for $vec<T> {
+			fn from(val: ($($T,)+)) -> $vec<T> {
+				$vec { $($field: val.$I),+ }
 			}
 		}
-
-		impl<T> From<($($T,)+)> for $ty<T> {
-			fn from(val: ($($T,)+)) -> $ty<T> {
-				$ty { $($field: val.$I),+ }
-			}
-		}
-		impl<T> Into<($($T,)+)> for $ty<T> {
+		impl<T> Into<($($T,)+)> for $vec<T> {
 			fn into(self) -> ($($T,)+) {
 				($(self.$field,)+)
 			}
 		}
 
-		impl<T: Copy> From<[T; $N]> for $ty<T> {
-			fn from(val: [T; $N]) -> $ty<T> {
+		impl<T: Copy> From<[T; $N]> for $vec<T> {
+			fn from(val: [T; $N]) -> $vec<T> {
 				// Can't move out of array...
-				$ty { $($field: val[$I]),+ }
+				$vec { $($field: val[$I]),+ }
 			}
 		}
-		impl<T> Into<[T; $N]> for $ty<T> {
+		impl<T> Into<[T; $N]> for $vec<T> {
 			fn into(self) -> [T; $N] {
 				[$(self.$field),+]
 			}
@@ -360,33 +399,33 @@ macro_rules! vec {
 		//----------------------------------------------------------------
 		// As references
 
-		impl<T> AsRef<($($T,)+)> for $ty<T> {
+		impl<T> AsRef<($($T,)+)> for $vec<T> {
 			fn as_ref(&self) -> &($($T,)+) {
 				unsafe { mem::transmute(self) }
 			}
 		}
-		impl<T> AsRef<[T; $N]> for $ty<T> {
+		impl<T> AsRef<[T; $N]> for $vec<T> {
 			fn as_ref(&self) -> &[T; $N] {
 				unsafe { mem::transmute(self) }
 			}
 		}
-		impl<T> AsRef<[T]> for $ty<T> {
+		impl<T> AsRef<[T]> for $vec<T> {
 			fn as_ref(&self) -> &[T] {
 				<Self as AsRef<[T; $N]>>::as_ref(self)
 			}
 		}
 		
-		impl<T> AsMut<($($T,)+)> for $ty<T> {
+		impl<T> AsMut<($($T,)+)> for $vec<T> {
 			fn as_mut(&mut self) -> &mut ($($T,)+) {
 				unsafe { mem::transmute(self) }
 			}
 		}
-		impl<T> AsMut<[T; $N]> for $ty<T> {
+		impl<T> AsMut<[T; $N]> for $vec<T> {
 			fn as_mut(&mut self) -> &mut [T; $N] {
 				unsafe { mem::transmute(self) }
 			}
 		}
-		impl<T> AsMut<[T]> for $ty<T> {
+		impl<T> AsMut<[T]> for $vec<T> {
 			fn as_mut(&mut self) -> &mut [T] {
 				<Self as AsMut<[T; $N]>>::as_mut(self)
 			}
@@ -395,10 +434,10 @@ macro_rules! vec {
 		//----------------------------------------------------------------
 		// Operations
 
-		impl<T: Scalar> $ty<T> {
+		impl<T: Scalar> $vec<T> {
 			/// Squares the components.
-			pub fn sqr(self) -> $ty<T> {
-				$ty { $($field: self.$field * self.$field),+ }
+			pub fn sqr(self) -> $vec<T> {
+				$vec { $($field: self.$field * self.$field),+ }
 			}
 			/// Calculates the squared length of the vector.
 			pub fn len_sqr(self) -> T {
@@ -409,15 +448,15 @@ macro_rules! vec {
 				self.len_sqr().sqrt()
 			}
 			/// Calculates the squared euclidean distance to another vector.
-			pub fn dist_sqr(self, to: $ty<T>) -> T {
+			pub fn dist_sqr(self, to: $vec<T>) -> T {
 				infix!(+ $((to.$field - self.$field) * (to.$field - self.$field)),+)
 			}
 			/// Calculates the euclidean distance to another vector.
-			pub fn dist(self, to: $ty<T>) -> T where T: Float {
+			pub fn dist(self, to: $vec<T>) -> T where T: Float {
 				self.dist_sqr(to).sqrt()
 			}
 			/// Normalizes the vector.
-			pub fn norm(self) -> $ty<T> where T: Float {
+			pub fn norm(self) -> $vec<T> where T: Float {
 				let self_len = self.len();
 				if self_len == T::zero() {
 					Self::zero()
@@ -427,7 +466,7 @@ macro_rules! vec {
 				}
 			}
 			/// Scales the vector such that its length equals the given value.
-			pub fn resize(self, len: T) -> $ty<T> where T: Float {
+			pub fn resize(self, len: T) -> $vec<T> where T: Float {
 				let self_len = self.len();
 				if self_len == T::zero() {
 					Self::zero()
@@ -440,90 +479,168 @@ macro_rules! vec {
 			pub fn hadd(self) -> T {
 				infix!(+ $(self.$field),+)
 			}
-			ops!($ty);
+			ops!($vec);
 			/// Calculates the inner product.
-			pub fn dot(self, rhs: $ty<T>) -> T {
+			pub fn dot(self, rhs: $vec<T>) -> T {
 				infix!(+ $(self.$field * rhs.$field),+)
+			}
+		}
+
+		//----------------------------------------------------------------
+		// Comparison masks
+
+		impl<T> $vec<T> {
+			/// Creates a mask by applying the callable `F` to each component.
+			pub fn mask<F: FnMut(T) -> bool>(self, mut f: F) -> $mask {
+				$mask { $($field: f(self.$field)),+ }
+			}
+			/// Creates a mask by applying the callable `F` to each component on the left and righthand side.
+			pub fn masked<F: FnMut(T, T) -> bool>(self, rhs: $vec<T>, mut f: F) -> $mask {
+				$mask { $($field: f(self.$field, rhs.$field)),+ }
+			}
+			/// Masks if the component is finite.
+			pub fn is_finite(self) -> $mask where T: Float {
+				$mask { $($field: self.$field.is_finite()),+ }
+			}
+			/// Masks if the components are equal.
+			pub fn eq(self, rhs: $vec<T>) -> $mask where T: PartialEq {
+				$mask { $($field: self.$field == rhs.$field),+ }
+			}
+			/// Masks if the components are not equal.
+			pub fn ne(self, rhs: $vec<T>) -> $mask where T: PartialEq {
+				$mask { $($field: self.$field != rhs.$field),+ }
+			}
+			/// Masks if the lefthand side components are less than the righthand side.
+			pub fn lt(self, rhs: $vec<T>) -> $mask where T: PartialOrd {
+				$mask { $($field: self.$field < rhs.$field),+ }
+			}
+			/// Masks if the lefthand side components are less than or equal the righthand side.
+			pub fn le(self, rhs: $vec<T>) -> $mask where T: PartialOrd {
+				$mask { $($field: self.$field <= rhs.$field),+ }
+			}
+			/// Masks if the lefthand side components are greater than the righthand side.
+			pub fn gt(self, rhs: $vec<T>) -> $mask where T: PartialOrd {
+				$mask { $($field: self.$field > rhs.$field),+ }
+			}
+			/// Masks if the lefthand side components are greater than or equal the righthand side.
+			pub fn ge(self, rhs: $vec<T>) -> $mask where T: PartialOrd {
+				$mask { $($field: self.$field >= rhs.$field),+ }
+			}
+			/// Combines two vectors based on the mask, selecting components from the lefthand side if `true` and righthand side if `false`.
+			pub fn select(self, rhs: $vec<T>, mask: $mask) -> $vec<T> {
+				$vec { $($field: if mask.$field { self.$field } else { rhs.$field }),+ }
 			}
 		}
 
 		//----------------------------------------------------------------
 		// Operators
 
-		impl<T> $ty<T> {
+		impl<T> $vec<T> {
 			/// Component wise absolute value.
-			pub fn abs(self) -> $ty<T> where T: Abs<Output = T> {
-				$ty { $($field: self.$field.abs()),+ }
+			pub fn abs(self) -> $vec<T> where T: Abs<Output = T> {
+				$vec { $($field: self.$field.abs()),+ }
 			}
 			/// Component wise minimum value.
-			pub fn min(self, rhs: $ty<T>) -> $ty<T> where T: Min<Output = T> {
-				$ty { $($field: T::min(self.$field, rhs.$field)),+ }
+			pub fn min(self, rhs: $vec<T>) -> $vec<T> where T: Min<Output = T> {
+				$vec { $($field: T::min(self.$field, rhs.$field)),+ }
 			}
 			/// Component wise maximum value.
-			pub fn max(self, rhs: $ty<T>) -> $ty<T> where T: Max<Output = T> {
-				$ty { $($field: T::max(self.$field, rhs.$field)),+ }
+			pub fn max(self, rhs: $vec<T>) -> $vec<T> where T: Max<Output = T> {
+				$vec { $($field: T::max(self.$field, rhs.$field)),+ }
 			}
 			/// Adds the scaled vector.
-			pub fn mul_add(self, vec: $ty<T>, scale: T) -> $ty<T> where T: Scalar {
-				$ty { $($field: self.$field + vec.$field * scale),+ }
+			pub fn mul_add(self, vec: $vec<T>, scale: T) -> $vec<T> where T: Scalar {
+				$vec { $($field: self.$field + vec.$field * scale),+ }
 			}
 		}
 
-		impl<T: ops::Add<Output = T>> ops::Add<$ty<T>> for $ty<T> {
-			type Output = $ty<T>;
-			fn add(self, rhs: $ty<T>) -> $ty<T> {
-				$ty { $($field: self.$field + rhs.$field),+ }
+		impl<T: ops::Add<Output = T>> ops::Add<$vec<T>> for $vec<T> {
+			type Output = $vec<T>;
+			fn add(self, rhs: $vec<T>) -> $vec<T> {
+				$vec { $($field: self.$field + rhs.$field),+ }
 			}
 		}
-		impl<T: ops::Sub<Output = T>> ops::Sub<$ty<T>> for $ty<T> {
-			type Output = $ty<T>;
-			fn sub(self, rhs: $ty<T>) -> $ty<T> {
-				$ty { $($field: self.$field - rhs.$field),+ }
+		impl<T: ops::Sub<Output = T>> ops::Sub<$vec<T>> for $vec<T> {
+			type Output = $vec<T>;
+			fn sub(self, rhs: $vec<T>) -> $vec<T> {
+				$vec { $($field: self.$field - rhs.$field),+ }
 			}
 		}
-		impl<T: ops::Neg<Output = T>> ops::Neg for $ty<T> {
-			type Output = $ty<T>;
-			fn neg(self) -> $ty<T> {
-				$ty { $($field: -self.$field),+ }
+		impl<T: ops::Neg<Output = T>> ops::Neg for $vec<T> {
+			type Output = $vec<T>;
+			fn neg(self) -> $vec<T> {
+				$vec { $($field: -self.$field),+ }
 			}
 		}
 
-		impl<T: Copy + ops::Mul<Output = T>> ops::Mul<T> for $ty<T> {
-			type Output = $ty<T>;
-			fn mul(self, rhs: T) -> $ty<T> {
-				$ty { $($field: self.$field * rhs),+ }
+		impl<T: Copy + ops::Mul<Output = T>> ops::Mul<T> for $vec<T> {
+			type Output = $vec<T>;
+			fn mul(self, rhs: T) -> $vec<T> {
+				$vec { $($field: self.$field * rhs),+ }
 			}
 		}
-		impl<T: Copy + ops::Div<Output = T>> ops::Div<T> for $ty<T> {
-			type Output = $ty<T>;
-			fn div(self, rhs: T) -> $ty<T> {
-				$ty { $($field: self.$field / rhs),+ }
+		impl<T: Copy + ops::Div<Output = T>> ops::Div<T> for $vec<T> {
+			type Output = $vec<T>;
+			fn div(self, rhs: T) -> $vec<T> {
+				$vec { $($field: self.$field / rhs),+ }
 			}
 		}
-		impl<T: Copy + ops::Rem<Output = T>> ops::Rem<T> for $ty<T> {
-			type Output = $ty<T>;
-			fn rem(self, rhs: T) -> $ty<T> {
-				$ty { $($field: self.$field % rhs),+ }
+		impl<T: Copy + ops::Rem<Output = T>> ops::Rem<T> for $vec<T> {
+			type Output = $vec<T>;
+			fn rem(self, rhs: T) -> $vec<T> {
+				$vec { $($field: self.$field % rhs),+ }
+			}
+		}
+
+		impl<T: ops::Mul<Output = T>> ops::Mul<$vec<T>> for $vec<T> {
+			type Output = $vec<T>;
+			fn mul(self, rhs: $vec<T>) -> $vec<T> {
+				$vec { $($field: self.$field * rhs.$field),+ }
+			}
+		}
+		impl<T: ops::Div<Output = T>> ops::Div<$vec<T>> for $vec<T> {
+			type Output = $vec<T>;
+			fn div(self, rhs: $vec<T>) -> $vec<T> {
+				$vec { $($field: self.$field / rhs.$field),+ }
+			}
+		}
+		impl<T: ops::Rem<Output = T>> ops::Rem<$vec<T>> for $vec<T> {
+			type Output = $vec<T>;
+			fn rem(self, rhs: $vec<T>) -> $vec<T> {
+				$vec { $($field: self.$field % rhs.$field),+ }
 			}
 		}
 
 		//----------------------------------------------------------------
-		// Display
+		// Formatting
 
-		display!($ty);
+		impl<T: fmt::Display> fmt::Display for $vec<T> {
+			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+				// This is unfortunate but it really wants the precision argument...
+				match f.precision() {
+					Some(p) => write!(f, fmt_str!($vec .*), $(p, self.$field),+),
+					None => write!(f, fmt_str!($vec), $(self.$field),+),
+				}
+			}
+		}
 	}
 }
 
-// vec!(Vec1 { x 0 T } 1);
-vec!(Vec2 { x 0 T, y 1 T } 2);
-vec!(Vec3 { x 0 T, y 1 T, z 2 T } 3);
-vec!(Vec4 { x 0 T, y 1 T, z 2 T, w 3 T } 4);
+// vec!(Vec1 1 { x 0 T });
+vec!(Vec2 Mask2 2 { x 0 T, y 1 T });
+vec!(Vec3 Mask3 3 { x 0 T, y 1 T, z 2 T });
+vec!(Vec4 Mask4 4 { x 0 T, y 1 T, z 2 T, w 3 T });
 
 #[cfg(test)]
 mod tests {
 	use super::*;
 	#[test]
-	fn units() {
+	fn constructors() {
 		let _ = Vec2::new(1, 2);
+	}
+	#[test]
+	fn formatting() {
+		assert_eq!("(3, 4, 5)", format!("{}", Vec3::new(3, 4, 5)));
+		assert_eq!("(1.300, 3.142)", format!("{:.3}", Vec2::new(1.3, 3.1415927)));
 	}
 }

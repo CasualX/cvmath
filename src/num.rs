@@ -36,6 +36,7 @@ pub trait Scalar: Copy + Default + Zero + One +
 
 pub trait Int: cmp::Eq + cmp::Ord {}
 pub trait Float {
+	fn is_finite(self) -> bool;
 	fn sqrt(self) -> Self;
 }
 
@@ -75,6 +76,9 @@ macro_rules! float {
 		}
 		impl Scalar for $ty {}
 		impl Float for $ty {
+			fn is_finite(self) -> bool {
+				self.is_finite()
+			}
 			fn sqrt(self) -> $ty {
 				self.sqrt()
 			}

@@ -1,34 +1,37 @@
+/*!
+Vector masks.
+*/
 
-/// A 2-dimensional bools result.
+/// A 2-dimensional mask.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
-pub struct Bools2 {
+pub struct Mask2 {
 	pub x: bool,
 	pub y: bool,
 }
 
-/// A 3-dimensional bools result.
+/// A 3-dimensional mask.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
-pub struct Bools3 {
+pub struct Mask3 {
 	pub x: bool,
 	pub y: bool,
 	pub z: bool,
 }
 
-/// A 4-dimensional bools result.
+/// A 4-dimensional mask.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
-pub struct Bools4 {
+pub struct Mask4 {
 	pub x: bool,
 	pub y: bool,
 	pub z: bool,
 	pub w: bool,
 }
 
-macro_rules! bools {
-	($ty:ident { $($field:ident $I:tt $T:ident),+ } $N:expr) => {
-		impl $ty {
+macro_rules! mask {
+	($mask:ident { $($field:ident $I:tt $T:ident),+ } $N:expr) => {
+		impl $mask {
 			pub fn any(self) -> bool {
 				infix!(|| $(self.$field),+)
 			}
@@ -39,6 +42,6 @@ macro_rules! bools {
 	}
 }
 
-bools!(Bools2 { x 0 T, y 1 T } 2);
-bools!(Bools3 { x 0 T, y 1 T, z 2 T } 3);
-bools!(Bools4 { x 0 T, y 1 T, z 2 T, w 3 T } 4);
+mask!(Mask2 { x 0 T, y 1 T } 2);
+mask!(Mask3 { x 0 T, y 1 T, z 2 T } 3);
+mask!(Mask4 { x 0 T, y 1 T, z 2 T, w 3 T } 4);

@@ -1,5 +1,7 @@
+/*!
+*/
 
-use ::std::{mem, ops};
+use ::std::{fmt, mem, ops};
 
 use ::num::{Cast};
 
@@ -23,93 +25,93 @@ pub struct Point3<T> {
 }
 
 macro_rules! point {
-	($ty:ident $vec:ident { $($field:ident $I:tt $T:ident),+ } $N:expr) => {
+	($pt:ident $vec:ident $N:tt { $($field:ident $I:tt $T:ident),+ } $fmt:expr) => {
 
 		//----------------------------------------------------------------
 		// Constructors
 
-		impl<T> $ty<T> {
-			pub fn new($($field: T),+) -> $ty<T> {
-				$ty { $($field: $field),+ }
+		impl<T> $pt<T> {
+			pub fn new($($field: T),+) -> $pt<T> {
+				$pt { $($field: $field),+ }
 			}
-			pub fn dup(u: T) -> $ty<T> where T: Copy {
-				$ty { $($field: u),+ }
+			pub fn dup(u: T) -> $pt<T> where T: Copy {
+				$pt { $($field: u),+ }
 			}
 		}
 		
 		//----------------------------------------------------------------
 		// Conversions
 
-		impl<T, U> Cast<$ty<U>> for $ty<T> where T: Cast<U> {
-			fn cast(self) -> $ty<U> {
-				$ty { $($field: self.$field.cast()),+ }
+		impl<T, U> Cast<$pt<U>> for $pt<T> where T: Cast<U> {
+			fn cast(self) -> $pt<U> {
+				$pt { $($field: self.$field.cast()),+ }
 			}
 		}
 
-		impl<T> From<($($T,)+)> for $ty<T> {
-			fn from(val: ($($T,)+)) -> $ty<T> {
-				$ty { $($field: val.$I),+ }
+		impl<T> From<($($T,)+)> for $pt<T> {
+			fn from(val: ($($T,)+)) -> $pt<T> {
+				$pt { $($field: val.$I),+ }
 			}
 		}
-		impl<T> Into<($($T,)+)> for $ty<T> {
+		impl<T> Into<($($T,)+)> for $pt<T> {
 			fn into(self) -> ($($T,)+) {
 				($(self.$field,)+)
 			}
 		}
 
-		impl<T: Copy> From<[T; $N]> for $ty<T> {
-			fn from(val: [T; $N]) -> $ty<T> {
+		impl<T: Copy> From<[T; $N]> for $pt<T> {
+			fn from(val: [T; $N]) -> $pt<T> {
 				// Can't move out of array...
-				$ty { $($field: val[$I]),+ }
+				$pt { $($field: val[$I]),+ }
 			}
 		}
-		impl<T> Into<[T; $N]> for $ty<T> {
+		impl<T> Into<[T; $N]> for $pt<T> {
 			fn into(self) -> [T; $N] {
 				[$(self.$field),+]
 			}
 		}
 
-		impl<T> From<$vec<T>> for $ty<T> {
-			fn from(vec: $vec<T>) -> $ty<T> {
-				$ty { $($field: vec.$field),+ }
+		impl<T> From<$vec<T>> for $pt<T> {
+			fn from(vec: $vec<T>) -> $pt<T> {
+				$pt { $($field: vec.$field),+ }
 			}
 		}
-		impl<T> From<$ty<T>> for $vec<T> {
-			fn from(pt: $ty<T>) -> $vec<T> {
+		impl<T> From<$pt<T>> for $vec<T> {
+			fn from(pt: $pt<T>) -> $vec<T> {
 				$vec { $($field: pt.$field),+ }
 			}
 		}
 
-		impl<'a, T> From<&'a ($($T,)+)> for &'a $ty<T> {
-			fn from(val: &'a ($($T,)+)) -> &'a $ty<T> {
+		impl<'a, T> From<&'a ($($T,)+)> for &'a $pt<T> {
+			fn from(val: &'a ($($T,)+)) -> &'a $pt<T> {
 				unsafe { mem::transmute(val) }
 			}
 		}
-		impl<'a, T> From<&'a mut ($($T,)+)> for &'a mut $ty<T> {
-			fn from(val: &'a mut ($($T,)+)) -> &'a mut $ty<T> {
-				unsafe { mem::transmute(val) }
-			}
-		}
-
-		impl<'a, T> From<&'a [T; $N]> for &'a $ty<T> {
-			fn from(val: &'a [T; $N]) -> &'a $ty<T> {
-				unsafe { mem::transmute(val) }
-			}
-		}
-		impl<'a, T> From<&'a mut [T; $N]> for &'a mut $ty<T> {
-			fn from(val: &'a mut [T; $N]) -> &'a mut $ty<T> {
+		impl<'a, T> From<&'a mut ($($T,)+)> for &'a mut $pt<T> {
+			fn from(val: &'a mut ($($T,)+)) -> &'a mut $pt<T> {
 				unsafe { mem::transmute(val) }
 			}
 		}
 
-		impl<'a, T> From<&'a [T]> for &'a $ty<T> {
-			fn from(val: &'a [T]) -> &'a $ty<T> {
+		impl<'a, T> From<&'a [T; $N]> for &'a $pt<T> {
+			fn from(val: &'a [T; $N]) -> &'a $pt<T> {
+				unsafe { mem::transmute(val) }
+			}
+		}
+		impl<'a, T> From<&'a mut [T; $N]> for &'a mut $pt<T> {
+			fn from(val: &'a mut [T; $N]) -> &'a mut $pt<T> {
+				unsafe { mem::transmute(val) }
+			}
+		}
+
+		impl<'a, T> From<&'a [T]> for &'a $pt<T> {
+			fn from(val: &'a [T]) -> &'a $pt<T> {
 				assert_eq!($N, val.len());
 				unsafe { mem::transmute(val.as_ptr()) }
 			}
 		}
-		impl<'a, T> From<&'a mut [T]> for &'a mut $ty<T> {
-			fn from(val: &'a mut [T]) -> &'a mut $ty<T> {
+		impl<'a, T> From<&'a mut [T]> for &'a mut $pt<T> {
+			fn from(val: &'a mut [T]) -> &'a mut $pt<T> {
 				assert_eq!($N, val.len());
 				unsafe { mem::transmute(val.as_mut_ptr()) }
 			}
@@ -118,54 +120,54 @@ macro_rules! point {
 		//----------------------------------------------------------------
 		// As references
 
-		impl<T> AsRef<($($T,)+)> for $ty<T> {
+		impl<T> AsRef<($($T,)+)> for $pt<T> {
 			fn as_ref(&self) -> &($($T,)+) {
 				unsafe { mem::transmute(self) }
 			}
 		}
-		impl<T> AsRef<[T; $N]> for $ty<T> {
+		impl<T> AsRef<[T; $N]> for $pt<T> {
 			fn as_ref(&self) -> &[T; $N] {
 				unsafe { mem::transmute(self) }
 			}
 		}
-		impl<T> AsRef<[T]> for $ty<T> {
+		impl<T> AsRef<[T]> for $pt<T> {
 			fn as_ref(&self) -> &[T] {
 				<Self as AsRef<[T; $N]>>::as_ref(self)
 			}
 		}
-		impl<T> AsRef<$vec<T>> for $ty<T> {
+		impl<T> AsRef<$vec<T>> for $pt<T> {
 			fn as_ref(&self) -> &$vec<T> {
 				unsafe { mem::transmute(self) }
 			}
 		}
-		impl<T> AsRef<$ty<T>> for $vec<T> {
-			fn as_ref(&self) -> &$ty<T> {
+		impl<T> AsRef<$pt<T>> for $vec<T> {
+			fn as_ref(&self) -> &$pt<T> {
 				unsafe { mem::transmute(self) }
 			}
 		}
 		
-		impl<T> AsMut<($($T,)+)> for $ty<T> {
+		impl<T> AsMut<($($T,)+)> for $pt<T> {
 			fn as_mut(&mut self) -> &mut ($($T,)+) {
 				unsafe { mem::transmute(self) }
 			}
 		}
-		impl<T> AsMut<[T; $N]> for $ty<T> {
+		impl<T> AsMut<[T; $N]> for $pt<T> {
 			fn as_mut(&mut self) -> &mut [T; $N] {
 				unsafe { mem::transmute(self) }
 			}
 		}
-		impl<T> AsMut<[T]> for $ty<T> {
+		impl<T> AsMut<[T]> for $pt<T> {
 			fn as_mut(&mut self) -> &mut [T] {
 				<Self as AsMut<[T; $N]>>::as_mut(self)
 			}
 		}
-		impl<T> AsMut<$vec<T>> for $ty<T> {
+		impl<T> AsMut<$vec<T>> for $pt<T> {
 			fn as_mut(&mut self) -> &mut $vec<T> {
 				unsafe { mem::transmute(self) }
 			}
 		}
-		impl<T> AsMut<$ty<T>> for $vec<T> {
-			fn as_mut(&mut self) -> &mut $ty<T> {
+		impl<T> AsMut<$pt<T>> for $vec<T> {
+			fn as_mut(&mut self) -> &mut $pt<T> {
 				unsafe { mem::transmute(self) }
 			}
 		}
@@ -173,21 +175,29 @@ macro_rules! point {
 		//----------------------------------------------------------------
 		// Operators
 
-		impl<T: ops::Add<Output = T>> ops::Add<$vec<T>> for $ty<T> {
-			type Output = $ty<T>;
-			fn add(self, rhs: $vec<T>) -> $ty<T> {
-				$ty { $($field: self.$field + rhs.$field),+ }
+		impl<T: ops::Add<Output = T>> ops::Add<$vec<T>> for $pt<T> {
+			type Output = $pt<T>;
+			fn add(self, rhs: $vec<T>) -> $pt<T> {
+				$pt { $($field: self.$field + rhs.$field),+ }
 			}
 		}
-		impl<T: ops::Sub<Output = T>> ops::Sub<$ty<T>> for $ty<T> {
+		impl<T: ops::Sub<Output = T>> ops::Sub<$pt<T>> for $pt<T> {
 			type Output = $vec<T>;
-			fn sub(self, rhs: $ty<T>) -> $vec<T> {
+			fn sub(self, rhs: $pt<T>) -> $vec<T> {
 				$vec { $($field: rhs.$field - self.$field),+ }
 			}
 		}
 
+		//----------------------------------------------------------------
+		// Operators
+
+		impl<T: fmt::Display> fmt::Display for $pt<T> {
+			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+				write!(f, $fmt, $(self.$field),+)
+			}
+		}
 	}
 }
 
-point!(Point2 Vec2 { x 0 T, y 1 T } 2);
-point!(Point3 Vec3 { x 0 T, y 1 T, z 2 T } 3);
+point!(Point2 Vec2 2 { x 0 T, y 1 T } "({}, {})");
+point!(Point3 Vec3 3 { x 0 T, y 1 T, z 2 T } "({}, {}, {})");
