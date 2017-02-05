@@ -40,6 +40,17 @@ pub trait Float {
 	fn sqrt(self) -> Self;
 }
 
+pub trait Trig: Sized {
+	fn sin(self) -> Self;
+	fn cos(self) -> Self;
+	fn tan(self) -> Self;
+	fn sin_cos(self) -> (Self, Self) where Self: Sized;
+	fn asin(self) -> Self;
+	fn acos(self) -> Self;
+	fn atan(self) -> Self;
+	fn atan2(self, Self) -> Self;
+}
+
 //----------------------------------------------------------------
 
 macro_rules! float {
@@ -82,6 +93,16 @@ macro_rules! float {
 			fn sqrt(self) -> $ty {
 				self.sqrt()
 			}
+		}
+		impl Trig for $ty {
+			fn sin(self) -> $ty { self.sin() }
+			fn cos(self) -> $ty { self.cos() }
+			fn tan(self) -> $ty { self.tan() }
+			fn sin_cos(self) -> ($ty, $ty) { self.sin_cos() }
+			fn asin(self) -> $ty { self.asin() }
+			fn acos(self) -> $ty { self.acos() }
+			fn atan(self) -> $ty { self.atan() }
+			fn atan2(self, x: $ty) -> $ty { self.atan2(x) }
 		}
 	};
 }

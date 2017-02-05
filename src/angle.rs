@@ -13,6 +13,8 @@ pub trait Angle<T> {
 	fn acos(T) -> Self;
 	fn atan(T) -> Self;
 	fn atan2(T, T) -> Self;
+	fn to_degrees(self) -> Deg<T>;
+	fn to_radians(self) -> Rad<T>;
 }
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
@@ -60,12 +62,10 @@ macro_rules! angle {
 			fn acos(val: $f) -> $ty<$f> { $ty(from_rad!($ty val.acos())) }
 			fn atan(val: $f) -> $ty<$f> { $ty(from_rad!($ty val.atan())) }
 			fn atan2(y: $f, x: $f) -> $ty<$f> { $ty(from_rad!($ty y.atan2(x))) }
-		}
-		impl $ty<$f> {
-			pub fn to_radians(self) -> Rad<$f> {
+			fn to_radians(self) -> Rad<$f> {
 				Rad(to_rad!($ty self.0))
 			}
-			pub fn to_degrees(self) -> Deg<$f> {
+			fn to_degrees(self) -> Deg<$f> {
 				Deg(to_deg!($ty self.0))
 			}
 		}
