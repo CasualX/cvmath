@@ -153,7 +153,6 @@ All vectors implement the following interfaces:
 use ::std::{fmt, mem, ops};
 
 use ::num::{Scalar, Zero, One, Abs, Min, Max, Float, Cast};
-use ::mask::{Mask2, Mask3, Mask4};
 
 // /// A 1-dimensional vector.
 // #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -312,7 +311,7 @@ macro_rules! fmt_str {
 
 // This may or may not be horrible abuse of the `macro_rules!` system :)
 macro_rules! vec {
-	($vec:ident $mask:ident $N:tt { $($field:ident $I:tt $T:ident),+ }) => {
+	($vec:ident $N:tt { $($field:ident $I:tt $T:ident),+ }) => {
 
 		//----------------------------------------------------------------
 		// Constructors
@@ -491,44 +490,87 @@ macro_rules! vec {
 
 		impl<T> $vec<T> {
 			/// Creates a mask by applying the callable `F` to each component.
-			pub fn mask<F: FnMut(T) -> bool>(self, mut f: F) -> $mask {
-				$mask { $($field: f(self.$field)),+ }
+			pub fn mask<F: FnMut(T) -> bool>(self, mut f: F) -> $vec<bool> {
+				$vec { $($field: f(self.$field)),+ }
 			}
 			/// Creates a mask by applying the callable `F` to each component on the left and righthand side.
-			pub fn masked<F: FnMut(T, T) -> bool>(self, rhs: $vec<T>, mut f: F) -> $mask {
-				$mask { $($field: f(self.$field, rhs.$field)),+ }
+			pub fn masked<F: FnMut(T, T) -> bool>(self, rhs: $vec<T>, mut f: F) -> $vec<bool> {
+				$vec { $($field: f(self.$field, rhs.$field)),+ }
 			}
 			/// Masks if the component is finite.
-			pub fn is_finite(self) -> $mask where T: Float {
-				$mask { $($field: self.$field.is_finite()),+ }
+			pub fn is_finite(self) -> $vec<bool> where T: Float {
+				$vec { $($field: self.$field.is_finite()),+ }
 			}
 			/// Masks if the components are equal.
-			pub fn eq(self, rhs: $vec<T>) -> $mask where T: PartialEq {
-				$mask { $($field: self.$field == rhs.$field),+ }
+			pub fn eq(self, rhs: $vec<T>) -> $vec<bool> where T: PartialEq {
+				$vec { $($field: self.$field == rhs.$field),+ }
 			}
 			/// Masks if the components are not equal.
-			pub fn ne(self, rhs: $vec<T>) -> $mask where T: PartialEq {
-				$mask { $($field: self.$field != rhs.$field),+ }
+			pub fn ne(self, rhs: $vec<T>) -> $vec<bool> where T: PartialEq {
+				$vec { $($field: self.$field != rhs.$field),+ }
 			}
 			/// Masks if the lefthand side components are less than the righthand side.
-			pub fn lt(self, rhs: $vec<T>) -> $mask where T: PartialOrd {
-				$mask { $($field: self.$field < rhs.$field),+ }
+			pub fn lt(self, rhs: $vec<T>) -> $vec<bool> where T: PartialOrd {
+				$vec { $($field: self.$field < rhs.$field),+ }
 			}
 			/// Masks if the lefthand side components are less than or equal the righthand side.
-			pub fn le(self, rhs: $vec<T>) -> $mask where T: PartialOrd {
-				$mask { $($field: self.$field <= rhs.$field),+ }
+			pub fn le(self, rhs: $vec<T>) -> $vec<bool> where T: PartialOrd {
+				$vec { $($field: self.$field <= rhs.$field),+ }
 			}
 			/// Masks if the lefthand side components are greater than the righthand side.
-			pub fn gt(self, rhs: $vec<T>) -> $mask where T: PartialOrd {
-				$mask { $($field: self.$field > rhs.$field),+ }
+			pub fn gt(self, rhs: $vec<T>) -> $vec<bool> where T: PartialOrd {
+				$vec { $($field: self.$field > rhs.$field),+ }
 			}
 			/// Masks if the lefthand side components are greater than or equal the righthand side.
-			pub fn ge(self, rhs: $vec<T>) -> $mask where T: PartialOrd {
-				$mask { $($field: self.$field >= rhs.$field),+ }
+			pub fn ge(self, rhs: $vec<T>) -> $vec<bool> where T: PartialOrd {
+				$vec { $($field: self.$field >= rhs.$field),+ }
 			}
 			/// Combines two vectors based on the mask, selecting components from the lefthand side if `true` and righthand side if `false`.
-			pub fn select(self, rhs: $vec<T>, mask: $mask) -> $vec<T> {
+			pub fn select(self, rhs: $vec<T>, mask: $vec<bool>) -> $vec<T> {
 				$vec { $($field: if mask.$field { self.$field } else { rhs.$field }),+ }
+			}
+		}
+
+		//----------------------------------------------------------------
+		// Comparison Operators
+
+		impl $vec<bool> {
+			/// Returns `true` if any of the components is `true`.
+			pub fn any(self) -> bool {
+				infix!(|| $(self.$field),+)
+			}
+			/// Returns `true` if all the components are `true`.
+			pub fn all(self) -> bool {
+				infix!(&& $(self.$field),+)
+			}
+			/// Returns `true` if none of the components are `true`.
+			pub fn none(self) -> bool {
+				!self.any()
+			}
+		}
+
+		impl ops::BitAnd<$vec<bool>> for $vec<bool> {
+			type Output = $vec<bool>;
+			fn bitand(self, rhs: $vec<bool>) -> $vec<bool> {
+				$vec { $($field: self.$field && rhs.$field),+ }
+			}
+		}
+		impl ops::BitOr<$vec<bool>> for $vec<bool> {
+			type Output = $vec<bool>;
+			fn bitor(self, rhs: $vec<bool>) -> $vec<bool> {
+				$vec { $($field: self.$field || rhs.$field),+ }
+			}
+		}
+		impl ops::BitXor<$vec<bool>> for $vec<bool> {
+			type Output = $vec<bool>;
+			fn bitxor(self, rhs: $vec<bool>) -> $vec<bool> {
+				$vec { $($field: self.$field != rhs.$field),+ }
+			}
+		}
+		impl ops::Not for $vec<bool> {
+			type Output = $vec<bool>;
+			fn not(self) -> $vec<bool> {
+				$vec { $($field: !self.$field),+ }
 			}
 		}
 
@@ -616,7 +658,7 @@ macro_rules! vec {
 
 		impl<T: fmt::Display> fmt::Display for $vec<T> {
 			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-				// This is unfortunate but it really wants the precision argument...
+				// This is unfortunate but floats really want the precision argument...
 				match f.precision() {
 					Some(p) => write!(f, fmt_str!($vec .*), $(p, self.$field),+),
 					None => write!(f, fmt_str!($vec), $(self.$field),+),
@@ -627,9 +669,9 @@ macro_rules! vec {
 }
 
 // vec!(Vec1 1 { x 0 T });
-vec!(Vec2 Mask2 2 { x 0 T, y 1 T });
-vec!(Vec3 Mask3 3 { x 0 T, y 1 T, z 2 T });
-vec!(Vec4 Mask4 4 { x 0 T, y 1 T, z 2 T, w 3 T });
+vec!(Vec2 2 { x 0 T, y 1 T });
+vec!(Vec3 3 { x 0 T, y 1 T, z 2 T });
+vec!(Vec4 4 { x 0 T, y 1 T, z 2 T, w 3 T });
 
 #[cfg(test)]
 mod tests {
