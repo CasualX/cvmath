@@ -1,10 +1,17 @@
 
 use ::std::{fmt, ops};
 
-use ::num::{Cast};
+use ::num::{Cast, Zero};
 
-pub trait Angle<T> {
+pub trait Angle<T>:
+	Copy + Default + PartialEq + Zero +
+	fmt::Debug + fmt::Display +
+	ops::Add<Output = Self> + ops::Sub<Output = Self> +
+	ops::Mul<T, Output = Self> + ops::Div<T, Output = Self> +
+{
 	fn turn() -> Self;
+	fn half() -> Self;
+	fn quarter() -> Self;
 	fn sin(self) -> T;
 	fn cos(self) -> T;
 	fn tan(self) -> T;
@@ -13,8 +20,10 @@ pub trait Angle<T> {
 	fn acos(T) -> Self;
 	fn atan(T) -> Self;
 	fn atan2(T, T) -> Self;
-	fn to_degrees(self) -> Deg<T>;
-	fn to_radians(self) -> Rad<T>;
+	fn from_deg(T) -> Self;
+	fn from_rad(T) -> Self;
+	fn to_deg(self) -> Deg<T>;
+	fn to_rad(self) -> Rad<T>;
 }
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
@@ -29,18 +38,11 @@ macro_rules! turn {
 	(Deg) => (360.0);
 	(Rad) => (6.283185307179586476925286766559);
 }
-
-macro_rules! to_rad {
-	(Deg $e:expr) => ($e * (6.283185307179586476925286766559 / 360.0));
-	(Rad $e:expr) => ($e);
-}
-macro_rules! to_deg {
-	(Deg $e:expr) => ($e);
-	(Rad $e:expr) => ($e * (360.0 / 6.283185307179586476925286766559));
-}
-macro_rules! from_rad {
-	(Deg $e:expr) => ($e * (360.0 / 6.283185307179586476925286766559));
-	(Rad $e:expr) => ($e);
+macro_rules! cvt {
+	(Deg to Deg $e:expr) => ($e);
+	(Deg to Rad $e:expr) => ($e * (turn!(Rad) / turn!(Deg)));
+	(Rad to Deg $e:expr) => ($e * (turn!(Deg) / turn!(Rad)));
+	(Rad to Rad $e:expr) => ($e);
 }
 
 macro_rules! fmt_str {
@@ -54,20 +56,20 @@ macro_rules! angle {
 	(for $ty:ident<$f:ty>) => {
 		impl Angle<$f> for $ty<$f> {
 			fn turn() -> $ty<$f> { $ty(turn!($ty)) }
-			fn sin(self) -> $f { to_rad!($ty self.0).sin() }
-			fn cos(self) -> $f { to_rad!($ty self.0).cos() }
-			fn tan(self) -> $f { to_rad!($ty self.0).tan() }
-			fn sin_cos(self) -> ($f, $f) { to_rad!($ty self.0).sin_cos() }
-			fn asin(val: $f) -> $ty<$f> { $ty(from_rad!($ty val.asin())) }
-			fn acos(val: $f) -> $ty<$f> { $ty(from_rad!($ty val.acos())) }
-			fn atan(val: $f) -> $ty<$f> { $ty(from_rad!($ty val.atan())) }
-			fn atan2(y: $f, x: $f) -> $ty<$f> { $ty(from_rad!($ty y.atan2(x))) }
-			fn to_radians(self) -> Rad<$f> {
-				Rad(to_rad!($ty self.0))
-			}
-			fn to_degrees(self) -> Deg<$f> {
-				Deg(to_deg!($ty self.0))
-			}
+			fn half() -> $ty<$f> { $ty(turn!($ty) / 2.0) }
+			fn quarter() -> $ty<$f> { $ty(turn!($ty) / 4.0) }
+			fn sin(self) -> $f { cvt!($ty to Rad self.0).sin() }
+			fn cos(self) -> $f { cvt!($ty to Rad self.0).cos() }
+			fn tan(self) -> $f { cvt!($ty to Rad self.0).tan() }
+			fn sin_cos(self) -> ($f, $f) { cvt!($ty to Rad self.0).sin_cos() }
+			fn asin(sin: $f) -> $ty<$f> { $ty(cvt!(Rad to $ty sin.asin())) }
+			fn acos(cos: $f) -> $ty<$f> { $ty(cvt!(Rad to $ty cos.acos())) }
+			fn atan(tan: $f) -> $ty<$f> { $ty(cvt!(Rad to $ty tan.atan())) }
+			fn atan2(y: $f, x: $f) -> $ty<$f> { $ty(cvt!(Rad to $ty y.atan2(x))) }
+			fn from_deg(deg: $f) -> $ty<$f> { $ty(cvt!(Deg to $ty deg)) }
+			fn from_rad(rad: $f) -> $ty<$f> { $ty(cvt!(Rad to $ty rad)) }
+			fn to_deg(self) -> Deg<$f> { Deg(cvt!($ty to Deg self.0)) }
+			fn to_rad(self) -> Rad<$f> { Rad(cvt!($ty to Rad self.0)) }
 		}
 	};
 	($ty:ident $fmt:expr) => {
@@ -77,6 +79,12 @@ macro_rules! angle {
 
 		angle!(for $ty<f32>);
 		angle!(for $ty<f64>);
+
+		impl<T: Zero> Zero for $ty<T> {
+			fn zero() -> $ty<T> {
+				$ty(T::zero())
+			}
+		}
 
 		//----------------------------------------------------------------
 		// Conversions

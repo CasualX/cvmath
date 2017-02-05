@@ -1,3 +1,22 @@
 [package]
 name = "cgm"
 version = "0.1.0"
+authors = ["CasualX <CasualX@github.com>"]
+
+description = "Computer Graphics Math Library"
+
+# documentation =
+# homepage =
+repository = "https://github.com/CasualX/cgmath"
+
+readme = "readme.md"
+
+keywords = ["vector", "matrix"]
+
+license = "MIT"
+
+[features]
+default = ["row-major"]
+
+# Use row-major matrices.
+row-major = []
