@@ -4,10 +4,10 @@ Numeric traits.
 
 use ::std::{cmp, ops};
 
-pub trait Zero {
+pub trait Zero: Sized + ops::Add<Output = Self> + ops::Mul<Output = Self> {
 	fn zero() -> Self;
 }
-pub trait One {
+pub trait One: Sized + ops::Mul<Output = Self> {
 	fn one() -> Self;
 }
 pub trait Min<Rhs = Self> {
@@ -37,6 +37,7 @@ pub trait Scalar: Copy + Default + Zero + One +
 pub trait Int: cmp::Eq + cmp::Ord {}
 pub trait Float {
 	fn is_finite(self) -> bool;
+	fn is_infinite(self) -> bool;
 	fn sqrt(self) -> Self;
 }
 
@@ -87,12 +88,9 @@ macro_rules! float {
 		}
 		impl Scalar for $ty {}
 		impl Float for $ty {
-			fn is_finite(self) -> bool {
-				self.is_finite()
-			}
-			fn sqrt(self) -> $ty {
-				self.sqrt()
-			}
+			fn is_finite(self) -> bool { self.is_finite() }
+			fn is_infinite(self) -> bool { self.is_infinite() }
+			fn sqrt(self) -> $ty { self.sqrt() }
 		}
 		impl Trig for $ty {
 			fn sin(self) -> $ty { self.sin() }
@@ -117,21 +115,15 @@ macro_rules! int {
 		}
 		impl Min<$ty> for $ty {
 			type Output = $ty;
-			fn min(self, rhs: $ty) -> $ty {
-				cmp::min(self, rhs)
-			}
+			fn min(self, rhs: $ty) -> $ty { cmp::min(self, rhs) }
 		}
 		impl Max<$ty> for $ty {
 			type Output = $ty;
-			fn max(self, rhs: $ty) -> $ty {
-				cmp::max(self, rhs)
-			}
+			fn max(self, rhs: $ty) -> $ty { cmp::max(self, rhs) }
 		}
 		impl Abs for $ty {
 			type Output = $ty;
-			fn abs(self) -> $ty {
-				self.abs()
-			}
+			fn abs(self) -> $ty { self.abs() }
 		}
 		impl Cast<i32> for $ty {
 			fn cast(self) -> i32 { self as i32 }

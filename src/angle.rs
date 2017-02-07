@@ -1,10 +1,10 @@
 
 use ::std::{fmt, ops};
 
-use ::num::{Cast, Zero};
+use ::num::{Cast};
 
 pub trait Angle<T>:
-	Copy + Default + PartialEq + Zero +
+	Copy + Default + PartialEq +
 	fmt::Debug + fmt::Display +
 	ops::Add<Output = Self> + ops::Sub<Output = Self> +
 	ops::Mul<T, Output = Self> + ops::Div<T, Output = Self> +
@@ -79,12 +79,6 @@ macro_rules! angle {
 
 		angle!(for $ty<f32>);
 		angle!(for $ty<f64>);
-
-		impl<T: Zero> Zero for $ty<T> {
-			fn zero() -> $ty<T> {
-				$ty(T::zero())
-			}
-		}
 
 		//----------------------------------------------------------------
 		// Conversions

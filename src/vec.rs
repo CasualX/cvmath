@@ -1,153 +1,264 @@
 /*!
 Defines the vector types.
 
-All vectors implement the following interfaces:
+An overview of their implementations:
 
-* Derived traits
+## Derived traits
 
-  `Copy`, `Clone`, `Debug`, `Default`, `Eq`, `PartialEq`, `Ord`, `PartialOrd`, `Hash`.
+`Copy`, `Clone` where T: `Copy`, `Clone`: For convenience all instances are passed by value, greatly simplifying usage.
 
-  `Display`: Formats the vector as an N-tuple.
+`Debug`, `Display` where T: `Debug`, `Display`: Struct-based formatting and tuple-based formatting respectively.
 
-* Constructors
+`Eq`, `PartialEq` where T: `Eq`, `PartialEq`: Compares if _all_ the underlying components are equal.
 
-  `new(x, y, ...)`: Constructs a new vector from components.
+`Ord`, `PartialOrd` where T: `Ord`, `PartialOrd`
 
-  `dup(u)`: Constructs a new vector by splatting to its components.
+`Hash` where T: `Hash`
 
-  `zero()`: Constructs a new zero vector.
+### Examples
 
-* Unit vectors
+```
+# use cgm::{Vec2, Vec3};
+assert_eq!("(2, 3, 4)", format!("{}", Vec3::new(2, 3, 4)));
+assert_eq!("(2.300, 2.142)", format!("{:.3}", Vec2::new(2.3, 2.14159278)));
+assert_eq!("Vec2 { x: 16, y: 25 }", format!("{:?}", Vec2::new(16, 25)));
 
-  `unit_x()`: A unit vector in the `x` direction.
+assert_eq!(Vec2 { x: -5, y: 9 }, Vec2::new(-5, 9));
+assert!(Vec2::new(1, 9) > Vec2::new(1, -2));
+```
 
-  `unit_y()`: A unit vector in the `y` direction. `Vec2` and up.
+## Constructors
 
-  `unit_z()`: A unit vector in the `z` direction. `Vec3` and up.
+`new(x, y, ...)`: Constructs a new vector from components.
 
-  `unit_w()`: A unit vector in the `w` direction. `Vec4` only.
+`dup(u)` where T: `Copy`: Constructs a new vector by splatting to its components.
 
-* Setting individual components
+`unit_x()`, `unit_y()`, `unit_z()`, `unit_w()` where T: `Zero` + `One`: Constructs a unit vector along the given axis (given that axis exists for the vector).
 
-  Note that these return new vectors with the respective component changed.
+`set_x(self, x)`, `set_y(self, y)`, `set_z(self, z)`, `set_w(self, w)`: Note that these return new vectors with the respective component changed.
 
-  `set_x(self, x)`: Sets the `x` component.
+### Examples
 
-  `set_y(self, y)`: Sets the `y` component. `Vec2` and up.
+```
+# use cgm::{Vec2, Vec3};
+assert_eq!(Vec2 { x: 1, y: 2 }, Vec2::new(1, 2));
 
-  `set_z(self, z)`: Sets the `z` component. `Vec3` and up.
+assert_eq!(Vec3 { x: 42, y: 42, z: 42 }, Vec3::dup(42));
 
-  `set_w(self, w)`: Sets the `w` component. `Vec4` only.
+assert_eq!(Vec2 { x: 0.0, y: 1.0 }, Vec2::unit_y());
+assert_eq!(Vec3 { x: 1, y: 0, z: 0 }, Vec3::unit_x());
 
-* Extending and truncating
+assert_eq!(Vec3 { x: -12, y: 0, z: 12 }, Vec3::default().set_x(-12).set_z(12));
+```
 
-  `vec3(self, T)`: Extends `Vec2` with a `z` component.
+## Extending and truncating
 
-  `vec4(self, T)`: Extends `Vec3` with a `w` component.
+`vec3(self, T)`: Extends `Vec2` with a `z` component.
 
-  `xy(self)`: Drops the `z` component from `Vec3` and `w` from `Vec4`.
+`vec4(self, T)`: Extends `Vec3` with a `w` component.
 
-  `xyz(self)`: Drops the `w` component from `Vec4`.
+`xy(self)`: Drops the `z` component from `Vec3` and `w` from `Vec4`.
 
-* Transformations
+`xyz(self)`: Drops the `w` component from `Vec4`.
 
-  `cast<U>(self)`: Casts to a vector of type `U` with the same dimensions.
+### Examples
 
-  `map<F>(self, F)`: Maps a callable over the components.
+```
+# use cgm::{Vec2, Vec3, Vec4};
+assert_eq!(Vec3 { x: 3, y: 4, z: 5 }, Vec2::new(3, 4).vec3(5));
 
-  `map2<F>(self, rhs, F)`: Maps a callable over the components side by side.
+assert_eq!(Vec4 { x: -1, y: -2, z: -3, w: -4 }, Vec3::new(-1, -2, -3).vec4(-4));
 
-  `reduce<F>(self, F)`: Reduces the vector.
+assert_eq!(Vec2 { x: 2, y: 1 }, Vec3::new(2, 1, 0).xy());
+assert_eq!(Vec2 { x: 1, y: 2 }, Vec4::new(1, 2, 3, 4).xy());
 
-  `fold<F>(self, acc, F)`: Folds the vector.
+assert_eq!(Vec3 { x: 1, y: 2, z: 3 }, Vec4::new(1, 2, 3, 4).xyz());
+```
 
-* Conversions
+## Transformations
 
-  `From`: PointN, N-tuple and N-array conversions.
+`cast<U>(self)` where T: `Cast<U>`: Casts to a vector of type `U` with the same dimensions.
 
-  `Into`: N-tuple and N-array conversions.
+`map<F>(self, F)` where F: `FnMut(T) -> T`: Maps a callable over the components.
 
-  `AsRef`: PointN, N-tuple, N-array and slice conversions.
+`map2<F>(self, rhs, F)` where F: `FnMut(T, T) -> T`: Maps a callable over the components with a right-hand side.
 
-  `AsMut`: PointN, N-tuple, N-array and slice conversions.
+`reduce<F>(self, F)` where F: `Fn(T, T) -> T`: Reduces the vector. The `x` component is used as the initial value of the accumulator.
 
-* Operations where T is `Scalar`
+`fold<F>(self, acc, F)` where F: `Fn(T, T) -> T`: Folds the vector.
 
-  `sqr(self)`: Squares the components.
+### Examples
 
-  `len_sqr(self)`: Calculates the squared length of the vector.
+```
+# use cgm::{Vec2, Vec3};
+assert_eq!(Vec2 { x: 2, y: 4 }, Vec2::new(2.2, 4.9).cast());
 
-  `len(self)`: Calculates the length of the vector given `Float` components.
+assert_eq!(Vec2 { x: 2, y: 4 }, Vec2::new(1, 2).map(|c| c * 2));
 
-  `dist_sqr(self, to)`: Calculates the squared euclidean distance to another vector.
+let left = Vec2::new(1, 2);
+let right = Vec2::new(1, -1);
+assert_eq!(Vec2 { x: 3, y: 3 }, Vec2::map2(left, right, |a, b| a * 2 + b));
 
-  `dist(self, to)`: Calculates the euclidean distance to another vector given `Float` components.
+let vec = Vec3::new(5, 3, 2);
+assert_eq!(0, vec.reduce(|acc, c| acc - c));
+assert_eq!(-10, vec.fold(0, |acc, c| acc - c));
+```
 
-  `norm(self)`: Normalizes the vector given `Float` components.
+## Conversions
 
-  `resize(self, len)`: Scales the vector such that its length equals the given value given `Float` components.
+`From`, `Into`: PointN, N-tuple and N-array conversions.
 
-  `hadd(self)`: Horizontal adds all components.
+`AsRef`, `AsMut`: PointN, N-tuple, N-array and slice conversions.
 
-  `dot(self, rhs)`: Calculates the inner product.
+### Examples
 
-  * Exclusive to `Vec2`
+```
+# use cgm::{Vec2};
+assert_eq!(Vec2::from((2, 3)), Vec2::from([2, 3]));
+```
 
-     `hsub(self)`: Horizontal subtracts the components.
+## Operations where T is `Scalar`
 
-     `ccw(self)`: Rotates the vector counter-clockwise by 90°.
+`sqr(self)`: Squares the components.
 
-     `cw(self)`: Rotates the vector clockwise by 90°.
+`len_sqr(self)`: Calculates the squared length of the vector.
 
-     `cross(self, rhs)`: Calculates the 3D cross product where the inputs are extended with `z = 0` and returns the magnitude of the result.
+`len(self)` where T: `Float`: Calculates the length of the vector.
 
-  * Exclusive to `Vec3`
+`dist_sqr(self, to)`: Calculates the squared euclidean distance to another vector.
 
-     `cross(self, rhs)`: Calculates the 3D cross product.
+`dist(self, to)` where T: `Float`: Calculates the euclidean distance to another vector.
 
-* Comparison masks
+`norm(self)` where T: `Float`: Normalizes the vector. The vector with length zero stays zero.
 
-  `mask<F>(self, F)`: Creates a mask by applying the callable `F` to each component.
+`resize(self, len)` where T: `Float`: Scales the vector such that its length equals the given value. The vector with length zero remains zero.
 
-  `masked<F>(self, rhs, F)`: Creates a mask by applying the callable `F` to each component on the left and righthand side.
+`hadd(self)`: Horizontal adds all components.
 
-  `is_finite(self)`: Masks if the component is finite.
+`dot(self, rhs)`: Calculates the inner product.
 
-  `eq(self, rhs)`: Masks if the components are equal.
+Exclusive to `Vec2`:
 
-  `ne(self, rhs)`: Masks if the components are not equal.
+`hsub(self)`: Horizontal subtracts the components of `Vec2`.
 
-  `lt(self, rhs)`: Masks if the lefthand side components are less than the righthand side.
+`ccw(self)`: Rotates the vector counter-clockwise by 90°.
 
-  `le(self, rhs)`: Masks if the lefthand side components are less than or equal the righthand side.
+`cw(self)`: Rotates the vector clockwise by 90°.
 
-  `gt(self, rhs)`: Masks if the lefthand side components are greater than the righthand side.
+`cross(self, rhs)`: Calculates the 3D cross product where the inputs are extended with `z = 0` and returns the magnitude of the result.
 
-  `ge(self, rhs)`: Masks if the lefthand side components are greater than or equal the righthand side.
+Exclusive to `Vec3`:
 
-  `select(self, rhs, mask)`: Combines two vectors based on the mask, selecting components from the lefthand side if `true` and righthand side if `false`.
+`cross(self, rhs)`: Calculates the 3D cross product.
 
-* Operators
+### Examples
 
-  `abs(self)`: Component wise absolute value.
+```
+# use cgm::{Vec2, Vec3};
+assert_eq!(Vec2 { x: 9, y: 16 }, Vec2::new(3, 4).sqr());
 
-  `min(self, rhs)`: Component wise minimum value.
+assert_eq!(25, Vec2::new(3, 4).len_sqr());
+assert_eq!(5.0, Vec2::new(3.0, 4.0).len());
 
-  `max(self, rhs)`: Component wise maximum value.
+assert_eq!(2, Vec2::dist_sqr(Vec2::new(1, 1), Vec2::new(2, 2)));
+assert_eq!(5.0, Vec2::dist(Vec2::new(10.0, 10.0), Vec2::new(13.0, 14.0)));
 
-  `mul_add(self, vec, scale)`: Adds the scaled value.
+assert_eq!(Vec2 { x: 0.6, y: 0.8 }, Vec2::new(3.0, 4.0).norm());
+assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2::new(0.0, 0.0).norm());
 
-  `Add`: Adds the vectors component wise.
+assert_eq!(Vec2 { x: 1.5, y: 2.0 }, Vec2::new(3.0, 4.0).resize(2.5));
+assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2::new(0.0, 0.0).resize(2.0));
 
-  `Sub`: Subtracts the vectors component wise.
+assert_eq!(12, Vec3::new(3, 4, 5).hadd());
+assert_eq!(-1, Vec2::new(3, 4).hsub());
 
-  `Neg`: Negates the vector component wise.
+assert_eq!(Vec2 { x: 4, y: -3 }, Vec2::new(3, 4).ccw());
+assert_eq!(Vec2 { x: -4, y: 3 }, Vec2::new(3, 4).cw());
+assert_eq!(10, Vec2::cross(Vec2::new(3, 4), Vec2::new(-1, 2)));
 
-  `Mul`: Multiply by scalar or vector.
+assert_eq!(12, Vec3::dot(Vec3::new(1, 2, 3), Vec3::new(4, -5, 6)));
+assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross((3, -3, 1).into(), (4, 9, 1).into()));
+```
 
-  `Div`: Divide by scalar or vector.
+## Comparison masks
 
-  `Rem`: Remainder by scalar or vector.
+Comparison masks are boolean vectors to be consumed by `select`.
+
+`mask<F>(self, F)`: Creates a mask by applying the callable `F` to each component.
+
+`masked<F>(self, rhs, F)`: Creates a mask by applying the callable `F` to each component on the left-hand and right-hand side.
+
+`is_finite(self)`: Masks if the components are finite.
+
+`is_infinite(self)`: Masks if the components are infinite.
+
+`eq(self, rhs)`: Masks if the components are equal.
+
+`ne(self, rhs)`: Masks if the components are not equal.
+
+`lt(self, rhs)`: Masks if the left-hand side components are less than the right-hand side.
+
+`le(self, rhs)`: Masks if the left-hand side components are less than or equal the right-hand side.
+
+`gt(self, rhs)`: Masks if the left-hand side components are greater than the right-hand side.
+
+`ge(self, rhs)`: Masks if the left-hand side components are greater than or equal the right-hand side.
+
+`select(self, rhs, mask)`: Combines two vectors based on the mask, selecting components from the left-hand side if `true` and right-hand side if `false`.
+
+### Examples
+
+```
+# use cgm::{Vec2, Vec3};
+assert_eq!(Vec2 { x: true, y: false }, Vec2::new(1, 2).eq(Vec2::new(1, -2)));
+```
+
+## Comparison operators
+
+`any(self)`: Returns `true` if any of the components is `true`.
+
+`all(self)`: Returns `true` if all the components are `true`.
+
+`none(self)`: Returns `true` if none of the components are `true`.
+
+`BitAnd`, `BitOr`, `BitXor`, `Not`: Component-wise boolean operators.
+
+### Examples
+
+```
+# use cgm::{Vec2};
+assert!(Vec2 { x: true, y: false }.any());
+assert!(Vec2 { x: true, y: true }.all());
+assert!(Vec2 { x: false, y: false }.none());
+```
+
+## Operators
+
+`abs(self)`: Component-wise absolute value.
+
+`min(self, rhs)`: Component-wise minimum value.
+
+`max(self, rhs)`: Component-wise maximum value.
+
+`mul_add(self, vec, scale)`: Adds the scaled value.
+
+`Add`: Adds the vectors component-wise.
+
+`Sub`: Subtracts the vectors component-wise.
+
+`Neg`: Negates the vector component-wise.
+
+`Mul`: Multiply by scalar or vector.
+
+`Div`: Divide by scalar or vector.
+
+`Rem`: Remainder by scalar or vector.
+
+### Examples
+
+```
+# use cgm::{Vec2, Vec3};
+```
 */
 
 use ::std::{fmt, mem, ops};
@@ -325,10 +436,6 @@ macro_rules! vec {
 			pub fn dup(u: T) -> $vec<T> where T: Copy {
 				$vec { $($field: u),+ }
 			}
-			/// Constructs a new zero vector.
-			pub fn zero() -> $vec<T> where T: Zero {
-				$vec { $($field: Zero::zero()),+ }
-			}
 		}
 
 		impl<T> $vec<T> {
@@ -458,7 +565,7 @@ macro_rules! vec {
 			pub fn norm(self) -> $vec<T> where T: Float {
 				let self_len = self.len();
 				if self_len == T::zero() {
-					Self::zero()
+					Self::default()
 				}
 				else {
 					self / self_len
@@ -468,7 +575,7 @@ macro_rules! vec {
 			pub fn resize(self, len: T) -> $vec<T> where T: Float {
 				let self_len = self.len();
 				if self_len == T::zero() {
-					Self::zero()
+					Self::default()
 				}
 				else {
 					self * (len / self_len)
@@ -493,13 +600,17 @@ macro_rules! vec {
 			pub fn mask<F: FnMut(T) -> bool>(self, mut f: F) -> $vec<bool> {
 				$vec { $($field: f(self.$field)),+ }
 			}
-			/// Creates a mask by applying the callable `F` to each component on the left and righthand side.
+			/// Creates a mask by applying the callable `F` to each component on the left-hand and right-hand side.
 			pub fn masked<F: FnMut(T, T) -> bool>(self, rhs: $vec<T>, mut f: F) -> $vec<bool> {
 				$vec { $($field: f(self.$field, rhs.$field)),+ }
 			}
-			/// Masks if the component is finite.
+			/// Masks if the components are finite.
 			pub fn is_finite(self) -> $vec<bool> where T: Float {
 				$vec { $($field: self.$field.is_finite()),+ }
+			}
+			/// Masks if the components are infinite.
+			pub fn is_infinite(self) -> $vec<bool> where T: Float {
+				$vec { $($field: self.$field.is_infinite()),+ }
 			}
 			/// Masks if the components are equal.
 			pub fn eq(self, rhs: $vec<T>) -> $vec<bool> where T: PartialEq {
@@ -509,30 +620,30 @@ macro_rules! vec {
 			pub fn ne(self, rhs: $vec<T>) -> $vec<bool> where T: PartialEq {
 				$vec { $($field: self.$field != rhs.$field),+ }
 			}
-			/// Masks if the lefthand side components are less than the righthand side.
+			/// Masks if the left-hand side components are less than the right-hand side.
 			pub fn lt(self, rhs: $vec<T>) -> $vec<bool> where T: PartialOrd {
 				$vec { $($field: self.$field < rhs.$field),+ }
 			}
-			/// Masks if the lefthand side components are less than or equal the righthand side.
+			/// Masks if the left-hand side components are less than or equal the right-hand side.
 			pub fn le(self, rhs: $vec<T>) -> $vec<bool> where T: PartialOrd {
 				$vec { $($field: self.$field <= rhs.$field),+ }
 			}
-			/// Masks if the lefthand side components are greater than the righthand side.
+			/// Masks if the left-hand side components are greater than the right-hand side.
 			pub fn gt(self, rhs: $vec<T>) -> $vec<bool> where T: PartialOrd {
 				$vec { $($field: self.$field > rhs.$field),+ }
 			}
-			/// Masks if the lefthand side components are greater than or equal the righthand side.
+			/// Masks if the left-hand side components are greater than or equal the right-hand side.
 			pub fn ge(self, rhs: $vec<T>) -> $vec<bool> where T: PartialOrd {
 				$vec { $($field: self.$field >= rhs.$field),+ }
 			}
-			/// Combines two vectors based on the mask, selecting components from the lefthand side if `true` and righthand side if `false`.
+			/// Combines two vectors based on the mask, selecting components from the left-hand side if `true` and right-hand side if `false`.
 			pub fn select(self, rhs: $vec<T>, mask: $vec<bool>) -> $vec<T> {
 				$vec { $($field: if mask.$field { self.$field } else { rhs.$field }),+ }
 			}
 		}
 
 		//----------------------------------------------------------------
-		// Comparison Operators
+		// Comparison operators
 
 		impl $vec<bool> {
 			/// Returns `true` if any of the components is `true`.
@@ -672,17 +783,3 @@ macro_rules! vec {
 vec!(Vec2 2 { x 0 T, y 1 T });
 vec!(Vec3 3 { x 0 T, y 1 T, z 2 T });
 vec!(Vec4 4 { x 0 T, y 1 T, z 2 T, w 3 T });
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-	#[test]
-	fn constructors() {
-		let _ = Vec2::new(1, 2);
-	}
-	#[test]
-	fn formatting() {
-		assert_eq!("(3, 4, 5)", format!("{}", Vec3::new(3, 4, 5)));
-		assert_eq!("(1.300, 3.142)", format!("{:.3}", Vec2::new(1.3, 3.1415927)));
-	}
-}
