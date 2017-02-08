@@ -68,7 +68,7 @@ macro_rules! affine2 {
 					a21: T::zero(), a22: scale.y,   a23: T::zero(),
 				}
 			}
-			pub fn rotate<A: Angle<T>>(angle: A) -> $ty<T> where T: Scalar {
+			pub fn rotate<A: Angle<T = T>>(angle: A) -> $ty<T> where T: Scalar + Float {
 				let (cy, cx) = angle.sin_cos();
 				$ty {
 					a11: cx, a12: -cy, a13: T::zero(),

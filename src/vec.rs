@@ -19,9 +19,10 @@ An overview of their implementations:
 
 ```
 # use cgm::{Vec2, Vec3};
-assert_eq!("(2, 3, 4)", format!("{}", Vec3::new(2, 3, 4)));
-assert_eq!("(2.300, 2.142)", format!("{:.3}", Vec2::new(2.3, 2.14159278)));
+assert_eq!("(2,3,4)", format!("{}", Vec3::new(2, 3, 4)));
+assert_eq!("(2.300,2.142)", format!("{:.3}", Vec2::new(2.3, 2.14159278)));
 assert_eq!("Vec2 { x: 16, y: 25 }", format!("{:?}", Vec2::new(16, 25)));
+assert_eq!("(  2,  3, 14)", format!("{:>3}", Vec3::new(2, 3, 14)));
 
 assert_eq!(Vec2 { x: -5, y: 9 }, Vec2::new(-5, 9));
 assert!(Vec2::new(1, 9) > Vec2::new(1, -2));
@@ -409,15 +410,16 @@ macro_rules! ops {
 	(Vec4) => {};
 }
 
-macro_rules! fmt_str {
-	(Vec1) => ("({})");
-	(Vec2) => ("({}, {})");
-	(Vec3) => ("({}, {}, {})");
-	(Vec4) => ("({}, {}, {}, {})");
-	(Vec1 .*) => ("({:.*})");
-	(Vec2 .*) => ("({:.*}, {:.*})");
-	(Vec3 .*) => ("({:.*}, {:.*}, {:.*})");
-	(Vec4 .*) => ("({:.*}, {:.*}, {:.*}, {:.*})");
+macro_rules! fmt {
+	($vec:ident $fmt:path { $($field:ident),+ }) => {
+		impl<T: $fmt> $fmt for $vec<T> {
+			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+				f.write_str("(")?;
+				instmt!(f.write_str(",")?; $(self.$field.fmt(f)?;)+);
+				f.write_str(")")
+			}
+		}
+	}
 }
 
 // This may or may not be horrible abuse of the `macro_rules!` system :)
@@ -767,15 +769,14 @@ macro_rules! vec {
 		//----------------------------------------------------------------
 		// Formatting
 
-		impl<T: fmt::Display> fmt::Display for $vec<T> {
-			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-				// This is unfortunate but floats really want the precision argument...
-				match f.precision() {
-					Some(p) => write!(f, fmt_str!($vec .*), $(p, self.$field),+),
-					None => write!(f, fmt_str!($vec), $(self.$field),+),
-				}
-			}
-		}
+		fmt!($vec fmt::Display { $($field),+ });
+		fmt!($vec fmt::Binary { $($field),+ });
+		fmt!($vec fmt::Octal { $($field),+ });
+		fmt!($vec fmt::LowerHex { $($field),+ });
+		fmt!($vec fmt::UpperHex { $($field),+ });
+		fmt!($vec fmt::Pointer { $($field),+ });
+		fmt!($vec fmt::LowerExp { $($field),+ });
+		fmt!($vec fmt::UpperExp { $($field),+ });
 	}
 }
 

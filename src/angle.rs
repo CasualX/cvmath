@@ -1,36 +1,51 @@
+/*!
+Angles.
+*/
 
 use ::std::{fmt, ops};
 
-use ::num::{Cast};
+use ::num::{Cast, Float};
 
-pub trait Angle<T>:
-	Copy + Default + PartialEq +
+pub trait Angle where Self:
+	Copy + Default + PartialEq + PartialOrd +
 	fmt::Debug + fmt::Display +
 	ops::Add<Output = Self> + ops::Sub<Output = Self> +
-	ops::Mul<T, Output = Self> + ops::Div<T, Output = Self> +
+	// ops::Mul<Self::T, Output = Self> + ops::Div<Self::T, Output = Self> +
 {
+	type T: Float;
+	/// Returns a full turn of 360° or 2pi.
 	fn turn() -> Self;
+	/// Returns a half turn of 180° or pi.
 	fn half() -> Self;
+	/// Returns a quarter turn of 90° or pi/2.
 	fn quarter() -> Self;
-	fn sin(self) -> T;
-	fn cos(self) -> T;
-	fn tan(self) -> T;
-	fn sin_cos(self) -> (T, T);
-	fn asin(T) -> Self;
-	fn acos(T) -> Self;
-	fn atan(T) -> Self;
-	fn atan2(T, T) -> Self;
-	fn from_deg(T) -> Self;
-	fn from_rad(T) -> Self;
-	fn to_deg(self) -> Deg<T>;
-	fn to_rad(self) -> Rad<T>;
+	/// Normalizes the angle to range [-180°, 180°] or [-pi, pi].
+	fn norm(self) -> Self;
+	fn sin(self) -> Self::T;
+	fn cos(self) -> Self::T;
+	fn tan(self) -> Self::T;
+	fn sin_cos(self) -> (Self::T, Self::T);
+	fn asin(Self::T) -> Self;
+	fn acos(Self::T) -> Self;
+	fn atan(Self::T) -> Self;
+	fn atan2(y: Self::T, x: Self::T) -> Self;
+	/// Converts from degrees.
+	fn from_deg(Deg<Self::T>) -> Self;
+	/// Converts from radians.
+	fn from_rad(Rad<Self::T>) -> Self;
+	/// Converts to degrees.
+	fn to_deg(self) -> Deg<Self::T>;
+	/// Converts to radians.
+	fn to_rad(self) -> Rad<Self::T>;
 }
 
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
+/// Angle in degrees.
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(C)]
 pub struct Deg<T>(T);
 
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
+/// Angle in radians.
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(C)]
 pub struct Rad<T>(T);
 
@@ -45,19 +60,14 @@ macro_rules! cvt {
 	(Rad to Rad $e:expr) => ($e);
 }
 
-macro_rules! fmt_str {
-	(Deg) => ("{}°");
-	(Rad) => ("{} rad");
-	(Deg .*) => ("{:.*}°");
-	(Rad .*) => ("{:.*} rad");
-}
-
 macro_rules! angle {
 	(for $ty:ident<$f:ty>) => {
-		impl Angle<$f> for $ty<$f> {
+		impl Angle for $ty<$f> {
+			type T = $f;
 			fn turn() -> $ty<$f> { $ty(turn!($ty)) }
 			fn half() -> $ty<$f> { $ty(turn!($ty) / 2.0) }
 			fn quarter() -> $ty<$f> { $ty(turn!($ty) / 4.0) }
+			fn norm(self) -> $ty<$f> { $ty(self.0.remainder(turn!($ty))) }
 			fn sin(self) -> $f { cvt!($ty to Rad self.0).sin() }
 			fn cos(self) -> $f { cvt!($ty to Rad self.0).cos() }
 			fn tan(self) -> $f { cvt!($ty to Rad self.0).tan() }
@@ -66,8 +76,8 @@ macro_rules! angle {
 			fn acos(cos: $f) -> $ty<$f> { $ty(cvt!(Rad to $ty cos.acos())) }
 			fn atan(tan: $f) -> $ty<$f> { $ty(cvt!(Rad to $ty tan.atan())) }
 			fn atan2(y: $f, x: $f) -> $ty<$f> { $ty(cvt!(Rad to $ty y.atan2(x))) }
-			fn from_deg(deg: $f) -> $ty<$f> { $ty(cvt!(Deg to $ty deg)) }
-			fn from_rad(rad: $f) -> $ty<$f> { $ty(cvt!(Rad to $ty rad)) }
+			fn from_deg(deg: Deg<$f>) -> $ty<$f> { $ty(cvt!(Deg to $ty deg.0)) }
+			fn from_rad(rad: Rad<$f>) -> $ty<$f> { $ty(cvt!(Rad to $ty rad.0)) }
 			fn to_deg(self) -> Deg<$f> { Deg(cvt!($ty to Deg self.0)) }
 			fn to_rad(self) -> Rad<$f> { Rad(cvt!($ty to Rad self.0)) }
 		}
@@ -94,11 +104,6 @@ macro_rules! angle {
 				$ty(val)
 			}
 		}
-		// impl<T> Into<T> for $ty<T> {
-		// 	fn into(self) -> T {
-		// 		self.0
-		// 	}
-		// }
 
 		impl<T> AsRef<T> for $ty<T> {
 			fn as_ref(&self) -> &T {
@@ -145,11 +150,8 @@ macro_rules! angle {
 
 		impl<T: fmt::Display> fmt::Display for $ty<T> {
 			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-				// This is unfortunate but it really wants the precision argument...
-				match f.precision() {
-					Some(p) => write!(f, fmt_str!($ty .*), p, self.0),
-					None => write!(f, fmt_str!($ty), self.0),
-				}
+				self.0.fmt(f)?;
+				f.write_str($fmt)
 			}
 		}
 
@@ -166,5 +168,11 @@ mod tests {
 	#[test]
 	fn formatting() {
 		assert_eq!("12°", format!("{:.0}", Deg::from(12.1f32)));
+		assert_eq!(" 12.0°", format!("{:>5.1}", Deg::from(12.0)));
+
+		assert_eq!(Deg(179.0), Deg(-181.0).norm());
+		assert_eq!(Deg(0.125), Deg(360.125).norm());
+		assert_eq!(Deg(180.0), Deg(-180.0).norm());
+		assert_eq!(Deg(-180.0), Deg(180.0).norm());
 	}
 }

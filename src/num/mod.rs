@@ -39,6 +39,7 @@ pub trait Float {
 	fn is_finite(self) -> bool;
 	fn is_infinite(self) -> bool;
 	fn sqrt(self) -> Self;
+	fn remainder(self, Self) -> Self;
 }
 
 pub trait Trig: Sized {
@@ -91,6 +92,9 @@ macro_rules! float {
 			fn is_finite(self) -> bool { self.is_finite() }
 			fn is_infinite(self) -> bool { self.is_infinite() }
 			fn sqrt(self) -> $ty { self.sqrt() }
+			fn remainder(self, y: $ty) -> $ty {
+				self - ((self / y).round() * y)
+			}
 		}
 		impl Trig for $ty {
 			fn sin(self) -> $ty { self.sin() }
