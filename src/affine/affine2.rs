@@ -85,6 +85,34 @@ macro_rules! affine2 {
 		}
 
 		//----------------------------------------------------------------
+		// Conversions
+
+		impl<T: Copy> From<[[T; 2]; 3]> for Affine2<T> {
+			fn from(mat: [[T; 2]; 3]) -> Affine2<T> {
+				Affine2 {
+					a11: mat[0][0],
+					a21: mat[0][1],
+					a12: mat[1][0],
+					a22: mat[1][1],
+					a13: mat[2][0],
+					a23: mat[2][1],
+				}
+			}
+		}
+		impl<T: Copy> From<[[T; 3]; 2]> for Affine2<T> {
+			fn from(mat: [[T; 3]; 2]) -> Affine2<T> {
+				Affine2 {
+					a11: mat[0][0],
+					a12: mat[0][1],
+					a13: mat[0][2],
+					a21: mat[1][0],
+					a22: mat[1][1],
+					a23: mat[1][2],
+				}
+			}
+		}
+
+		//----------------------------------------------------------------
 		// Operations
 
 		impl<T> $ty<T> {

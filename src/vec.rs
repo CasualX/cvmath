@@ -262,7 +262,7 @@ assert!(Vec2 { x: false, y: false }.none());
 ```
 */
 
-use ::std::{fmt, mem, ops};
+use ::std::{mem, ops};
 
 use ::num::{Scalar, Zero, One, Abs, Min, Max, Float, Cast};
 
@@ -408,18 +408,6 @@ macro_rules! ops {
 		}
 	};
 	(Vec4) => {};
-}
-
-macro_rules! fmt {
-	($vec:ident $fmt:path { $($field:ident),+ }) => {
-		impl<T: $fmt> $fmt for $vec<T> {
-			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-				f.write_str("(")?;
-				instmt!(f.write_str(",")?; $(self.$field.fmt(f)?;)+);
-				f.write_str(")")
-			}
-		}
-	}
 }
 
 // This may or may not be horrible abuse of the `macro_rules!` system :)
@@ -769,14 +757,7 @@ macro_rules! vec {
 		//----------------------------------------------------------------
 		// Formatting
 
-		fmt!($vec fmt::Display { $($field),+ });
-		fmt!($vec fmt::Binary { $($field),+ });
-		fmt!($vec fmt::Octal { $($field),+ });
-		fmt!($vec fmt::LowerHex { $($field),+ });
-		fmt!($vec fmt::UpperHex { $($field),+ });
-		fmt!($vec fmt::Pointer { $($field),+ });
-		fmt!($vec fmt::LowerExp { $($field),+ });
-		fmt!($vec fmt::UpperExp { $($field),+ });
+		fmt!($vec { $($field),+ });
 	}
 }
 

@@ -36,3 +36,5 @@ impl<T: Scalar + Float, A: Angle<T = T>> From<Vec3<T>> for Euler<A> {
 		Euler { pitch: pitch, yaw: yaw, roll: A::zero() }
 	}
 }
+
+fmt!(Euler { pitch, yaw, roll });

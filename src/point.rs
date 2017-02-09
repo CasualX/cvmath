@@ -1,7 +1,8 @@
 /*!
+Affine point.
 */
 
-use ::std::{fmt, mem, ops};
+use ::std::{mem, ops};
 
 use ::num::{Cast};
 
@@ -25,7 +26,7 @@ pub struct Point3<T> {
 }
 
 macro_rules! point {
-	($pt:ident $vec:ident $N:tt { $($field:ident $I:tt $T:ident),+ } $fmt:expr) => {
+	($pt:ident $vec:ident $N:tt { $($field:ident $I:tt $T:ident),+ }) => {
 
 		//----------------------------------------------------------------
 		// Constructors
@@ -79,41 +80,6 @@ macro_rules! point {
 		impl<T> From<$pt<T>> for $vec<T> {
 			fn from(pt: $pt<T>) -> $vec<T> {
 				$vec { $($field: pt.$field),+ }
-			}
-		}
-
-		impl<'a, T> From<&'a ($($T,)+)> for &'a $pt<T> {
-			fn from(val: &'a ($($T,)+)) -> &'a $pt<T> {
-				unsafe { mem::transmute(val) }
-			}
-		}
-		impl<'a, T> From<&'a mut ($($T,)+)> for &'a mut $pt<T> {
-			fn from(val: &'a mut ($($T,)+)) -> &'a mut $pt<T> {
-				unsafe { mem::transmute(val) }
-			}
-		}
-
-		impl<'a, T> From<&'a [T; $N]> for &'a $pt<T> {
-			fn from(val: &'a [T; $N]) -> &'a $pt<T> {
-				unsafe { mem::transmute(val) }
-			}
-		}
-		impl<'a, T> From<&'a mut [T; $N]> for &'a mut $pt<T> {
-			fn from(val: &'a mut [T; $N]) -> &'a mut $pt<T> {
-				unsafe { mem::transmute(val) }
-			}
-		}
-
-		impl<'a, T> From<&'a [T]> for &'a $pt<T> {
-			fn from(val: &'a [T]) -> &'a $pt<T> {
-				assert_eq!($N, val.len());
-				unsafe { mem::transmute(val.as_ptr()) }
-			}
-		}
-		impl<'a, T> From<&'a mut [T]> for &'a mut $pt<T> {
-			fn from(val: &'a mut [T]) -> &'a mut $pt<T> {
-				assert_eq!($N, val.len());
-				unsafe { mem::transmute(val.as_mut_ptr()) }
 			}
 		}
 
@@ -191,13 +157,9 @@ macro_rules! point {
 		//----------------------------------------------------------------
 		// Operators
 
-		impl<T: fmt::Display> fmt::Display for $pt<T> {
-			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-				write!(f, $fmt, $(self.$field),+)
-			}
-		}
+		fmt!($pt { $($field),+ });
 	}
 }
 
-point!(Point2 Vec2 2 { x 0 T, y 1 T } "({}, {})");
-point!(Point3 Vec3 3 { x 0 T, y 1 T, z 2 T } "({}, {}, {})");
+point!(Point2 Vec2 2 { x 0 T, y 1 T });
+point!(Point3 Vec3 3 { x 0 T, y 1 T, z 2 T });

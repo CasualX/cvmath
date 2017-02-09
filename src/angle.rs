@@ -6,12 +6,14 @@ use ::std::{fmt, ops};
 
 use ::num::{Cast, Float};
 
+/// Angle units.
 pub trait Angle where Self:
 	Copy + Default + PartialEq + PartialOrd +
 	fmt::Debug + fmt::Display +
 	ops::Add<Output = Self> + ops::Sub<Output = Self> + ops::Neg<Output = Self> +
 	ops::Mul<<Self as Angle>::T, Output = Self> + ops::Div<<Self as Angle>::T, Output = Self> +
 {
+	/// The underlying float type.
 	type T: Float;
 	/// Returns a full turn of 360° or 2pi.
 	fn turn() -> Self;
@@ -23,9 +25,13 @@ pub trait Angle where Self:
 	fn zero() -> Self;
 	/// Normalizes the angle to range [-180°, 180°] or [-pi, pi].
 	fn norm(self) -> Self;
+	/// Sine.
 	fn sin(self) -> Self::T;
+	/// Cosine.
 	fn cos(self) -> Self::T;
+	/// Tangent.
 	fn tan(self) -> Self::T;
+	/// Calculates the sine and cosine efficiently.
 	fn sin_cos(self) -> (Self::T, Self::T);
 	fn asin(Self::T) -> Self;
 	fn acos(Self::T) -> Self;
@@ -62,8 +68,30 @@ macro_rules! cvt {
 	(Rad to Rad $e:expr) => ($e);
 }
 
+macro_rules! fmt {
+	(unit_str! Deg) => ("°");
+	(unit_str! Rad) => ("rad");
+	($ty:ident $fmt:path) => {
+		impl<T: $fmt> $fmt for $ty<T> {
+			fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+				self.0.fmt(f)?;
+				f.write_str(fmt!(unit_str! $ty))
+			}
+		}
+	};
+	($ty:ident) => {
+		fmt!($ty ::std::fmt::Display);
+		fmt!($ty ::std::fmt::UpperExp);
+		fmt!($ty ::std::fmt::LowerExp);
+	};
+}
+
 macro_rules! angle {
 	(for $ty:ident<$f:ty>) => {
+
+		//----------------------------------------------------------------
+		// Implement Angle
+
 		impl Angle for $ty<$f> {
 			type T = $f;
 			fn turn() -> $ty<$f> { $ty(turn!($ty)) }
@@ -86,12 +114,6 @@ macro_rules! angle {
 		}
 	};
 	($ty:ident $fmt:expr) => {
-
-		//----------------------------------------------------------------
-		// Implement Angle
-
-		angle!(for $ty<f32>);
-		angle!(for $ty<f64>);
 
 		//----------------------------------------------------------------
 		// Conversions
@@ -157,12 +179,7 @@ macro_rules! angle {
 		//----------------------------------------------------------------
 		// Formatting
 
-		impl<T: fmt::Display> fmt::Display for $ty<T> {
-			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-				self.0.fmt(f)?;
-				f.write_str($fmt)
-			}
-		}
+		fmt!($ty);
 
 	};
 }

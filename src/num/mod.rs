@@ -2,12 +2,12 @@
 Numeric traits.
 */
 
-use ::std::{cmp, ops};
+use ::std::{fmt, cmp, ops};
 
-pub trait Zero: Sized + ops::Add<Output = Self> + ops::Mul<Output = Self> {
+pub trait Zero where Self: Sized + ops::Add<Output = Self> + ops::Mul<Output = Self> {
 	fn zero() -> Self;
 }
-pub trait One: Sized + ops::Mul<Output = Self> {
+pub trait One where Self: Sized + ops::Mul<Output = Self> {
 	fn one() -> Self;
 }
 pub trait Min<Rhs = Self> {
@@ -26,27 +26,28 @@ pub trait Abs {
 pub trait Cast<T> {
 	fn cast(self) -> T;
 }
+pub trait Literal<T> {
+	fn literal(lit: T) -> Self;
+}
 
-pub trait Scalar: Copy + Default + Zero + One +
+pub trait Scalar where Self: Copy + Default + Zero + One +
+	fmt::Display + fmt::Debug +
 	ops::Add<Output = Self> + ops::Sub<Output = Self> +
 	ops::Mul<Output = Self> + ops::Div<Output = Self> +
 	ops::Neg<Output = Self> + ops::Rem<Output = Self> +
 	Min<Output = Self> + Max<Output = Self> + Abs<Output = Self> +
 	cmp::PartialEq + cmp::PartialOrd {}
 
-pub trait Int: cmp::Eq + cmp::Ord {}
-pub trait Float {
+pub trait Int where Self: Scalar + cmp::Eq + cmp::Ord {}
+pub trait Float where Self: Scalar + Literal<f64> {
 	fn is_finite(self) -> bool;
 	fn is_infinite(self) -> bool;
 	fn sqrt(self) -> Self;
 	fn remainder(self, Self) -> Self;
-}
-
-pub trait Trig: Sized {
 	fn sin(self) -> Self;
 	fn cos(self) -> Self;
 	fn tan(self) -> Self;
-	fn sin_cos(self) -> (Self, Self) where Self: Sized;
+	fn sin_cos(self) -> (Self, Self);
 	fn asin(self) -> Self;
 	fn acos(self) -> Self;
 	fn atan(self) -> Self;
@@ -87,6 +88,12 @@ macro_rules! float {
 		impl Cast<f64> for $ty {
 			fn cast(self) -> f64 { self as f64 }
 		}
+		impl Literal<f64> for $ty {
+			fn literal(lit: f64) -> $ty { lit as $ty }
+		}
+		impl Literal<f32> for $ty {
+			fn literal(lit: f32) -> $ty { lit as $ty }
+		}
 		impl Scalar for $ty {}
 		impl Float for $ty {
 			fn is_finite(self) -> bool { self.is_finite() }
@@ -95,8 +102,6 @@ macro_rules! float {
 			fn remainder(self, y: $ty) -> $ty {
 				self - ((self / y).round() * y)
 			}
-		}
-		impl Trig for $ty {
 			fn sin(self) -> $ty { self.sin() }
 			fn cos(self) -> $ty { self.cos() }
 			fn tan(self) -> $ty { self.tan() }
