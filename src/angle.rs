@@ -9,8 +9,8 @@ use ::num::{Cast, Float};
 pub trait Angle where Self:
 	Copy + Default + PartialEq + PartialOrd +
 	fmt::Debug + fmt::Display +
-	ops::Add<Output = Self> + ops::Sub<Output = Self> +
-	// ops::Mul<Self::T, Output = Self> + ops::Div<Self::T, Output = Self> +
+	ops::Add<Output = Self> + ops::Sub<Output = Self> + ops::Neg<Output = Self> +
+	ops::Mul<<Self as Angle>::T, Output = Self> + ops::Div<<Self as Angle>::T, Output = Self> +
 {
 	type T: Float;
 	/// Returns a full turn of 360° or 2pi.
@@ -19,6 +19,8 @@ pub trait Angle where Self:
 	fn half() -> Self;
 	/// Returns a quarter turn of 90° or pi/2.
 	fn quarter() -> Self;
+	/// Returns a turn of 0° or 0pi.
+	fn zero() -> Self;
 	/// Normalizes the angle to range [-180°, 180°] or [-pi, pi].
 	fn norm(self) -> Self;
 	fn sin(self) -> Self::T;
@@ -67,6 +69,7 @@ macro_rules! angle {
 			fn turn() -> $ty<$f> { $ty(turn!($ty)) }
 			fn half() -> $ty<$f> { $ty(turn!($ty) / 2.0) }
 			fn quarter() -> $ty<$f> { $ty(turn!($ty) / 4.0) }
+			fn zero() -> $ty<$f> { $ty(0.0) }
 			fn norm(self) -> $ty<$f> { $ty(self.0.remainder(turn!($ty))) }
 			fn sin(self) -> $f { cvt!($ty to Rad self.0).sin() }
 			fn cos(self) -> $f { cvt!($ty to Rad self.0).cos() }
@@ -129,6 +132,12 @@ macro_rules! angle {
 			type Output = $ty<T>;
 			fn sub(self, rhs: $ty<T>) -> $ty<T> {
 				$ty(self.0 - rhs.0)
+			}
+		}
+		impl<T: ops::Neg<Output = T>> ops::Neg for $ty<T> {
+			type Output = $ty<T>;
+			fn neg(self) -> $ty<T> {
+				$ty(-self.0)
 			}
 		}
 
