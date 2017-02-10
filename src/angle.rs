@@ -115,6 +115,9 @@ macro_rules! angle {
 	};
 	($ty:ident $fmt:expr) => {
 
+		angle!(for $ty<f32>);
+		angle!(for $ty<f64>);
+
 		//----------------------------------------------------------------
 		// Conversions
 
@@ -193,6 +196,7 @@ mod tests {
 
 	#[test]
 	fn formatting() {
+		use angle::Angle;
 		assert_eq!("12°", format!("{:.0}", Deg::from(12.1f32)));
 		assert_eq!(" 12.0°", format!("{:>5.1}", Deg::from(12.0)));
 

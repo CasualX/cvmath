@@ -9,7 +9,7 @@ use ::num::{Cast};
 use ::{Vec2, Vec3};
 
 /// A point in 2-dimensional space.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(C)]
 pub struct Point2<T> {
 	pub x: T,
@@ -17,7 +17,7 @@ pub struct Point2<T> {
 }
 
 /// A point in 3-dimensional space.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(C)]
 pub struct Point3<T> {
 	pub x: T,
