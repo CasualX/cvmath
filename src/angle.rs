@@ -10,20 +10,21 @@ use ::num::{Cast, Float};
 pub trait Angle where Self:
 	Copy + Default + PartialEq + PartialOrd +
 	fmt::Debug + fmt::Display +
+	From<Deg<<Self as Angle>::T>> + From<Rad<<Self as Angle>::T>> +
 	ops::Add<Output = Self> + ops::Sub<Output = Self> + ops::Neg<Output = Self> +
 	ops::Mul<<Self as Angle>::T, Output = Self> + ops::Div<<Self as Angle>::T, Output = Self> +
 {
 	/// The underlying float type.
 	type T: Float;
-	/// Returns a full turn of 360° or 2pi.
+	/// Returns a full turn of `360°` or `2pi`.
 	fn turn() -> Self;
-	/// Returns a half turn of 180° or pi.
+	/// Returns a half turn of `180°` or `pi`.
 	fn half() -> Self;
-	/// Returns a quarter turn of 90° or pi/2.
+	/// Returns a quarter turn of `90°` or `pi/2`.
 	fn quarter() -> Self;
-	/// Returns a turn of 0° or 0pi.
+	/// Returns a turn of `0°` or `0pi`.
 	fn zero() -> Self;
-	/// Normalizes the angle to range [-180°, 180°] or [-pi, pi].
+	/// Normalizes the angle to range `[-180°, 180°]` or `[-pi, pi]`.
 	fn norm(self) -> Self;
 	/// Sine.
 	fn sin(self) -> Self::T;
@@ -50,27 +51,27 @@ pub trait Angle where Self:
 /// Angle in degrees.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(C)]
-pub struct Deg<T>(T);
+pub struct Deg<T>(pub T);
 
 /// Angle in radians.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(C)]
-pub struct Rad<T>(T);
+pub struct Rad<T>(pub T);
 
 macro_rules! turn {
-	(Deg) => (360.0);
-	(Rad) => (6.283185307179586476925286766559);
+	(Deg<$T:ident>) => ($T::literal(360.0));
+	(Rad<$T:ident>) => ($T::literal(6.283185307179586476925286766559));
 }
 macro_rules! cvt {
-	(Deg to Deg $e:expr) => ($e);
-	(Deg to Rad $e:expr) => ($e * (turn!(Rad) / turn!(Deg)));
-	(Rad to Deg $e:expr) => ($e * (turn!(Deg) / turn!(Rad)));
-	(Rad to Rad $e:expr) => ($e);
+	(Deg<$T:ident> to Deg $e:expr) => ($e);
+	(Deg<$T:ident> to Rad $e:expr) => ($e * (turn!(Rad<$T>) / turn!(Deg<$T>)));
+	(Rad<$T:ident> to Deg $e:expr) => ($e * (turn!(Deg<$T>) / turn!(Rad<$T>)));
+	(Rad<$T:ident> to Rad $e:expr) => ($e);
 }
 
 macro_rules! fmt {
 	(unit_str! Deg) => ("°");
-	(unit_str! Rad) => ("rad");
+	(unit_str! Rad) => (" rad");
 	($ty:ident $fmt:path) => {
 		impl<T: $fmt> $fmt for $ty<T> {
 			fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
@@ -87,36 +88,27 @@ macro_rules! fmt {
 }
 
 macro_rules! angle {
-	(for $ty:ident<$f:ty>) => {
-
-		//----------------------------------------------------------------
-		// Implement Angle
-
-		impl Angle for $ty<$f> {
-			type T = $f;
-			fn turn() -> $ty<$f> { $ty(turn!($ty)) }
-			fn half() -> $ty<$f> { $ty(turn!($ty) / 2.0) }
-			fn quarter() -> $ty<$f> { $ty(turn!($ty) / 4.0) }
-			fn zero() -> $ty<$f> { $ty(0.0) }
-			fn norm(self) -> $ty<$f> { $ty(self.0.remainder(turn!($ty))) }
-			fn sin(self) -> $f { cvt!($ty to Rad self.0).sin() }
-			fn cos(self) -> $f { cvt!($ty to Rad self.0).cos() }
-			fn tan(self) -> $f { cvt!($ty to Rad self.0).tan() }
-			fn sin_cos(self) -> ($f, $f) { cvt!($ty to Rad self.0).sin_cos() }
-			fn asin(sin: $f) -> $ty<$f> { $ty(cvt!(Rad to $ty sin.asin())) }
-			fn acos(cos: $f) -> $ty<$f> { $ty(cvt!(Rad to $ty cos.acos())) }
-			fn atan(tan: $f) -> $ty<$f> { $ty(cvt!(Rad to $ty tan.atan())) }
-			fn atan2(y: $f, x: $f) -> $ty<$f> { $ty(cvt!(Rad to $ty y.atan2(x))) }
-			fn from_deg(deg: Deg<$f>) -> $ty<$f> { $ty(cvt!(Deg to $ty deg.0)) }
-			fn from_rad(rad: Rad<$f>) -> $ty<$f> { $ty(cvt!(Rad to $ty rad.0)) }
-			fn to_deg(self) -> Deg<$f> { Deg(cvt!($ty to Deg self.0)) }
-			fn to_rad(self) -> Rad<$f> { Rad(cvt!($ty to Rad self.0)) }
+	($ty:ident) => {
+		impl<T: Float> Angle for $ty<T> {
+			type T = T;
+			fn turn() -> $ty<T> { $ty(turn!($ty<T>)) }
+			fn half() -> $ty<T> { $ty(turn!($ty<T>) / T::literal(2.0)) }
+			fn quarter() -> $ty<T> { $ty(turn!($ty<T>) / T::literal(4.0)) }
+			fn zero() -> $ty<T> { $ty(T::literal(0.0)) }
+			fn norm(self) -> $ty<T> { $ty(self.0.remainder(turn!($ty<T>))) }
+			fn sin(self) -> T { cvt!($ty<T> to Rad self.0).sin() }
+			fn cos(self) -> T { cvt!($ty<T> to Rad self.0).cos() }
+			fn tan(self) -> T { cvt!($ty<T> to Rad self.0).tan() }
+			fn sin_cos(self) -> (T, T) { cvt!($ty<T> to Rad self.0).sin_cos() }
+			fn asin(sin: T) -> $ty<T> { $ty(cvt!(Rad<T> to $ty sin.asin())) }
+			fn acos(cos: T) -> $ty<T> { $ty(cvt!(Rad<T> to $ty cos.acos())) }
+			fn atan(tan: T) -> $ty<T> { $ty(cvt!(Rad<T> to $ty tan.atan())) }
+			fn atan2(y: T, x: T) -> $ty<T> { $ty(cvt!(Rad<T> to $ty y.atan2(x))) }
+			fn from_deg(deg: Deg<T>) -> $ty<T> { $ty(cvt!(Deg<T> to $ty deg.0)) }
+			fn from_rad(rad: Rad<T>) -> $ty<T> { $ty(cvt!(Rad<T> to $ty rad.0)) }
+			fn to_deg(self) -> Deg<T> { Deg(cvt!($ty<T> to Deg self.0)) }
+			fn to_rad(self) -> Rad<T> { Rad(cvt!($ty<T> to Rad self.0)) }
 		}
-	};
-	($ty:ident $fmt:expr) => {
-
-		angle!(for $ty<f32>);
-		angle!(for $ty<f64>);
 
 		//----------------------------------------------------------------
 		// Conversions
@@ -124,12 +116,6 @@ macro_rules! angle {
 		impl<T> $ty<T> {
 			pub fn cast<U>(self) -> $ty<U> where T: Cast<U> {
 				$ty(self.0.cast())
-			}
-		}
-
-		impl<T> From<T> for $ty<T> {
-			fn from(val: T) -> $ty<T> {
-				$ty(val)
 			}
 		}
 
@@ -187,8 +173,19 @@ macro_rules! angle {
 	};
 }
 
-angle!(Deg "°");
-angle!(Rad " rad");
+angle!(Deg);
+angle!(Rad);
+
+impl<T: Float> From<Deg<T>> for Rad<T> {
+	fn from(deg: Deg<T>) -> Rad<T> {
+		deg.to_rad()
+	}
+}
+impl<T: Float> From<Rad<T>> for Deg<T> {
+	fn from(rad: Rad<T>) -> Deg<T> {
+		rad.to_deg()
+	}
+}
 
 #[cfg(test)]
 mod tests {
@@ -196,13 +193,23 @@ mod tests {
 
 	#[test]
 	fn formatting() {
-		use angle::Angle;
-		assert_eq!("12°", format!("{:.0}", Deg::from(12.1f32)));
-		assert_eq!(" 12.0°", format!("{:>5.1}", Deg::from(12.0)));
+		assert_eq!("12°", format!("{:.0}", Deg(12.1f32)));
+		assert_eq!(" 12.0°", format!("{:>5.1}", Deg(12.0)));
 
 		assert_eq!(Deg(179.0), Deg(-181.0).norm());
 		assert_eq!(Deg(0.125), Deg(360.125).norm());
 		assert_eq!(Deg(180.0), Deg(-180.0).norm());
 		assert_eq!(Deg(-180.0), Deg(180.0).norm());
+	}
+
+	#[test]
+	fn from() {
+		fn rad<A: Into<Rad<f64>>>(_: A) {}
+		fn angle<A: Angle<T = f64>>(angle: A) {
+			// Doesn't work because I can't `impl<A: Angle> From<A> for Deg/Rad<A::T>`...
+			// rad(angle);
+			rad(angle.to_rad());
+		}
+		angle(Deg(12.0));
 	}
 }

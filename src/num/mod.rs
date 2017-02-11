@@ -26,9 +26,6 @@ pub trait Abs {
 pub trait Cast<T> {
 	fn cast(self) -> T;
 }
-pub trait Literal<T> {
-	fn literal(lit: T) -> Self;
-}
 
 pub trait Scalar where Self: Copy + Default + Zero + One +
 	fmt::Display + fmt::Debug +
@@ -39,7 +36,8 @@ pub trait Scalar where Self: Copy + Default + Zero + One +
 	cmp::PartialEq + cmp::PartialOrd {}
 
 pub trait Int where Self: Scalar + cmp::Eq + cmp::Ord {}
-pub trait Float where Self: Scalar + Literal<f64> {
+pub trait Float where Self: Scalar {
+	fn literal(f: f64) -> Self;
 	fn is_finite(self) -> bool;
 	fn is_infinite(self) -> bool;
 	fn sqrt(self) -> Self;
@@ -88,14 +86,9 @@ macro_rules! float {
 		impl Cast<f64> for $ty {
 			fn cast(self) -> f64 { self as f64 }
 		}
-		impl Literal<f64> for $ty {
-			fn literal(lit: f64) -> $ty { lit as $ty }
-		}
-		impl Literal<f32> for $ty {
-			fn literal(lit: f32) -> $ty { lit as $ty }
-		}
 		impl Scalar for $ty {}
 		impl Float for $ty {
+			fn literal(f: f64) -> $ty { f as $ty }
 			fn is_finite(self) -> bool { self.is_finite() }
 			fn is_infinite(self) -> bool { self.is_infinite() }
 			fn sqrt(self) -> $ty { self.sqrt() }
