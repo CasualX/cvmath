@@ -19,11 +19,15 @@ pub trait Angle where Self:
 	/// Returns a full turn of `360°` or `2pi`.
 	fn turn() -> Self;
 	/// Returns a half turn of `180°` or `pi`.
-	fn half() -> Self;
+	fn half() -> Self { Self::turn() / Self::T::literal(2.0) }
+	/// Returns a third turn of `120°` or `2pi/3`.
+	fn third() -> Self { Self::turn() / Self::T::literal(3.0) }
 	/// Returns a quarter turn of `90°` or `pi/2`.
-	fn quarter() -> Self;
+	fn quarter() -> Self { Self::turn() / Self::T::literal(4.0) }
+	/// Returns a sixth turn of `60°` or `pi/3`.
+	fn sixth() -> Self { Self::turn() / Self::T::literal(6.0) }
 	/// Returns a turn of `0°` or `0pi`.
-	fn zero() -> Self;
+	fn zero() -> Self { Self::default() }
 	/// Normalizes the angle to range `[-180°, 180°]` or `[-pi, pi]`.
 	fn norm(self) -> Self;
 	/// Sine.
@@ -93,7 +97,9 @@ macro_rules! angle {
 			type T = T;
 			fn turn() -> $ty<T> { $ty(turn!($ty<T>)) }
 			fn half() -> $ty<T> { $ty(turn!($ty<T>) / T::literal(2.0)) }
+			fn third() -> $ty<T> { $ty(turn!($ty<T>) / T::literal(3.0)) }
 			fn quarter() -> $ty<T> { $ty(turn!($ty<T>) / T::literal(4.0)) }
+			fn sixth() -> $ty<T> { $ty(turn!($ty<T>) / T::literal(6.0)) }
 			fn zero() -> $ty<T> { $ty(T::literal(0.0)) }
 			fn norm(self) -> $ty<T> { $ty(self.0.remainder(turn!($ty<T>))) }
 			fn sin(self) -> T { cvt!($ty<T> to Rad self.0).sin() }

@@ -8,6 +8,7 @@ mod macros;
 pub mod angle;
 pub mod point;
 pub mod vec;
+pub mod mask;
 pub mod affine;
 pub mod euler;
 

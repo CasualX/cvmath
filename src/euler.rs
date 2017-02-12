@@ -9,9 +9,9 @@ use ::num::{Zero};
 type Euler<T> = Vec3<T>;
 
 #[cfg(feature = "invert-pitch")]
-macro_rules! pitch { ($e:expr) => (-$e); }
+macro_rules! invert { ($e:expr) => (-$e); }
 #[cfg(not(feature = "invert-pitch"))]
-macro_rules! pitch { ($e:expr) => ($e); }
+macro_rules! invert { ($e:expr) => ($e); }
 
 impl<A: Angle> Euler<A> {
 	pub fn from_vec(vec: Vec3<A::T>) -> Euler<A> {
@@ -32,7 +32,7 @@ impl<A: Angle> Euler<A> {
 			z: A::zero(),
 		}
 	}
-	pub fn from_vecs(forward: Vec3<A::T>, up: Vec3<A::T>) -> Euler<A> {
+	pub fn from_vecs(_forward: Vec3<A::T>, _up: Vec3<A::T>) -> Euler<A> {
 		unimplemented!()
 	}
 	pub fn to_vec(self) -> Vec3<A::T> {
@@ -42,7 +42,7 @@ impl<A: Angle> Euler<A> {
 			x: cp * cy,
 			y: cp * sy,
 			z: invert!(sp),
-		};
+		}
 	}
 	pub fn to_vecs(self) -> (Vec3<A::T>, Vec3<A::T>, Vec3<A::T>) {
 		let (sp, cp) = self.x.sin_cos();
@@ -65,5 +65,16 @@ impl<A: Angle> Euler<A> {
 				z: invert!(cr * cp),
 			},
 		)
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use ::angle::{Deg};
+	#[test]
+	fn mul_test() {
+		let qa = Euler { x: Deg(1.0), y: Deg(2.0), z: Deg(0.0) } * 2.0;
+		assert_eq!(qa, Euler { x: Deg(2.0), y: Deg(4.0), z: Deg(0.0) });
 	}
 }
