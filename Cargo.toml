@@ -18,5 +18,9 @@ license = "MIT"
 [features]
 default = ["row-major"]
 
-# Use row-major matrices.
+# Use row-major or column-major matrices.
 row-major = []
+column-major = []
+
+# Invert pitch in euler angles.
+invert-pitch = []

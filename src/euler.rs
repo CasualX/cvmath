@@ -3,38 +3,67 @@
 */
 
 use ::angle::{Angle};
-use ::vec::Vec3;
-use ::num::{Scalar, Float};
+use ::vec::{Vec3};
+use ::num::{Zero};
 
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
-#[repr(C)]
-pub struct Euler<A> {
-	pub pitch: A,
-	pub yaw: A,
-	pub roll: A,
-}
+type Euler<T> = Vec3<T>;
 
-impl<A> Euler<A> {
-	pub fn new(pitch: A, yaw: A, roll: A) -> Euler<A> {
-		Euler { pitch: pitch, yaw: yaw, roll: roll }
-	}
-}
+#[cfg(feature = "invert-pitch")]
+macro_rules! pitch { ($e:expr) => (-$e); }
+#[cfg(not(feature = "invert-pitch"))]
+macro_rules! pitch { ($e:expr) => ($e); }
 
-impl<T: Scalar + Float, A: Angle<T = T>> From<Vec3<T>> for Euler<A> {
-	fn from(vec: Vec3<T>) -> Euler<A> {
-		let zero = T::zero();
+impl<A: Angle> Euler<A> {
+	pub fn from_vec(vec: Vec3<A::T>) -> Euler<A> {
+		let zero = A::T::zero();
 		let pitch;
 		let yaw;
 		if vec.x == zero && vec.y == zero {
 			yaw = A::zero();
-			pitch = if vec.z > zero { A::quarter() } else { -A::quarter() };
+			pitch = if vec.z > zero { invert!(A::quarter()) } else { -invert!(A::quarter()) };
 		}
 		else {
 			yaw = A::atan2(vec.y, vec.x);
-			pitch = A::atan2(vec.z, vec.xy().len());
+			pitch = A::atan2(invert!(vec.z), vec.xy().len());
 		}
-		Euler { pitch: pitch, yaw: yaw, roll: A::zero() }
+		Euler {
+			x: pitch,
+			y: yaw,
+			z: A::zero(),
+		}
+	}
+	pub fn from_vecs(forward: Vec3<A::T>, up: Vec3<A::T>) -> Euler<A> {
+		unimplemented!()
+	}
+	pub fn to_vec(self) -> Vec3<A::T> {
+		let (sp, cp) = self.x.sin_cos();
+		let (sy, cy) = self.y.sin_cos();
+		Vec3 {
+			x: cp * cy,
+			y: cp * sy,
+			z: invert!(sp),
+		};
+	}
+	pub fn to_vecs(self) -> (Vec3<A::T>, Vec3<A::T>, Vec3<A::T>) {
+		let (sp, cp) = self.x.sin_cos();
+		let (sy, cy) = self.y.sin_cos();
+		let (sr, cr) = self.z.sin_cos();
+		(
+			Vec3 {
+				x: cp * cy,
+				y: cp * sy,
+				z: invert!(sp),
+			},
+			Vec3 {
+				x: sr * sp * cy + cr * sy,
+				y: sr * sp * sy - cr * cy,
+				z: invert!(sr * cp),
+			},
+			Vec3 {
+				x: cr * sp * cy + sr * sy,
+				y: cr * sp * sy - sr * cy,
+				z: invert!(cr * cp),
+			},
+		)
 	}
 }
-
-fmt!(Euler { pitch, yaw, roll });
