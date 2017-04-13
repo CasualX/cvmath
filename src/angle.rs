@@ -11,24 +11,25 @@ pub trait Angle where Self:
 	Copy + Default + PartialEq + PartialOrd +
 	fmt::Debug + fmt::Display +
 	From<Deg<<Self as Angle>::T>> + From<Rad<<Self as Angle>::T>> +
+	Into<Deg<<Self as Angle>::T>> + Into<Rad<<Self as Angle>::T>> +
 	ops::Add<Output = Self> + ops::Sub<Output = Self> + ops::Neg<Output = Self> +
 	ops::Mul<<Self as Angle>::T, Output = Self> + ops::Div<<Self as Angle>::T, Output = Self> +
 {
 	/// The underlying float type.
 	type T: Float;
-	/// Returns a full turn of `360°` or `2pi`.
+	/// Returns a full turn of `360°` or `2π rad`.
 	fn turn() -> Self;
-	/// Returns a half turn of `180°` or `pi`.
+	/// Returns a half turn of `180°` or `π rad`.
 	fn half() -> Self { Self::turn() / Self::T::literal(2.0) }
-	/// Returns a third turn of `120°` or `2pi/3`.
+	/// Returns a third turn of `120°` or `2π/3 rad`.
 	fn third() -> Self { Self::turn() / Self::T::literal(3.0) }
-	/// Returns a quarter turn of `90°` or `pi/2`.
+	/// Returns a quarter turn of `90°` or `π/2 rad`.
 	fn quarter() -> Self { Self::turn() / Self::T::literal(4.0) }
-	/// Returns a sixth turn of `60°` or `pi/3`.
+	/// Returns a sixth turn of `60°` or `π/3 rad`.
 	fn sixth() -> Self { Self::turn() / Self::T::literal(6.0) }
-	/// Returns a turn of `0°` or `0pi`.
+	/// Returns a turn of `0°` or `0π rad`.
 	fn zero() -> Self { Self::default() }
-	/// Normalizes the angle to range `[-180°, 180°]` or `[-pi, pi]`.
+	/// Normalizes the angle to range `[-180°, 180°]` or `[-π rad, π rad]`.
 	fn norm(self) -> Self;
 	/// Sine.
 	fn sin(self) -> Self::T;
@@ -43,13 +44,13 @@ pub trait Angle where Self:
 	fn atan(Self::T) -> Self;
 	fn atan2(y: Self::T, x: Self::T) -> Self;
 	/// Converts from degrees.
-	fn from_deg(Deg<Self::T>) -> Self;
+	fn from_deg(deg: Deg<Self::T>) -> Self { deg.into() }
 	/// Converts from radians.
-	fn from_rad(Rad<Self::T>) -> Self;
+	fn from_rad(rad: Rad<Self::T>) -> Self { rad.into() }
 	/// Converts to degrees.
-	fn to_deg(self) -> Deg<Self::T>;
+	fn to_deg(self) -> Deg<Self::T> { self.into() }
 	/// Converts to radians.
-	fn to_rad(self) -> Rad<Self::T>;
+	fn to_rad(self) -> Rad<Self::T> { self.into() }
 }
 
 /// Angle in degrees.
@@ -73,14 +74,29 @@ macro_rules! cvt {
 	(Rad<$T:ident> to Rad $e:expr) => ($e);
 }
 
+#[cfg(feature = "format-rad-pi")]
+macro_rules! unit {
+	(Deg $e:expr) => { ("°", $e) };
+	(Rad $e:expr) => { ("π rad", $e / T::half()) };
+}
+#[cfg(feature = "format-rad-tau")]
+macro_rules! unit {
+	(Deg $e:expr) => { ("°", $e) };
+	(Rad $e:expr) => { ("τ rad", $e / T::turn()) };
+}
+#[cfg(all(not(feature = "format-rad-pi"), not(feature = "format-rad-tau")))]
+macro_rules! unit {
+	(Deg $e:expr) => { ("°", $e) };
+	(Rad $e:expr) => { (" rad", $e) };
+}
+
 macro_rules! fmt {
-	(unit_str! Deg) => ("°");
-	(unit_str! Rad) => (" rad");
 	($ty:ident $fmt:path) => {
-		impl<T: $fmt> $fmt for $ty<T> {
+		impl<T: Copy + $fmt> $fmt for $ty<T> {
 			fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-				self.0.fmt(f)?;
-				f.write_str(fmt!(unit_str! $ty))
+				let (s, e) = unit!($ty self.0);
+				e.fmt(f)?;
+				f.write_str(s)
 			}
 		}
 	};
