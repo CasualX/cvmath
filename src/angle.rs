@@ -1,5 +1,10 @@
 /*!
 Angles.
+
+Wishlist:
+
+* Have language support for traits like `Float` and `Integer` allowing number literals in generic contexts.
+
 */
 
 use ::std::{fmt, ops};
@@ -12,8 +17,9 @@ pub trait Angle where Self:
 	fmt::Debug + fmt::Display +
 	From<Deg<<Self as Angle>::T>> + From<Rad<<Self as Angle>::T>> +
 	Into<Deg<<Self as Angle>::T>> + Into<Rad<<Self as Angle>::T>> +
-	ops::Add<Output = Self> + ops::Sub<Output = Self> + ops::Neg<Output = Self> +
-	ops::Mul<<Self as Angle>::T, Output = Self> + ops::Div<<Self as Angle>::T, Output = Self> +
+	/*addition*/ops::Add<Output = Self> + /*difference*/ops::Sub<Output = Self> + /*inverse*/ops::Neg<Output = Self> +
+	/*scalar*/ops::Mul<<Self as Angle>::T, Output = Self> + /*scalar*/ops::Div<<Self as Angle>::T, Output = Self> +
+	/*ratio*/ops::Div<Self, Output = <Self as Angle>::T>
 {
 	/// The underlying float type.
 	type T: Float;
@@ -25,8 +31,12 @@ pub trait Angle where Self:
 	fn third() -> Self { Self::turn() / Self::T::literal(3.0) }
 	/// Returns a quarter turn of `90°` or `π/2 rad`.
 	fn quarter() -> Self { Self::turn() / Self::T::literal(4.0) }
+	/// Returns a fifth turn of `72°` or `2π/5 rad`.
+	fn fifth() -> Self { Self::turn() / Self::T::literal(5.0) }
 	/// Returns a sixth turn of `60°` or `π/3 rad`.
 	fn sixth() -> Self { Self::turn() / Self::T::literal(6.0) }
+	/// Returns an eight turn of `45°` or `π/4 rad`.
+	fn eight() -> Self { Self::turn() / Self::T::literal(8.0) }
 	/// Returns a turn of `0°` or `0π rad`.
 	fn zero() -> Self { Self::default() }
 	/// Normalizes the angle to range `[-180°, 180°]` or `[-π rad, π rad]`.
@@ -64,41 +74,49 @@ pub struct Deg<T>(pub T);
 pub struct Rad<T>(pub T);
 
 macro_rules! turn {
-	(Deg<$T:ident>) => ($T::literal(360.0));
-	(Rad<$T:ident>) => ($T::literal(6.283185307179586476925286766559));
+	(Deg) => (360.0);
+	(Rad) => (6.283185307179586476925286766559);
 }
 macro_rules! cvt {
 	(Deg<$T:ident> to Deg $e:expr) => ($e);
-	(Deg<$T:ident> to Rad $e:expr) => ($e * (turn!(Rad<$T>) / turn!(Deg<$T>)));
-	(Rad<$T:ident> to Deg $e:expr) => ($e * (turn!(Deg<$T>) / turn!(Rad<$T>)));
+	(Deg<$T:ident> to Rad $e:expr) => ($e * $T::literal(turn!(Rad) / turn!(Deg)));
+	(Rad<$T:ident> to Deg $e:expr) => ($e * $T::literal(turn!(Deg) / turn!(Rad)));
 	(Rad<$T:ident> to Rad $e:expr) => ($e);
 }
 
-#[cfg(feature = "format-rad-pi")]
-macro_rules! unit {
-	(Deg $e:expr) => { ("°", $e) };
-	(Rad $e:expr) => { ("π rad", $e / T::half()) };
-}
-#[cfg(feature = "format-rad-tau")]
-macro_rules! unit {
-	(Deg $e:expr) => { ("°", $e) };
-	(Rad $e:expr) => { ("τ rad", $e / T::turn()) };
-}
-#[cfg(all(not(feature = "format-rad-pi"), not(feature = "format-rad-tau")))]
-macro_rules! unit {
-	(Deg $e:expr) => { ("°", $e) };
-	(Rad $e:expr) => { (" rad", $e) };
-}
-
 macro_rules! fmt {
-	($ty:ident $fmt:path) => {
-		impl<T: Copy + $fmt> $fmt for $ty<T> {
+	(Deg $fmt:path) => {
+		impl<T: $fmt> $fmt for Deg<T> {
 			fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-				let (s, e) = unit!($ty self.0);
-				e.fmt(f)?;
-				f.write_str(s)
+				self.0.fmt(f)?;
+				f.write_str("°")
 			}
 		}
+	};
+	(Rad $fmt:path) => {
+		impl<T: $fmt> $fmt for Rad<T> {
+			fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+				self.0.fmt(f)?;
+				f.write_str(" rad")
+			}
+		}
+		// Requires specialization
+		// #[cfg(feature = "format-rad-pi")]
+		// impl<T: Float + $fmt> $fmt for Rad<T> {
+		// 	fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+		// 		let e = *self / Self::half();
+		// 		<T as $fmt>::fmt(&e, f)?;
+		// 		f.write_str("π rad")
+		// 	}
+		// }
+		// #[cfg(feature = "format-rad-tau")]
+		// impl<T: Float + $fmt> $fmt for Rad<T> {
+		// 	fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+		// 		let e = *self / Self::turn();
+		// 		<T as $fmt>::fmt(&e, f)?;
+		// 		f.write_str("τ rad")
+		// 	}
+		// }
 	};
 	($ty:ident) => {
 		fmt!($ty ::std::fmt::Display);
@@ -111,13 +129,15 @@ macro_rules! angle {
 	($ty:ident) => {
 		impl<T: Float> Angle for $ty<T> {
 			type T = T;
-			fn turn() -> $ty<T> { $ty(turn!($ty<T>)) }
-			fn half() -> $ty<T> { $ty(turn!($ty<T>) / T::literal(2.0)) }
-			fn third() -> $ty<T> { $ty(turn!($ty<T>) / T::literal(3.0)) }
-			fn quarter() -> $ty<T> { $ty(turn!($ty<T>) / T::literal(4.0)) }
-			fn sixth() -> $ty<T> { $ty(turn!($ty<T>) / T::literal(6.0)) }
+			fn turn() -> $ty<T> { $ty(T::literal(turn!($ty))) }
+			fn half() -> $ty<T> { $ty(T::literal(turn!($ty) / 2.0)) }
+			fn third() -> $ty<T> { $ty(T::literal(turn!($ty) / 3.0)) }
+			fn quarter() -> $ty<T> { $ty(T::literal(turn!($ty) / 4.0)) }
+			fn fifth() -> $ty<T> { $ty(T::literal(turn!($ty) / 5.0)) }
+			fn sixth() -> $ty<T> { $ty(T::literal(turn!($ty) / 6.0)) }
+			fn eight() -> $ty<T> { $ty(T::literal(turn!($ty) / 8.0)) }
 			fn zero() -> $ty<T> { $ty(T::literal(0.0)) }
-			fn norm(self) -> $ty<T> { $ty(self.0.remainder(turn!($ty<T>))) }
+			fn norm(self) -> $ty<T> { $ty(self.0.remainder(T::literal(turn!($ty)))) }
 			fn sin(self) -> T { cvt!($ty<T> to Rad self.0).sin() }
 			fn cos(self) -> T { cvt!($ty<T> to Rad self.0).cos() }
 			fn tan(self) -> T { cvt!($ty<T> to Rad self.0).tan() }
@@ -186,6 +206,12 @@ macro_rules! angle {
 				$ty(self.0 / rhs)
 			}
 		}
+		impl<T: ops::Div<Output = T>> ops::Div<$ty<T>> for $ty<T> {
+			type Output = T;
+			fn div(self, rhs: $ty<T>) -> T {
+				self.0 / rhs.0
+			}
+		}
 
 		//----------------------------------------------------------------
 		// Formatting
@@ -214,15 +240,34 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn formatting() {
-		assert_eq!("12°", format!("{:.0}", Deg(12.1f32)));
-		assert_eq!(" 12.0°", format!("{:>5.1}", Deg(12.0)));
-
+	fn norm() {
 		assert_eq!(Deg(179.0), Deg(-181.0).norm());
 		assert_eq!(Deg(0.125), Deg(360.125).norm());
 		assert_eq!(Deg(180.0), Deg(-180.0).norm());
 		assert_eq!(Deg(-180.0), Deg(180.0).norm());
 	}
+
+	#[test]
+	fn formatting() {
+		assert_eq!("12°", format!("{:.0}", Deg(12.1f32)));
+		assert_eq!(" 12.0°", format!("{:>5.1}", Deg(12.0)));
+	}
+
+	// #[cfg(all(not(feature = "format-rad-pi"), not(feature = "format-rad-tau")))]
+	#[test]
+	fn rad_fmt() {
+		assert_eq!("2.00 rad", format!("{:.2}", Rad(2.0f32)));
+	}
+	// #[cfg(feature = "format-rad-pi")]
+	// #[test]
+	// fn rad_fmt() {
+	// 	assert_eq!("2.00π rad", format!("{:.2}", Rad::<f32>::turn()));
+	// }
+	// #[cfg(feature = "format-rad-tau")]
+	// #[test]
+	// fn rad_fmt() {
+	// 	assert_eq!("1.00τ rad", format!("{:.2}", Rad::<f32>::turn()));
+	// }
 
 	#[test]
 	fn from() {

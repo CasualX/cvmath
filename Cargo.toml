@@ -24,3 +24,7 @@ column-major = []
 
 # Invert pitch in euler angles.
 invert-pitch = []
+
+# Pretty print radians
+format-rad-pi = []
+format-rad-tau = []
