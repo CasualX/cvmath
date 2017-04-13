@@ -11,6 +11,7 @@ pub mod vec;
 pub mod mask;
 pub mod affine;
 pub mod euler;
+pub mod rect_box;
 
 pub mod num;
 

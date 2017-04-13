@@ -25,6 +25,22 @@ pub struct Point3<T> {
 	pub z: T,
 }
 
+macro_rules! cvt {
+	(Point2) => {
+		impl<T> Point2<T> {
+			pub fn pt3(self, z: T) -> Point3<T> {
+				Point3 {
+					x: self.x,
+					y: self.y,
+					z: z,
+				}
+			}
+		}
+	};
+	(Point3) => {
+	};
+}
+
 macro_rules! point {
 	($pt:ident $vec:ident $N:tt { $($field:ident $I:tt $T:ident),+ }) => {
 
