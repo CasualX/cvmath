@@ -6,7 +6,7 @@ use ::angle::{Angle};
 use ::vec::{Vec3};
 use ::num::{Zero};
 
-type Euler<T> = Vec3<T>;
+pub type Euler<T> = Vec3<T>;
 
 #[cfg(feature = "invert-pitch")]
 macro_rules! invert { ($e:expr) => (-$e); }

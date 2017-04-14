@@ -13,12 +13,12 @@ pub struct Rect<T> {
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
 #[repr(C)]
-pub struct Cuboid<T> {
+pub struct Box<T> {
 	mins: Point3<T>,
 	maxs: Point3<T>,
 }
 
-macro_rules! rect_box {
+macro_rules! rect {
 	($ty:ident $pt:ident { $($field:ident),+ }) => {
 		impl<T> $ty<T> {
 			pub fn new(mins: $pt<T>, maxs: $pt<T>) -> $ty<T> {
@@ -31,5 +31,5 @@ macro_rules! rect_box {
 	};
 }
 
-rect_box!(Rect Point2 { x, y });
-rect_box!(Cuboid Point3 { x, y, z });
+rect!(Rect Point2 { x, y });
+rect!(Box Point3 { x, y, z });

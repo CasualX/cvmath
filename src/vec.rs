@@ -502,21 +502,21 @@ macro_rules! vec {
 			/// Normalizes the vector.
 			pub fn norm(self) -> $vec<T> where T: Float {
 				let self_len = self.len();
-				if self_len == T::zero() {
-					Self::default()
+				if self_len > T::zero() {
+					self / self_len
 				}
 				else {
-					self / self_len
+					Self::default()
 				}
 			}
 			/// Scales the vector such that its length equals the given value.
 			pub fn resize(self, len: T) -> $vec<T> where T: Float {
 				let self_len = self.len();
-				if self_len == T::zero() {
-					Self::default()
+				if self_len > T::zero() {
+					self * (len / self_len)
 				}
 				else {
-					self * (len / self_len)
+					Self::default()
 				}
 			}
 			/// Horizontal adds all components.
