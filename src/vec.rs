@@ -82,7 +82,7 @@ assert_eq!(Vec3 { x: 1, y: 2, z: 3 }, Vec4::new(1, 2, 3, 4).xyz());
 
 `map<F>(self, F)` where F: `FnMut(T) -> T`: Maps a callable over the components.
 
-`map2<F>(self, rhs, F)` where F: `FnMut(T, T) -> T`: Maps a callable over the components with a right-hand side.
+`zip<F>(self, rhs, F)` where F: `FnMut(T, T) -> T`: Maps a callable over the components with a right-hand side.
 
 `reduce<F>(self, F)` where F: `Fn(T, T) -> T`: Reduces the vector. The `x` component is used as the initial value of the accumulator.
 
@@ -98,7 +98,7 @@ assert_eq!(Vec2 { x: 2, y: 4 }, Vec2::new(1, 2).map(|c| c * 2));
 
 let left = Vec2::new(1, 2);
 let right = Vec2::new(1, -1);
-assert_eq!(Vec2 { x: 3, y: 3 }, Vec2::map2(left, right, |a, b| a * 2 + b));
+assert_eq!(Vec2 { x: 3, y: 3 }, Vec2::zip(left, right, |a, b| a * 2 + b));
 
 let vec = Vec3::new(5, 3, 2);
 assert_eq!(0, vec.reduce(|acc, c| acc - c));
@@ -406,7 +406,7 @@ macro_rules! vec {
 				$vec { $($field: f(self.$field)),+ }
 			}
 			/// Maps a callable over the components side by side.
-			pub fn map2<F: FnMut(T, T) -> T>(self, rhs: $vec<T>, mut f: F) -> $vec<T> {
+			pub fn zip<F: FnMut(T, T) -> T>(self, rhs: $vec<T>, mut f: F) -> $vec<T> {
 				$vec { $($field: f(self.$field, rhs.$field)),+ }
 			}
 			/// Reduces the vector.
