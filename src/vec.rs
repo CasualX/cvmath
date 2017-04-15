@@ -330,7 +330,7 @@ macro_rules! cvt {
 		/// Extends the 2D vector with a `z` component.
 		pub fn vec3(self, z: T) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z: z } }
 		/// Extends the 2D vector with a `z` and `w` component.
-		pub fn vec4(self, z: T, w: T) -> Vec4<T> { Vec4 { x.self.x, y: self.y, z: z, w: w } }
+		pub fn vec4(self, z: T, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: z, w: w } }
 	};
 	(Vec3) => {
 		/// Extends the 3D vector with a `w` component.
@@ -387,15 +387,11 @@ macro_rules! vec {
 			pub fn dup(u: T) -> $vec<T> where T: Copy {
 				$vec { $($field: u),+ }
 			}
+			unit!($vec);
 		}
 
 		impl<T> $vec<T> {
-			unit!($vec);
-		}
-		impl<T> $vec<T> {
 			set!($vec);
-		}
-		impl<T> $vec<T> {
 			cvt!($vec);
 		}
 
