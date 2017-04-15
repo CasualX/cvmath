@@ -24,6 +24,26 @@ pub struct Line3<T> {
 
 macro_rules! line {
 	($line:ident $pt:ident) => {
+		impl<T> $line<T> {
+			pub fn new(start: $pt<T>, end: $pt<T>) -> $line<T> {
+				$line {
+					start: start,
+					end: end,
+				}
+			}
+			pub fn point(pt: $pt<T>) -> $line<T> where T: Copy {
+				$line {
+					start: pt,
+					end: pt,
+				}
+			}
+			pub fn swap(self) -> $line<T> {
+				$line {
+					start: self.end,
+					end: self.start,
+				}
+			}
+		}
 		impl<T: Float> $line<T> {
 			/// Projects the point on the line.
 			pub fn project(self, pt: $pt<T>) -> $pt<T> {
