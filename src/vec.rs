@@ -134,6 +134,10 @@ assert_eq!(Vec2::from((2, 3)), Vec2::from([2, 3]));
 
 `resize(self, len)` where T: `Float`: Scales the vector such that its length equals the given value. The vector with length zero remains zero.
 
+`scalar_project(self, v)` where T: `Float`: Scalar projection of `v` on `self`.
+
+`project(self, v)` where T: `Float`: Projection of `v` on `self`.
+
 `hadd(self)`: Horizontal adds all components.
 
 `dot(self, rhs)`: Calculates the inner product.
@@ -169,6 +173,9 @@ assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2::new(0.0, 0.0).norm());
 
 assert_eq!(Vec2 { x: 1.5, y: 2.0 }, Vec2::new(3.0, 4.0).resize(2.5));
 assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2::new(0.0, 0.0).resize(2.0));
+
+assert_eq!(2.2, Vec2::new(3.0, 4.0).scalar_project(Vec2::new(1.0, 2.0)));
+assert_eq!(2.0, Vec3::new(4.0, 2.0, 4.0).scalar_project(Vec3::new(1.0, 4.0, 0.0)));
 
 assert_eq!(12, Vec3::new(3, 4, 5).hadd());
 assert_eq!(-1, Vec2::new(3, 4).hsub());
@@ -518,6 +525,14 @@ macro_rules! vec {
 				else {
 					Self::default()
 				}
+			}
+			/// Scalar projection of `v` on `self`.
+			pub fn scalar_project(self, v: $vec<T>) -> T where T: Float {
+				self.dot(v) / self.len()
+			}
+			/// Projection of `v` on `self`.
+			pub fn project(self, v: $vec<T>) -> $vec<T> where T: Float {
+				self * (self.dot(v) / v.dot(v))
 			}
 			/// Horizontal adds all components.
 			pub fn hadd(self) -> T {
