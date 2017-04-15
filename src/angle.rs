@@ -100,23 +100,22 @@ macro_rules! fmt {
 				f.write_str(" rad")
 			}
 		}
-		// Requires specialization
-		// #[cfg(feature = "format-rad-pi")]
-		// impl<T: Float + $fmt> $fmt for Rad<T> {
-		// 	fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-		// 		let e = *self / Self::half();
-		// 		<T as $fmt>::fmt(&e, f)?;
-		// 		f.write_str("π rad")
-		// 	}
-		// }
-		// #[cfg(feature = "format-rad-tau")]
-		// impl<T: Float + $fmt> $fmt for Rad<T> {
-		// 	fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-		// 		let e = *self / Self::turn();
-		// 		<T as $fmt>::fmt(&e, f)?;
-		// 		f.write_str("τ rad")
-		// 	}
-		// }
+		#[cfg(feature = "format-rad-pi")]
+		impl<T: Float + $fmt> $fmt for Rad<T> {
+			fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+				let e = *self / Self::half();
+				<T as $fmt>::fmt(&e, f)?;
+				f.write_str("π rad")
+			}
+		}
+		#[cfg(feature = "format-rad-tau")]
+		impl<T: Float + $fmt> $fmt for Rad<T> {
+			fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+				let e = *self / Self::turn();
+				<T as $fmt>::fmt(&e, f)?;
+				f.write_str("τ rad")
+			}
+		}
 	};
 	($ty:ident) => {
 		fmt!($ty ::std::fmt::Display);

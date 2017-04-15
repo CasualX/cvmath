@@ -82,7 +82,7 @@ assert_eq!(Vec3 { x: 1, y: 2, z: 3 }, Vec4::new(1, 2, 3, 4).xyz());
 
 `map<F>(self, F)` where F: `FnMut(T) -> T`: Maps a callable over the components.
 
-`zip<F>(self, rhs, F)` where F: `FnMut(T, T) -> T`: Maps a callable over the components with a right-hand side.
+`zip<F>(self, rhs, F)` where F: `FnMut(T, T) -> T`: Zips two vectors together.
 
 `reduce<F>(self, F)` where F: `Fn(T, T) -> T`: Reduces the vector. The `x` component is used as the initial value of the accumulator.
 
@@ -141,6 +141,8 @@ assert_eq!(Vec2::from((2, 3)), Vec2::from([2, 3]));
 `hadd(self)`: Horizontal adds all components.
 
 `dot(self, rhs)`: Calculates the inner product.
+
+`angle(self, rhs)`: Calculates the inner angle.
 
 Exclusive to `Vec2`:
 
@@ -220,6 +222,8 @@ assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross((3, -3, 1).into(), (4, 9, 1
 use ::std::{mem, ops};
 
 use ::num::{Scalar, Zero, One, Abs, Min, Max, Float, Cast};
+
+use ::angle::{Rad, Angle};
 
 // /// A 1-dimensional vector.
 // #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -325,6 +329,8 @@ macro_rules! cvt {
 	(Vec2) => {
 		/// Extends the 2D vector with a `z` component.
 		pub fn vec3(self, z: T) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z: z } }
+		/// Extends the 2D vector with a `z` and `w` component.
+		pub fn vec4(self, z: T, w: T) -> Vec4<T> { Vec4 { x.self.x, y: self.y, z: z, w: w } }
 	};
 	(Vec3) => {
 		/// Extends the 3D vector with a `w` component.
@@ -405,7 +411,7 @@ macro_rules! vec {
 			pub fn map<F: FnMut(T) -> T>(self, mut f: F) -> $vec<T> {
 				$vec { $($field: f(self.$field)),+ }
 			}
-			/// Maps a callable over the components side by side.
+			/// Zips two vectors together.
 			pub fn zip<F: FnMut(T, T) -> T>(self, rhs: $vec<T>, mut f: F) -> $vec<T> {
 				$vec { $($field: f(self.$field, rhs.$field)),+ }
 			}
@@ -542,6 +548,10 @@ macro_rules! vec {
 			/// Calculates the inner product.
 			pub fn dot(self, rhs: $vec<T>) -> T {
 				infix!(+ $(self.$field * rhs.$field),+)
+			}
+			/// Calculates the inner angle.
+			pub fn angle(self, rhs: $vec<T>) -> Rad<T> where T: Float {
+				Rad::acos(self.dot(rhs) / (self.len() * rhs.len()))
 			}
 		}
 
