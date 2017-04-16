@@ -547,7 +547,7 @@ macro_rules! vec {
 			}
 			/// Calculates the inner angle.
 			pub fn angle(self, rhs: $vec<T>) -> Rad<T> where T: Float {
-				Rad::acos(self.dot(rhs) / (self.len() * rhs.len()))
+				Rad::acos(self.dot(rhs) / (self.len_sqr() * rhs.len_sqr()).sqrt())
 			}
 		}
 
