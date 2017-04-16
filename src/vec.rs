@@ -404,11 +404,11 @@ macro_rules! vec {
 				$vec { $($field: self.$field.cast()),+ }
 			}
 			/// Maps a callable over the components.
-			pub fn map<F: FnMut(T) -> T>(self, mut f: F) -> $vec<T> {
+			pub fn map<U, F: FnMut(T) -> U>(self, mut f: F) -> $vec<U> {
 				$vec { $($field: f(self.$field)),+ }
 			}
 			/// Zips two vectors together.
-			pub fn zip<F: FnMut(T, T) -> T>(self, rhs: $vec<T>, mut f: F) -> $vec<T> {
+			pub fn zip<U, F: FnMut(T, T) -> U>(self, rhs: $vec<T>, mut f: F) -> $vec<U> {
 				$vec { $($field: f(self.$field, rhs.$field)),+ }
 			}
 			/// Reduces the vector.
@@ -417,7 +417,7 @@ macro_rules! vec {
 				fold!(f, $(self.$field),+)
 			}
 			/// Folds the vector.
-			pub fn fold<F: Fn(T, T) -> T>(self, acc: T, f: F) -> T {
+			pub fn fold<A, F: Fn(A, T) -> A>(self, acc: A, f: F) -> A {
 				// These will end up nested without temporaries which won't work with `FnMut`...
 				fold!(f, acc, $(self.$field),+)
 			}
@@ -573,60 +573,104 @@ macro_rules! vec {
 			}
 		}
 
-		impl<U, T: ops::Add<U, Output = T>> ops::Add<$vec<U>> for $vec<T> {
-			type Output = $vec<T>;
-			fn add(self, rhs: $vec<U>) -> $vec<T> {
+		impl<T: Abs> Abs for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn abs(self) -> $vec<T::Output> {
+				$vec { $($field: self.$field.abs()),+ }
+			}
+		}
+		impl<U, T: Min<U>> Min<$vec<U>> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn min(self, rhs: $vec<U>) -> $vec<T::Output> {
+				$vec { $($field: self.$field.min(rhs.$field)),+ }
+			}
+		}
+		impl<U, T: Max<U>> Max<$vec<U>> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn max(self, rhs: $vec<U>) -> $vec<T::Output> {
+				$vec { $($field: self.$field.max(rhs.$field)),+ }
+			}
+		}
+
+		impl<U, T: ops::Add<U>> ops::Add<$vec<U>> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn add(self, rhs: $vec<U>) -> $vec<T::Output> {
 				$vec { $($field: self.$field + rhs.$field),+ }
 			}
 		}
-		impl<U, T: ops::Sub<U, Output = T>> ops::Sub<$vec<U>> for $vec<T> {
-			type Output = $vec<T>;
-			fn sub(self, rhs: $vec<U>) -> $vec<T> {
+		impl<U, T: ops::Sub<U>> ops::Sub<$vec<U>> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn sub(self, rhs: $vec<U>) -> $vec<T::Output> {
 				$vec { $($field: self.$field - rhs.$field),+ }
 			}
 		}
-		impl<T: ops::Neg<Output = T>> ops::Neg for $vec<T> {
-			type Output = $vec<T>;
-			fn neg(self) -> $vec<T> {
+		impl<T: ops::Neg> ops::Neg for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn neg(self) -> $vec<T::Output> {
 				$vec { $($field: -self.$field),+ }
 			}
 		}
 
-		impl<U: Scalar, T: ops::Mul<U, Output = T>> ops::Mul<U> for $vec<T> {
-			type Output = $vec<T>;
-			fn mul(self, rhs: U) -> $vec<T> {
+		impl<U: Scalar, T: ops::Mul<U>> ops::Mul<U> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn mul(self, rhs: U) -> $vec<T::Output> {
 				$vec { $($field: self.$field * rhs),+ }
 			}
 		}
-		impl<U: Scalar, T: ops::Div<U, Output = T>> ops::Div<U> for $vec<T> {
-			type Output = $vec<T>;
-			fn div(self, rhs: U) -> $vec<T> {
+		impl<U: Scalar, T: ops::Div<U>> ops::Div<U> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn div(self, rhs: U) -> $vec<T::Output> {
 				$vec { $($field: self.$field / rhs),+ }
 			}
 		}
-		impl<U: Scalar, T: ops::Rem<U, Output = T>> ops::Rem<U> for $vec<T> {
-			type Output = $vec<T>;
-			fn rem(self, rhs: U) -> $vec<T> {
+		impl<U: Scalar, T: ops::Rem<U>> ops::Rem<U> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn rem(self, rhs: U) -> $vec<T::Output> {
 				$vec { $($field: self.$field % rhs),+ }
 			}
 		}
 
-		impl<U, T: ops::Mul<U, Output = T>> ops::Mul<$vec<U>> for $vec<T> {
-			type Output = $vec<T>;
-			fn mul(self, rhs: $vec<U>) -> $vec<T> {
+		impl<U, T: ops::Mul<U>> ops::Mul<$vec<U>> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn mul(self, rhs: $vec<U>) -> $vec<T::Output> {
 				$vec { $($field: self.$field * rhs.$field),+ }
 			}
 		}
-		impl<U, T: ops::Div<U, Output = T>> ops::Div<$vec<U>> for $vec<T> {
-			type Output = $vec<T>;
-			fn div(self, rhs: $vec<U>) -> $vec<T> {
+		impl<U, T: ops::Div<U>> ops::Div<$vec<U>> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn div(self, rhs: $vec<U>) -> $vec<T::Output> {
 				$vec { $($field: self.$field / rhs.$field),+ }
 			}
 		}
-		impl<U, T: ops::Rem<U, Output = T>> ops::Rem<$vec<U>> for $vec<T> {
-			type Output = $vec<T>;
-			fn rem(self, rhs: $vec<U>) -> $vec<T> {
+		impl<U, T: ops::Rem<U>> ops::Rem<$vec<U>> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn rem(self, rhs: $vec<U>) -> $vec<T::Output> {
 				$vec { $($field: self.$field % rhs.$field),+ }
+			}
+		}
+
+		impl<U, T: ops::BitAnd<U>> ops::BitAnd<$vec<U>> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn bitand(self, rhs: $vec<U>) -> $vec<T::Output> {
+				$vec { $($field: self.$field & rhs.$field),+ }
+			}
+		}
+		impl<U, T: ops::BitOr<U>> ops::BitOr<$vec<U>> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn bitor(self, rhs: $vec<U>) -> $vec<T::Output> {
+				$vec { $($field: self.$field | rhs.$field),+ }
+			}
+		}
+		impl<U, T: ops::BitXor<U>> ops::BitXor<$vec<U>> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn bitxor(self, rhs: $vec<U>) -> $vec<T::Output> {
+				$vec { $($field: self.$field ^ rhs.$field),+ }
+			}
+		}
+		impl<T: ops::Not> ops::Not for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn not(self) -> $vec<T::Output> {
+				$vec { $($field: !self.$field),+ }
 			}
 		}
 

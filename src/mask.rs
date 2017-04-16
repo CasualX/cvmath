@@ -5,9 +5,7 @@ Boolean vectors.
 
 Comparison masks are boolean vectors to be consumed by `select`.
 
-`mask<F>(self, F)`: Creates a mask by applying the callable `F` to each component.
-
-`masked<F>(self, rhs, F)`: Creates a mask by applying the callable `F` to each component on the left-hand and right-hand side.
+Map or Zip vectors to a boolean vector for a custom mask.
 
 `is_finite(self)`: Masks if the components are finite.
 
@@ -42,8 +40,6 @@ assert_eq!(Mask2 { x: true, y: false }, Vec2::new(1, 2).eq(Vec2::new(1, -2)));
 
 `none(self)`: Returns `true` if none of the components are `true`.
 
-`BitAnd`, `BitOr`, `BitXor`, `Not`: Component-wise boolean operators.
-
 ### Examples
 
 ```
@@ -54,8 +50,6 @@ assert!(Mask2 { x: false, y: false }.none());
 ```
 
 */
-
-use ::std::{ops};
 
 use ::vec::{Vec2, Vec3, Vec4};
 use ::num::{Float};
@@ -70,14 +64,6 @@ macro_rules! mask {
 		// Comparison masks
 
 		impl<T> $vec<T> {
-			/// Creates a mask by applying the callable `F` to each component.
-			pub fn mask<F: FnMut(T) -> bool>(self, mut f: F) -> $mask {
-				$vec { $($field: f(self.$field)),+ }
-			}
-			/// Creates a mask by applying the callable `F` to each component on the left-hand and right-hand side.
-			pub fn masked<F: FnMut(T, T) -> bool>(self, rhs: $vec<T>, mut f: F) -> $mask {
-				$vec { $($field: f(self.$field, rhs.$field)),+ }
-			}
 			/// Masks if the components are finite.
 			pub fn is_finite(self) -> $mask where T: Float {
 				$vec { $($field: self.$field.is_finite()),+ }
@@ -131,31 +117,6 @@ macro_rules! mask {
 			/// Returns `true` if none of the components are `true`.
 			pub fn none(self) -> bool {
 				!self.any()
-			}
-		}
-
-		impl ops::BitAnd<$mask> for $mask {
-			type Output = $mask;
-			fn bitand(self, rhs: $mask) -> $mask {
-				$vec { $($field: self.$field && rhs.$field),+ }
-			}
-		}
-		impl ops::BitOr<$mask> for $mask {
-			type Output = $mask;
-			fn bitor(self, rhs: $mask) -> $mask {
-				$vec { $($field: self.$field || rhs.$field),+ }
-			}
-		}
-		impl ops::BitXor<$mask> for $mask {
-			type Output = $mask;
-			fn bitxor(self, rhs: $mask) -> $mask {
-				$vec { $($field: self.$field != rhs.$field),+ }
-			}
-		}
-		impl ops::Not for $mask {
-			type Output = $mask;
-			fn not(self) -> $mask {
-				$vec { $($field: !self.$field),+ }
 			}
 		}
 	};
