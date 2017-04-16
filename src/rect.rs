@@ -2,7 +2,7 @@
 Rectangle and Box.
 */
 
-use ::{Point2, Point3};
+use ::point::{Point2, Point3};
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
 #[repr(C)]

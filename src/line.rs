@@ -2,7 +2,7 @@
 Line segment.
 */
 
-use ::{Point2, Point3};
+use ::point::{Point2, Point3};
 
 use ::num::{Float};
 

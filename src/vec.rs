@@ -18,7 +18,7 @@ An overview of their implementations:
 ### Examples
 
 ```
-# use cgm::{Vec2, Vec3};
+# use cgm::prelude::{Vec2, Vec3};
 assert_eq!("(2,3,4)", format!("{}", Vec3::new(2, 3, 4)));
 assert_eq!("(2.300,2.142)", format!("{:.3}", Vec2::new(2.3, 2.14159278)));
 assert_eq!("Vec2 { x: 16, y: 25 }", format!("{:?}", Vec2::new(16, 25)));
@@ -41,7 +41,7 @@ assert!(Vec2::new(1, 9) > Vec2::new(1, -2));
 ### Examples
 
 ```
-# use cgm::{Vec2, Vec3};
+# use cgm::prelude::{Vec2, Vec3};
 assert_eq!(Vec2 { x: 1, y: 2 }, Vec2::new(1, 2));
 
 assert_eq!(Vec3 { x: 42, y: 42, z: 42 }, Vec3::dup(42));
@@ -65,7 +65,7 @@ assert_eq!(Vec3 { x: -12, y: 0, z: 12 }, Vec3::default().set_x(-12).set_z(12));
 ### Examples
 
 ```
-# use cgm::{Vec2, Vec3, Vec4};
+# use cgm::prelude::{Vec2, Vec3, Vec4};
 assert_eq!(Vec3 { x: 3, y: 4, z: 5 }, Vec2::new(3, 4).vec3(5));
 
 assert_eq!(Vec4 { x: -1, y: -2, z: -3, w: -4 }, Vec3::new(-1, -2, -3).vec4(-4));
@@ -91,7 +91,7 @@ assert_eq!(Vec3 { x: 1, y: 2, z: 3 }, Vec4::new(1, 2, 3, 4).xyz());
 ### Examples
 
 ```
-# use cgm::{Vec2, Vec3};
+# use cgm::prelude::{Vec2, Vec3};
 assert_eq!(Vec2 { x: 2, y: 4 }, Vec2::new(2.2, 4.9).cast());
 
 assert_eq!(Vec2 { x: 2, y: 4 }, Vec2::new(1, 2).map(|c| c * 2));
@@ -114,7 +114,7 @@ assert_eq!(-10, vec.fold(0, |acc, c| acc - c));
 ### Examples
 
 ```
-# use cgm::{Vec2};
+# use cgm::prelude::{Vec2};
 assert_eq!(Vec2::from((2, 3)), Vec2::from([2, 3]));
 ```
 
@@ -161,7 +161,7 @@ Exclusive to `Vec3`:
 ### Examples
 
 ```
-# use cgm::{Vec2, Vec3};
+# use cgm::prelude::{Vec2, Vec3};
 assert_eq!(Vec2 { x: 9, y: 16 }, Vec2::new(3, 4).sqr());
 
 assert_eq!(25, Vec2::new(3, 4).len_sqr());
@@ -215,7 +215,7 @@ assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross((3, -3, 1).into(), (4, 9, 1
 ### Examples
 
 ```
-# use cgm::{Vec2, Vec3};
+# use cgm::prelude::{Vec2, Vec3};
 ```
 */
 

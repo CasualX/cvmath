@@ -1,12 +1,8 @@
 extern crate cgm;
+use cgm::prelude as cgmath;
 
-type Point2 = cgm::Point2<f64>;
-
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
-struct Line {
-	start: Point2,
-	end: Point2,
-}
+type Point2 = cgmath::Point2<f64>;
+type Line2 = cgmath::Line2<f64>;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 enum Cut {
@@ -15,7 +11,7 @@ enum Cut {
 	Cut(Point2),
 }
 
-fn cut(line: Line, x: f64) -> Cut {
+fn cut(line: Line2, x: f64) -> Cut {
 	if line.start.x <= x && line.end.x <= x {
 		Cut::Left
 	}
@@ -31,6 +27,6 @@ fn cut(line: Line, x: f64) -> Cut {
 
 #[test]
 fn cut_it() {
-	let cut = cut(Line { start: Point2::new(0.0, 0.0), end: Point2::new(2.0, 2.0) }, 1.0);
+	let cut = cut(Line2 { start: Point2::new(0.0, 0.0), end: Point2::new(2.0, 2.0) }, 1.0);
 	assert_eq!(cut, Cut::Cut(Point2::new(1.0, 1.0)));
 }
