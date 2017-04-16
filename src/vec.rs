@@ -142,11 +142,15 @@ assert_eq!(Vec2::from((2, 3)), Vec2::from([2, 3]));
 
 `dot(self, rhs)`: Calculates the inner product.
 
+`cos_angle(self, rhs)`: Calculates the cosine of the inner angle.
+
 `angle(self, rhs)`: Calculates the inner angle.
 
 Exclusive to `Vec2`:
 
 `hsub(self)`: Horizontal subtracts the components of `Vec2`.
+
+`polar_angle(self)`: Calculates the polar angle.
 
 `ccw(self)`: Rotates the vector counter-clockwise by 90°.
 
@@ -351,6 +355,8 @@ macro_rules! ops {
 	(Vec2) => {
 		/// Horizontal subtracts the components.
 		pub fn hsub(self) -> T { self.x - self.y }
+		/// Calculates the polar angle.
+		pub fn polar_angle(self) -> Rad<T> where T: Float { Rad::atan2(self.y, self.x) }
 		/// Rotates the vector counter-clockwise by 90°.
 		pub fn ccw(self) -> Vec2<T> { Vec2 { x: self.y, y: -self.x } }
 		/// Rotates the vector clockwise by 90°.
@@ -545,9 +551,15 @@ macro_rules! vec {
 			pub fn dot(self, rhs: $vec<T>) -> T {
 				infix!(+ $(self.$field * rhs.$field),+)
 			}
+			/// Calculates the cosine of the inner angle.
+			pub fn cos_angle(self, rhs: $vec<T>) -> T where T: Float {
+				// |self| * |rhs| <=> √(self ∙ self * rhs ∙ rhs)
+				let d = (self.dot(self) * rhs.dot(rhs)).sqrt();
+				self.dot(rhs) / d
+			}
 			/// Calculates the inner angle.
 			pub fn angle(self, rhs: $vec<T>) -> Rad<T> where T: Float {
-				Rad::acos(self.dot(rhs) / (self.len_sqr() * rhs.len_sqr()).sqrt())
+				Rad::acos(self.cos_angle(rhs))
 			}
 		}
 
