@@ -51,8 +51,8 @@ impl<T: Scalar> Affine2<T> {
 		Mat2::identity().into()
 	}
 	/// Null matrix.
-	pub fn zero() -> Affine2<T> {
-		Mat2::zero().into()
+	pub fn null() -> Affine2<T> {
+		Mat2::null().into()
 	}
 	/// Translation matrix.
 	pub fn translate<V: Into<Vec2<T>>>(trans: V) -> Affine2<T> {

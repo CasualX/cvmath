@@ -4,7 +4,7 @@
 
 use ::std::{ops};
 
-use ::num::{Zero, One, Scalar};
+use ::num::{Scalar, Float};
 use ::vec::{Vec3};
 
 /// 3D transformation matrix.
@@ -46,16 +46,26 @@ impl<T> Mat3<T> {
 			a31: a31, a32: a32, a33: a33,
 		}
 	}
+}
+impl<T: Scalar> Mat3<T> {
 	/// Identity matrix.
-	pub fn identity() -> Mat3<T> where T: Zero + One {
+	pub fn identity() -> Mat3<T> {
 		Mat3 {
 			a11: T::one(),  a12: T::zero(), a13: T::zero(),
 			a21: T::zero(), a22: T::one(),  a23: T::zero(),
 			a31: T::zero(), a32: T::zero(), a33: T::one(),
 		}
 	}
+	/// Null matrix.
+	pub fn null() -> Mat3<T> {
+		Mat3 {
+			a11: T::zero(), a12: T::zero(), a13: T::zero(),
+			a21: T::zero(), a22: T::zero(), a23: T::zero(),
+			a31: T::zero(), a32: T::zero(), a33: T::zero(),
+		}
+	}
 	/// Scaling matrix.
-	pub fn scale<V: Into<Vec3<T>>>(scale: V) -> Mat3<T> where T: Zero {
+	pub fn scale<V: Into<Vec3<T>>>(scale: V) -> Mat3<T> {
 		let scale = scale.into();
 		Mat3 {
 			a11: scale.x,   a12: T::zero(), a13: T::zero(),
@@ -143,13 +153,14 @@ impl<T> Mat3<T> {
 //----------------------------------------------------------------
 // Operations
 
-impl<T> Mat3<T> {
-	pub fn det(self) -> T where T: Scalar {
+impl<T: Scalar> Mat3<T> {
+	pub fn det(self) -> T {
 		self.a11 * self.a22 * self.a33 + self.a12 * self.a23 * self.a31 + self.a13 * self.a21 * self.a32
 			- self.a13 * self.a22 * self.a31 - self.a12 * self.a21 * self.a33 - self.a11 * self.a23 * self.a32
 	}
-	pub fn inverse(self) -> Mat3<T> where T: Scalar {
-		unimplemented!()
+	pub fn inv(self) -> Mat3<T> where T: Float {
+		let inv_det = T::one() / self.det();
+		self.adj() * inv_det
 	}
 	pub fn transpose(self) -> Mat3<T> {
 		Mat3 {
@@ -158,11 +169,46 @@ impl<T> Mat3<T> {
 			a31: self.a13, a32: self.a23, a33: self.a33,
 		}
 	}
+	pub fn adj(self) -> Mat3<T> {
+		Mat3 {
+			a11: self.a22 * self.a33 - self.a23 * self.a32,
+			a12: self.a13 * self.a32 - self.a12 * self.a33,
+			a13: self.a12 * self.a23 - self.a13 * self.a22,
+
+			a21: self.a23 * self.a31 - self.a21 * self.a33,
+			a22: self.a11 * self.a33 - self.a13 * self.a31,
+			a23: self.a13 * self.a21 - self.a11 * self.a23,
+
+			a31: self.a21 * self.a32 - self.a22 * self.a31,
+			a32: self.a12 * self.a31 - self.a11 * self.a32,
+			a33: self.a11 * self.a22 - self.a12 * self.a21,
+		}
+	}
 }
 
 //----------------------------------------------------------------
 // Operators
 
+impl<T: Copy + ops::Mul<Output = T>> ops::Mul<T> for Mat3<T> {
+	type Output = Mat3<T>;
+	fn mul(self, rhs: T) -> Mat3<T> {
+		Mat3 {
+			a11: self.a11 * rhs, a12: self.a12 * rhs, a13: self.a13 * rhs,
+			a21: self.a21 * rhs, a22: self.a22 * rhs, a23: self.a23 * rhs,
+			a31: self.a31 * rhs, a32: self.a32 * rhs, a33: self.a33 * rhs,
+		}
+	}
+}
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec3<T>> for Mat3<T> {
+	type Output = Vec3<T>;
+	fn mul(self, rhs: Vec3<T>) -> Vec3<T> {
+		Vec3 {
+			x: self.a11 * rhs.x + self.a12 * rhs.y + self.a13 * rhs.z,
+			y: self.a21 * rhs.x + self.a22 * rhs.y + self.a23 * rhs.z,
+			z: self.a31 * rhs.x + self.a32 * rhs.y + self.a33 * rhs.z,
+		}
+	}
+}
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat3<T>> for Mat3<T> {
 	type Output = Mat3<T>;
 	fn mul(self, rhs: Mat3<T>) -> Mat3<T> {
@@ -178,17 +224,6 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat3<T>> fo
 			a31: self.a31 * rhs.a11 + self.a32 * rhs.a21 + self.a33 * rhs.a31,
 			a32: self.a31 * rhs.a12 + self.a32 * rhs.a22 + self.a33 * rhs.a32,
 			a33: self.a31 * rhs.a13 + self.a32 * rhs.a23 + self.a33 * rhs.a33,
-		}
-	}
-}
-
-impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec3<T>> for Mat3<T> {
-	type Output = Vec3<T>;
-	fn mul(self, rhs: Vec3<T>) -> Vec3<T> {
-		Vec3 {
-			x: self.a11 * rhs.x + self.a12 * rhs.y + self.a13 * rhs.z,
-			y: self.a21 * rhs.x + self.a22 * rhs.y + self.a23 * rhs.z,
-			z: self.a31 * rhs.x + self.a32 * rhs.y + self.a33 * rhs.z,
 		}
 	}
 }

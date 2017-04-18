@@ -55,7 +55,7 @@ impl<T: Scalar> Mat2<T> {
 		}
 	}
 	/// Null matrix.
-	pub fn zero() -> Mat2<T> {
+	pub fn null() -> Mat2<T> {
 		Mat2 {
 			a11: T::zero(), a12: T::zero(),
 			a21: T::zero(), a22: T::zero(),
@@ -135,7 +135,7 @@ impl<T: Scalar> Mat2<T> {
 		}
 		else {
 			// Do something like absorb all
-			Mat2::zero()
+			Mat2::null()
 		}
 	}
 }
