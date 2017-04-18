@@ -4,7 +4,7 @@ Line segment.
 
 use ::point::{Point2, Point3};
 
-use ::num::{Float};
+use ::num::{Scalar, Float};
 
 /// A 2D line segment.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
@@ -44,18 +44,18 @@ macro_rules! line {
 				}
 			}
 		}
-		impl<T: Float> $line<T> {
+		impl<T: Scalar> $line<T> {
 			/// Projects the point on the line.
-			pub fn project(self, pt: $pt<T>) -> $pt<T> {
+			pub fn project(self, pt: $pt<T>) -> $pt<T> where T: Float {
 				let p = (self.end - self.start).project(pt - self.start);
 				self.start + p
 			}
 			/// Point to line distance.
-			pub fn dist(self, pt: $pt<T>) -> T {
+			pub fn dist(self, pt: $pt<T>) -> T where T: Float {
 				self.project(pt).dist(pt)
 			}
 			/// Projects the point on the line segment, clamping at the end points.
-			pub fn segment_project(self, pt: $pt<T>) -> $pt<T> {
+			pub fn segment_project(self, pt: $pt<T>) -> $pt<T> where T: Float {
 				let base = self.end - self.start;
 				let v = pt - self.start;
 				let p = base.project(v);
@@ -70,7 +70,7 @@ macro_rules! line {
 				}
 			}
 			/// Point to line segment distance.
-			pub fn segment_dist(self, pt: $pt<T>) -> T {
+			pub fn segment_dist(self, pt: $pt<T>) -> T where T: Float {
 				self.segment_project(pt).dist(pt)
 			}
 		}

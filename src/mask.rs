@@ -51,9 +51,12 @@ assert!(Mask2 { x: false, y: false }.none());
 
 */
 
+use ::std::ops;
+
 use ::vec::{Vec2, Vec3, Vec4};
 use ::num::{Float};
 
+// pub  type Mask1 = Vec1<bool>;
 pub type Mask2 = Vec2<bool>;
 pub type Mask3 = Vec3<bool>;
 pub type Mask4 = Vec4<bool>;
@@ -119,9 +122,38 @@ macro_rules! mask {
 				!self.any()
 			}
 		}
+
+		//----------------------------------------------------------------
+		// Bitwise operators
+
+		impl<U, T: ops::BitAnd<U>> ops::BitAnd<$vec<U>> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn bitand(self, rhs: $vec<U>) -> $vec<T::Output> {
+				$vec { $($field: self.$field & rhs.$field),+ }
+			}
+		}
+		impl<U, T: ops::BitOr<U>> ops::BitOr<$vec<U>> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn bitor(self, rhs: $vec<U>) -> $vec<T::Output> {
+				$vec { $($field: self.$field | rhs.$field),+ }
+			}
+		}
+		impl<U, T: ops::BitXor<U>> ops::BitXor<$vec<U>> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn bitxor(self, rhs: $vec<U>) -> $vec<T::Output> {
+				$vec { $($field: self.$field ^ rhs.$field),+ }
+			}
+		}
+		impl<T: ops::Not> ops::Not for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn not(self) -> $vec<T::Output> {
+				$vec { $($field: !self.$field),+ }
+			}
+		}
 	};
 }
 
+// mask!(Mask1 Vec1 { x });
 mask!(Mask2 Vec2 { x, y });
 mask!(Mask3 Vec3 { x, y, z });
 mask!(Mask4 Vec4 { x, y, z, w });

@@ -138,8 +138,6 @@ assert_eq!(Vec2::from((2, 3)), Vec2::from([2, 3]));
 
 `project(self, v)` where T: `Float`: Projection of `v` on `self`.
 
-`hadd(self)`: Horizontal adds all components.
-
 `dot(self, rhs)`: Calculates the inner product.
 
 `cos_angle(self, rhs)`: Calculates the cosine of the inner angle.
@@ -147,8 +145,6 @@ assert_eq!(Vec2::from((2, 3)), Vec2::from([2, 3]));
 `angle(self, rhs)`: Calculates the inner angle.
 
 Exclusive to `Vec2`:
-
-`hsub(self)`: Horizontal subtracts the components of `Vec2`.
 
 `polar_angle(self)`: Calculates the polar angle.
 
@@ -221,6 +217,10 @@ assert_eq!(Vec4 { x: 64.0/255.0, y: 128.0/255.0, z: 192.0/255.0, w: 1.0 }, color
 ```
 
 ## Operators
+
+`hadd(self)`: Horizontal adds all components.
+
+`hsub(self)`: Horizontal subtracts the components of `Vec2`.
 
 `abs(self)`: Component-wise absolute value.
 
@@ -398,6 +398,31 @@ macro_rules! cvt {
 		pub fn xy(self) -> Vec2<T> { Vec2 { x: self.x, y: self.y } }
 		/// Drops the `w` component.
 		pub fn xyz(self) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z: self.z } }
+	};
+}
+
+const VEC_FMT_OPEN: &'static str = "(";
+const VEC_FMT_SEP: &'static str = ",";
+const VEC_FMT_CLOSE: &'static str = ")";
+
+macro_rules! fmt {
+	($ty:ident { $($field:ident),+ }) => {
+		fmt!($ty { $($field),+ } ::std::fmt::Display);
+		fmt!($ty { $($field),+ } ::std::fmt::Binary);
+		fmt!($ty { $($field),+ } ::std::fmt::Octal);
+		fmt!($ty { $($field),+ } ::std::fmt::LowerHex);
+		fmt!($ty { $($field),+ } ::std::fmt::UpperHex);
+		fmt!($ty { $($field),+ } ::std::fmt::LowerExp);
+		fmt!($ty { $($field),+ } ::std::fmt::UpperExp);
+	};
+	($ty:ident { $($field:ident),+ } $fmt:path) => {
+		impl<T: $fmt> $fmt for $ty<T> {
+			fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+				f.write_str(VEC_FMT_OPEN)?;
+				instmt!(f.write_str(VEC_FMT_SEP)?; $(self.$field.fmt(f)?;)+);
+				f.write_str(VEC_FMT_CLOSE)
+			}
+		}
 	};
 }
 
@@ -722,32 +747,6 @@ macro_rules! vec {
 			}
 		}
 
-		// Bitwise operators
-		impl<U, T: ops::BitAnd<U>> ops::BitAnd<$vec<U>> for $vec<T> {
-			type Output = $vec<T::Output>;
-			fn bitand(self, rhs: $vec<U>) -> $vec<T::Output> {
-				$vec { $($field: self.$field & rhs.$field),+ }
-			}
-		}
-		impl<U, T: ops::BitOr<U>> ops::BitOr<$vec<U>> for $vec<T> {
-			type Output = $vec<T::Output>;
-			fn bitor(self, rhs: $vec<U>) -> $vec<T::Output> {
-				$vec { $($field: self.$field | rhs.$field),+ }
-			}
-		}
-		impl<U, T: ops::BitXor<U>> ops::BitXor<$vec<U>> for $vec<T> {
-			type Output = $vec<T::Output>;
-			fn bitxor(self, rhs: $vec<U>) -> $vec<T::Output> {
-				$vec { $($field: self.$field ^ rhs.$field),+ }
-			}
-		}
-		impl<T: ops::Not> ops::Not for $vec<T> {
-			type Output = $vec<T::Output>;
-			fn not(self) -> $vec<T::Output> {
-				$vec { $($field: !self.$field),+ }
-			}
-		}
-
 		//----------------------------------------------------------------
 		// Formatting
 
@@ -765,6 +764,7 @@ vec!(Vec4 4 { x 0 T, y 1 T, z 2 T, w 3 T });
 
 impl Vec2<u32> {
 	/// Unpack `u64` into `u32 u32`.
+	#[inline]
 	pub fn unpack32(v: u64) -> Vec2<u32> {
 		Vec2 {
 			x: ((v & 0x00000000FFFFFFFF) >> 0) as u32,
@@ -772,12 +772,14 @@ impl Vec2<u32> {
 		}
 	}
 	/// Pack into `u64`.
+	#[inline]
 	pub fn pack(self) -> u64 {
 		(self.y as u64) << 32 | (self.x as u64)
 	}
 }
 impl Vec2<u16> {
 	/// Unpack `u32` into `u16 u16`.
+	#[inline]
 	pub fn unpack16(v: u32) -> Vec2<u16> {
 		Vec2 {
 			x: ((v & 0x0000FFFF) >> 0) as u16,
@@ -785,12 +787,14 @@ impl Vec2<u16> {
 		}
 	}
 	/// Pack into `u32`.
+	#[inline]
 	pub fn pack(self) -> u32 {
 		(self.y as u32) << 16 | (self.x as u32)
 	}
 }
 impl Vec2<u8> {
 	/// Unpack `u16` into `u8 u8`.
+	#[inline]
 	pub fn unpack8(v: u16) -> Vec2<u8> {
 		Vec2 {
 			x: ((v as u32 & 0x000000FF) >> 0) as u8,
@@ -798,12 +802,14 @@ impl Vec2<u8> {
 		}
 	}
 	/// Pack into `u16`.
+	#[inline]
 	pub fn pack(self) -> u16 {
 		((self.y as u32) << 8 | (self.x as u32)) as u16
 	}
 }
 impl Vec4<u16> {
 	/// Unpack `u64` into `u16 u16 u16 u16`.
+	#[inline]
 	pub fn unpack16(v: u64) -> Vec4<u16> {
 		Vec4 {
 			x: ((v & 0x000000000000FFFF) >> 0) as u16,
@@ -813,12 +819,14 @@ impl Vec4<u16> {
 		}
 	}
 	/// Pack into `u64`.
+	#[inline]
 	pub fn pack(self) -> u64 {
 		(self.w as u64) << 48 | (self.z as u64) << 32 | (self.y as u64) << 16 | (self.x as u64)
 	}
 }
 impl Vec4<u8> {
 	/// Unpack `u32` into `u8 u8 u8 u8`.
+	#[inline]
 	pub fn unpack8(v: u32) -> Vec4<u8> {
 		Vec4 {
 			x: ((v & 0x000000FF) >> 0) as u8,
@@ -828,6 +836,7 @@ impl Vec4<u8> {
 		}
 	}
 	/// Pack into `u32`.
+	#[inline]
 	pub fn pack(self) -> u32 {
 		(self.w as u32) << 24 | (self.z as u32) << 16 | (self.y as u32) << 8 | (self.x as u32)
 	}
