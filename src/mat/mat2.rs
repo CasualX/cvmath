@@ -183,21 +183,17 @@ impl<T> Mat2<T> {
 
 //----------------------------------------------------------------
 // Decomposition
-//
-// Any vector can be decomposed to `unit_x * vec.x + unit_y * vec.y` where `unit_x` is the unit vector in the X direction and `unit_y` is the unit vector in the Y direction.
-//
-// A linear transformation then changes the unit vectors. The transformed location can then be calculated.
-//
-// This calculation can be represented by a transformation matrix where the first column is the new unit vector for the X direction and the second column is the new unit vector for the Y direction.
-//
-// Decomposing a matrix is then simply accessing the transformed unit vectors.
 
 impl<T> Mat2<T> {
 	/// Compose the matrix from unit vectors.
 	///
-	/// Any vector can be [decomposed](https://en.wikipedia.org/wiki/Vector_decomposition) by multiplying each unit vector with its respective component and then summing the result, in 2D this means `Vec2::unit_x() * vec.x + Vec2::unit_y() * vec.y`.
+	/// Any vector can be [decomposed](https://en.wikipedia.org/wiki/Vector_decomposition) by multiplying each unit vector with its respective component and then summing the result.
 	///
-	/// A linear transformation then can be defined as ch
+	/// In 2D space this means `Vec2::unit_x() * vec.x + Vec2::unit_y() * vec.y`.
+	///
+	/// A linear transformation then can be defined by these unit vectors. The result is a transformation which remaps the unit vectors to their new location.
+	///
+	/// These unit vectors are simply the columns of the transformation matrix and as such can be trivially decomposed.
 	pub fn compose(x: Vec2<T>, y: Vec2<T>) -> Mat2<T> {
 		Mat2 {
 			a11: x.x, a12: y.x,

@@ -138,6 +138,15 @@ impl<T> Affine2<T> {
 // Decomposition
 
 impl<T> Affine2<T> {
+	/// Compose the matrix from unit vectors.
+	///
+	/// Any vector can be [decomposed](https://en.wikipedia.org/wiki/Vector_decomposition) by multiplying each unit vector with its respective component and then summing the result.
+	///
+	/// In 2D affine space this means `Vec2::unit_x() * vec.x + Vec2::unit_y() * vec.y + translate`.
+	///
+	/// A linear transformation then can be defined by these unit vectors. The result is a transformation which remaps the unit vectors to their new location.
+	///
+	/// These unit vectors are simply the columns of the transformation matrix and as such can be trivially decomposed.
 	pub fn compose(x: Vec2<T>, y: Vec2<T>, t: Vec2<T>) -> Affine2<T> {
 		Affine2 {
 			a11: x.x, a12: y.x, a13: t.x,
@@ -159,6 +168,8 @@ impl<T> Affine2<T> {
 		}
 	}
 	/// Gets the translation vector.
+	///
+	/// Translation is applied after the basis change.
 	pub fn t(self) -> Vec2<T> {
 		Vec2 {
 			x: self.a13,
