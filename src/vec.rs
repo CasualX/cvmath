@@ -289,6 +289,31 @@ pub struct Vec4<T> {
 	pub w: T,
 }
 
+macro_rules! Vec1 {
+	(Vec1 $($body:tt)*) => { $($body)* };
+	(Vec2 $($body:tt)*) => {};
+	(Vec3 $($body:tt)*) => {};
+	(Vec4 $($body:tt)*) => {};
+}
+macro_rules! Vec2 {
+	(Vec1 $($body:tt)*) => {};
+	(Vec2 $($body:tt)*) => { $($body)* };
+	(Vec3 $($body:tt)*) => {};
+	(Vec4 $($body:tt)*) => {};
+}
+macro_rules! Vec3 {
+	(Vec1 $($body:tt)*) => {};
+	(Vec2 $($body:tt)*) => {};
+	(Vec3 $($body:tt)*) => { $($body)* };
+	(Vec4 $($body:tt)*) => {};
+}
+macro_rules! Vec4 {
+	(Vec1 $($body:tt)*) => {};
+	(Vec2 $($body:tt)*) => {};
+	(Vec3 $($body:tt)*) => {};
+	(Vec4 $($body:tt)*) => { $($body)* };
+}
+
 macro_rules! unit {
 	(Vec1) => {
 		/// A unit vector in the `x` direction.
@@ -379,8 +404,6 @@ macro_rules! cvt {
 macro_rules! ops {
 	(Vec1) => {};
 	(Vec2) => {
-		/// Horizontal subtracts the components.
-		pub fn hsub(self) -> T { self.x - self.y }
 		/// Calculates the polar angle.
 		pub fn polar_angle(self) -> Rad<T> where T: Float { Rad::atan2(self.y, self.x) }
 		/// Rotates the vector counter-clockwise by 90°.
@@ -568,10 +591,6 @@ macro_rules! vec {
 			pub fn project(self, v: $vec<T>) -> $vec<T> where T: Float {
 				self * (self.dot(v) / v.dot(v))
 			}
-			/// Horizontal adds all components.
-			pub fn hadd(self) -> T {
-				infix!(+ $(self.$field),+)
-			}
 			ops!($vec);
 			/// Calculates the inner product.
 			pub fn dot(self, rhs: $vec<T>) -> T {
@@ -593,6 +612,17 @@ macro_rules! vec {
 		// Operators
 
 		impl<T> $vec<T> {
+			/// Horizontal adds all components.
+			pub fn hadd(self) -> T where T: ops::Add<Output = T> {
+				infix!(+ $(self.$field),+)
+			}
+			Vec2! {
+				$vec
+				/// Horizontal subtracts the components.
+				pub fn hsub(self) -> T where T: ops::Sub<Output = T> {
+					self.x - self.y
+				}
+			}
 			/// Component wise absolute value.
 			pub fn abs(self) -> $vec<T> where T: Abs<Output = T> {
 				$vec { $($field: self.$field.abs()),+ }

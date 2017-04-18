@@ -4,7 +4,7 @@
 
 use ::std::{ops};
 
-use ::num::{Zero, One, Scalar, Float};
+use ::num::{Scalar, Float};
 use ::vec::{Vec2};
 use ::angle::{Angle};
 
@@ -45,15 +45,17 @@ impl<T> Mat2<T> {
 			a21: a21, a22: a22,
 		}
 	}
+}
+impl<T: Scalar> Mat2<T> {
 	/// Identity matrix.
-	pub fn identity() -> Mat2<T> where T: Zero + One {
+	pub fn identity() -> Mat2<T> {
 		Mat2 {
 			a11: T::one(), a12: T::zero(),
 			a21: T::zero(), a22: T::one(),
 		}
 	}
 	/// Null matrix.
-	pub fn zero() -> Mat2<T> where T: Zero {
+	pub fn zero() -> Mat2<T> {
 		Mat2 {
 			a11: T::zero(), a12: T::zero(),
 			a21: T::zero(), a22: T::zero(),
@@ -69,7 +71,7 @@ impl<T> Mat2<T> {
 	/// Scaling matrix.
 	///
 	/// Scales around the origin.
-	pub fn scale<V: Into<Vec2<T>>>(scale: V) -> Mat2<T> where T: Zero {
+	pub fn scale<V: Into<Vec2<T>>>(scale: V) -> Mat2<T> {
 		let scale = scale.into();
 		Mat2 {
 			a11: scale.x,   a12: T::zero(),
@@ -87,7 +89,7 @@ impl<T> Mat2<T> {
 		}
 	}
 	/// Skewing matrix.
-	pub fn skew<V: Into<Vec2<T>>>(skew: V) -> Mat2<T> where T: One {
+	pub fn skew<V: Into<Vec2<T>>>(skew: V) -> Mat2<T> {
 		let skew = skew.into();
 		Mat2 {
 			a11: T::one(), a12: skew.x,
@@ -219,18 +221,20 @@ impl<T> Mat2<T> {
 //----------------------------------------------------------------
 // Operations
 
-impl<T> Mat2<T> {
+impl<T: Scalar> Mat2<T> {
 	/// Calculates the determinant.
 	pub fn det(self) -> T where T: Scalar {
 		self.a11 * self.a22 - self.a21 * self.a12
 	}
-	pub fn inverse(self) -> Mat2<T> where T: Float {
+	/// Calculates the inverse matrix.
+	pub fn inv(self) -> Mat2<T> where T: Float {
 		let inv_det = T::one() / self.det();
 		Mat2 {
 			a11:  self.a22 * inv_det, a12: -self.a12 * inv_det,
 			a21: -self.a21 * inv_det, a22:  self.a11 * inv_det,
 		}
 	}
+	/// Calculates the transposed matrix.
 	pub fn transpose(self) -> Mat2<T> {
 		Mat2 {
 			a11: self.a11, a12: self.a21,
@@ -242,6 +246,39 @@ impl<T> Mat2<T> {
 //----------------------------------------------------------------
 // Operators
 
+impl<T: ops::Add<Output = T>> ops::Add<Mat2<T>> for Mat2<T> {
+	type Output = Mat2<T>;
+	fn add(self, rhs: Mat2<T>) -> Mat2<T> {
+		Mat2 {
+			a11: self.a11 + rhs.a11,
+			a12: self.a12 + rhs.a12,
+			a21: self.a21 + rhs.a21,
+			a22: self.a22 + rhs.a22,
+		}
+	}
+}
+impl<T: ops::Sub<Output = T>> ops::Sub<Mat2<T>> for Mat2<T> {
+	type Output = Mat2<T>;
+	fn sub(self, rhs: Mat2<T>) -> Mat2<T> {
+		Mat2 {
+			a11: self.a11 - rhs.a11,
+			a12: self.a12 - rhs.a12,
+			a21: self.a21 - rhs.a21,
+			a22: self.a22 - rhs.a22,
+		}
+	}
+}
+impl<T: Copy + ops::Mul<Output = T>> ops::Mul<T> for Mat2<T> {
+	type Output = Mat2<T>;
+	fn mul(self, rhs: T) -> Mat2<T> {
+		Mat2 {
+			a11: self.a11 * rhs,
+			a12: self.a12 * rhs,
+			a21: self.a21 * rhs,
+			a22: self.a22 * rhs,
+		}
+	}
+}
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat2<T>> for Mat2<T> {
 	type Output = Mat2<T>;
 	fn mul(self, rhs: Mat2<T>) -> Mat2<T> {

@@ -4,7 +4,7 @@ Affine 2D transformation matrix.
 
 use ::std::{ops};
 
-use ::num::{Zero, One, Scalar, Float};
+use ::num::{Scalar, Float};
 use ::vec::{Vec2};
 use ::angle::{Angle};
 
@@ -44,22 +44,24 @@ impl<T> Affine2<T> {
 			a21: a21, a22: a22, a23: a23,
 		}
 	}
+}
+impl<T: Scalar> Affine2<T> {
 	/// Identity matrix.
-	pub fn identity() -> Affine2<T> where T: Zero + One {
+	pub fn identity() -> Affine2<T> {
 		Mat2::identity().into()
 	}
 	/// Null matrix.
-	pub fn zero() -> Affine2<T> where T: Zero {
+	pub fn zero() -> Affine2<T> {
 		Mat2::zero().into()
 	}
 	/// Translation matrix.
-	pub fn translate<V: Into<Vec2<T>>>(trans: V) -> Affine2<T> where T: Zero + One {
+	pub fn translate<V: Into<Vec2<T>>>(trans: V) -> Affine2<T> {
 		Mat2::identity().translate(trans)
 	}
 	/// Scaling matrix.
 	///
 	/// Scales around the origin.
-	pub fn scale<V: Into<Vec2<T>>>(scale: V) -> Affine2<T> where T: Zero {
+	pub fn scale<V: Into<Vec2<T>>>(scale: V) -> Affine2<T> {
 		Mat2::scale(scale).into()
 	}
 	/// Rotation matrix.
@@ -69,7 +71,7 @@ impl<T> Affine2<T> {
 		Mat2::rotate(angle).into()
 	}
 	/// Skewing matrix.
-	pub fn skew<V: Into<Vec2<T>>>(skew: V) -> Affine2<T> where T: Zero + One {
+	pub fn skew<V: Into<Vec2<T>>>(skew: V) -> Affine2<T> {
 		Mat2::skew(skew).into()
 	}
 	/// Reflection matrix.
@@ -93,11 +95,11 @@ impl<T> Affine2<T> {
 //----------------------------------------------------------------
 // Conversions
 
-impl<T: Zero> From<Mat2<T>> for Affine2<T> {
+impl<T: Default> From<Mat2<T>> for Affine2<T> {
 	fn from(mat: Mat2<T>) -> Affine2<T> {
 		Affine2 {
-			a11: mat.a11, a12: mat.a12, a13: T::zero(),
-			a21: mat.a21, a22: mat.a22, a23: T::zero(),
+			a11: mat.a11, a12: mat.a12, a13: T::default(),
+			a21: mat.a21, a22: mat.a22, a23: T::default(),
 		}
 	}
 }
@@ -186,7 +188,16 @@ impl<T> Affine2<T> {
 	pub fn det(self) -> T where T: Scalar {
 		self.a11 * self.a22 - self.a21 * self.a12
 	}
-	pub fn inverse(self) -> Affine2<T> where T: Scalar + Float {
+	/// Calculates the inverse matrix.
+	///
+	/// Note that even though this matrix isn't strictly square, if an inverse exists, it will also be an affine transform.
+	///
+	/// This can be intuitively realized when you consider matrices as geometric linear transforms.
+	/// Any affine transform, if its determinant isn't zero, has an inverse affine transform.
+	///
+	/// To prove this we only need to prove that translation is invertible with another translation (duh).
+	/// The resulting inverse transform is then the inverse translation followed by the inverse of the matrix without the translation.
+	pub fn inv(self) -> Affine2<T> where T: Scalar + Float {
 		let inv_det = T::one() / self.det();
 		Affine2 {
 			a11: self.a22 * inv_det,
