@@ -47,6 +47,12 @@ impl<T> Affine2<T> {
 			a21: a21, a22: a22, a23: a23,
 		}
 	}
+	pub fn compose(x: Vec2<T>, y: Vec2<T>, t: Vec2<T>) -> Affine2<T> {
+		Affine2 {
+			a11: x.x, a12: y.x, a13: t.x,
+			a21: x.y, a22: y.y, a23: t.y,
+		}
+	}
 	/// Identity matrix.
 	pub fn identity() -> Affine2<T> where T: Zero + One {
 		Affine2 {
@@ -141,6 +147,33 @@ impl<T> Affine2<T> {
 			[self.a12, self.a22],
 			[self.a13, self.a23],
 		]
+	}
+}
+
+//----------------------------------------------------------------
+// Decomposition
+
+impl<T> Affine2<T> {
+	/// Gets the transformed X unit vector.
+	pub fn x(self) -> Vec2<T> {
+		Vec2 {
+			x: self.a11,
+			y: self.a21,
+		}
+	}
+	/// Gets the transformed Y unit vector.
+	pub fn y(self) -> Vec2<T> {
+		Vec2 {
+			x: self.a12,
+			y: self.a22,
+		}
+	}
+	/// Gets the translation vector.
+	pub fn t(self) -> Vec2<T> {
+		Vec2 {
+			x: self.a13,
+			y: self.a23,
+		}
 	}
 }
 
