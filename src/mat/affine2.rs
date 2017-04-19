@@ -1,5 +1,5 @@
 /*!
-Affine 2x3 transformation matrices.
+Affine 2D transformation matrix.
 */
 
 use ::std::{ops};
@@ -10,7 +10,9 @@ use ::angle::{Angle};
 
 use super::Mat2;
 
-/// Affine 2x3 row-major transformation matrix.
+/// Affine 2D transformation matrix.
+///
+/// A 2x3 row-major matrix.
 #[cfg(feature = "row-major")]
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
@@ -23,7 +25,9 @@ pub struct Affine2<T> {
 	pub a23: T,
 }
 
-/// Affine 2x3 column-major transformation matrix.
+/// Affine 2D transformation matrix.
+///
+/// A 2x3 column-major matrix.
 #[cfg(feature = "column-major")]
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
@@ -55,57 +59,54 @@ impl<T> Affine2<T> {
 	}
 	/// Identity matrix.
 	pub fn identity() -> Affine2<T> where T: Zero + One {
-		Affine2 {
-			a11: T::one(),  a12: T::zero(), a13: T::zero(),
-			a21: T::zero(), a22: T::one(),  a23: T::zero(),
-		}
+		Mat2::identity().into()
 	}
 	/// Translation matrix.
 	pub fn translate<V: Into<Vec2<T>>>(trans: V) -> Affine2<T> where T: Zero + One {
-		let trans = trans.into();
-		Affine2 {
-			a11: T::one(),  a12: T::zero(), a13: trans.x,
-			a21: T::zero(), a22: T::one(),  a23: trans.y,
-		}
+		Mat2::identity().translate(trans)
 	}
 	/// Scaling matrix.
-	pub fn scale<V: Into<Vec2<T>>>(scale: V) -> Affine2<T> where T: Zero + One {
-		let scale = scale.into();
-		Affine2 {
-			a11: scale.x,   a12: T::zero(), a13: T::zero(),
-			a21: T::zero(), a22: scale.y,   a23: T::zero(),
-		}
+	///
+	/// Scales around the origin.
+	pub fn scale<V: Into<Vec2<T>>>(scale: V) -> Affine2<T> where T: Zero {
+		Mat2::scale(scale).into()
 	}
 	/// Rotation matrix.
+	///
+	/// Rotates around the origin.
 	pub fn rotate<A: Angle<T = T>>(angle: A) -> Affine2<T> where T: Float {
-		let (cy, cx) = angle.sin_cos();
-		Affine2 {
-			a11: cx, a12: -cy, a13: T::zero(),
-			a21: cy, a22: cx,  a23: T::zero(),
-		}
+		Mat2::rotate(angle).into()
 	}
 	/// Skewing matrix.
 	pub fn skew<V: Into<Vec2<T>>>(skew: V) -> Affine2<T> where T: Zero + One {
-		let skew = skew.into();
-		Affine2 {
-			a11: T::one(), a12: skew.x,   a13: T::zero(),
-			a21: skew.y,   a22: T::one(), a23: T::zero(),
-		}
+		Mat2::skew(skew).into()
+	}
+	/// Reflection matrix.
+	///
+	/// Reflects around the line defined by the line going through the origin and `line`.
+	///
+	/// If `line` is the zero vector, the matrix will be a point reflection around the origin.
+	pub fn reflect<V: Into<Vec2<T>>>(line: V) -> Affine2<T> where T: Float {
+		Mat2::reflect(line).into()
+	}
+	/// Projection matrix.
+	///
+	/// Projects onto the line defined by the line going through the origin and `line`.
+	///
+	/// If `line` is the zero vector, the matrix is the null matrix.
+	pub fn project<V: Into<Vec2<T>>>(line: V) -> Affine2<T> where T: Float {
+		Mat2::project(line).into()
 	}
 }
 
 //----------------------------------------------------------------
 // Conversions
 
-impl<T: Zero + One> From<Mat2<T>> for Affine2<T> {
+impl<T: Zero> From<Mat2<T>> for Affine2<T> {
 	fn from(mat: Mat2<T>) -> Affine2<T> {
 		Affine2 {
-			a11: mat.a11,
-			a12: mat.a12,
-			a13: T::zero(),
-			a21: mat.a21,
-			a22: mat.a22,
-			a23: T::zero(),
+			a11: mat.a11, a12: mat.a12, a13: T::zero(),
+			a21: mat.a21, a22: mat.a22, a23: T::zero(),
 		}
 	}
 }
@@ -114,23 +115,15 @@ impl<T> Affine2<T> {
 	/// Imports as row major.
 	pub fn from_row_major(mat: [[T; 3]; 2]) -> Affine2<T> where T: Copy {
 		Affine2 {
-			a11: mat[0][0],
-			a12: mat[0][1],
-			a13: mat[0][2],
-			a21: mat[1][0],
-			a22: mat[1][1],
-			a23: mat[1][2],
+			a11: mat[0][0], a12: mat[0][1], a13: mat[0][2],
+			a21: mat[1][0], a22: mat[1][1], a23: mat[1][2],
 		}
 	}
 	/// Imports as column major.
 	pub fn from_column_major(mat: [[T; 2]; 3]) -> Affine2<T> where T: Copy {
 		Affine2 {
-			a11: mat[0][0],
-			a12: mat[1][0],
-			a13: mat[2][0],
-			a21: mat[0][1],
-			a22: mat[1][1],
-			a23: mat[2][1],
+			a11: mat[0][0], a12: mat[1][0], a13: mat[2][0],
+			a21: mat[0][1], a22: mat[1][1], a23: mat[2][1],
 		}
 	}
 	/// Exports as row major.
@@ -214,24 +207,19 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine2<T>>
 		}
 	}
 }
-
-macro_rules! transform {
-	($mat:expr, $vec:expr) => {
-		Vec2 {
-			x: $vec.x * $mat.a11 + $vec.y * $mat.a12 + $mat.a13,
-			y: $vec.x * $mat.a21 + $vec.y * $mat.a22 + $mat.a23,
-		}
-	};
+impl<T: Copy + Zero + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat2<T>> for Affine2<T> {
+	type Output = Affine2<T>;
+	fn mul(self, rhs: Mat2<T>) -> Affine2<T> {
+		self * Affine2::from(rhs)
+	}
 }
+
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec2<T>> for Affine2<T> {
 	type Output = Vec2<T>;
 	fn mul(self, rhs: Vec2<T>) -> Vec2<T> {
-		transform!(self, rhs)
-	}
-}
-impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine2<T>> for Vec2<T> {
-	type Output = Vec2<T>;
-	fn mul(self, rhs: Affine2<T>) -> Vec2<T> {
-		transform!(rhs, self)
+		Vec2 {
+			x: rhs.x * self.a11 + rhs.y * self.a12 + self.a13,
+			y: rhs.x * self.a21 + rhs.y * self.a22 + self.a23,
+		}
 	}
 }

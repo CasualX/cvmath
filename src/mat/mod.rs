@@ -1,3 +1,6 @@
+/*!
+Transformation matrices.
+*/
 
 mod affine2;
 mod mat2;

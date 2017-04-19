@@ -585,6 +585,7 @@ macro_rules! vec {
 			}
 		}
 
+		// Num traits
 		impl<T: Abs> Abs for $vec<T> {
 			type Output = $vec<T::Output>;
 			fn abs(self) -> $vec<T::Output> {
@@ -604,6 +605,7 @@ macro_rules! vec {
 			}
 		}
 
+		// Vector addition, subtraction and negation
 		impl<U, T: ops::Add<U>> ops::Add<$vec<U>> for $vec<T> {
 			type Output = $vec<T::Output>;
 			fn add(self, rhs: $vec<U>) -> $vec<T::Output> {
@@ -623,6 +625,7 @@ macro_rules! vec {
 			}
 		}
 
+		// Scalar multiplication, division and remainder
 		impl<U: Scalar, T: ops::Mul<U>> ops::Mul<U> for $vec<T> {
 			type Output = $vec<T::Output>;
 			fn mul(self, rhs: U) -> $vec<T::Output> {
@@ -642,6 +645,7 @@ macro_rules! vec {
 			}
 		}
 
+		// Vector multiplication, division and remainder
 		impl<U, T: ops::Mul<U>> ops::Mul<$vec<U>> for $vec<T> {
 			type Output = $vec<T::Output>;
 			fn mul(self, rhs: $vec<U>) -> $vec<T::Output> {
@@ -661,6 +665,7 @@ macro_rules! vec {
 			}
 		}
 
+		// Bitwise operators
 		impl<U, T: ops::BitAnd<U>> ops::BitAnd<$vec<U>> for $vec<T> {
 			type Output = $vec<T::Output>;
 			fn bitand(self, rhs: $vec<U>) -> $vec<T::Output> {
