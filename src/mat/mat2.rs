@@ -17,10 +17,8 @@ use super::Affine2;
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
 pub struct Mat2<T> {
-	pub a11: T,
-	pub a12: T,
-	pub a21: T,
-	pub a22: T,
+	pub a11: T, pub a12: T,
+	pub a21: T, pub a22: T,
 }
 
 /// 2D transformation matrix.
@@ -30,27 +28,21 @@ pub struct Mat2<T> {
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
 pub struct Mat2<T> {
-	pub a11: T,
-	pub a21: T,
-	pub a12: T,
-	pub a22: T,
+	pub a11: T, pub a21: T,
+	pub a12: T, pub a22: T,
 }
 
 //----------------------------------------------------------------
 // Constructors
 
 impl<T> Mat2<T> {
-	pub fn new(a11: T, a12: T,
-	           a21: T, a22: T) -> Mat2<T> {
+	pub fn new(
+		a11: T, a12: T,
+		a21: T, a22: T,
+	) -> Mat2<T> {
 		Mat2 {
 			a11: a11, a12: a12,
 			a21: a21, a22: a22,
-		}
-	}
-	pub fn compose(x: Vec2<T>, y: Vec2<T>) -> Mat2<T> {
-		Mat2 {
-			a11: x.x, a12: y.x,
-			a21: x.y, a22: y.y,
 		}
 	}
 	/// Identity matrix.
@@ -194,6 +186,13 @@ impl<T> Mat2<T> {
 // Decomposing a matrix is then simply accessing the transformed unit vectors.
 
 impl<T> Mat2<T> {
+	/// Compose the matrix from unit vectors.
+	pub fn compose(x: Vec2<T>, y: Vec2<T>) -> Mat2<T> {
+		Mat2 {
+			a11: x.x, a12: y.x,
+			a21: x.y, a22: y.y,
+		}
+	}
 	/// Gets the transformed X unit vector.
 	pub fn x(self) -> Vec2<T> {
 		Vec2 {
