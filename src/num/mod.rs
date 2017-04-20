@@ -148,3 +148,10 @@ int!(i32);
 int!(i64);
 float!(f32);
 float!(f64);
+
+impl Cast<u8> for f32 {
+	fn cast(self) -> u8 { self as u8 }
+}
+impl Cast<f32> for u8 {
+	fn cast(self) -> f32 { self as f32 }
+}
