@@ -7,15 +7,17 @@ use ::num::{Zero, One, Scalar, Float};
 use ::vec::{Vec2};
 use ::angle::{Angle};
 
+use super::Affine2;
+
 /// 2D row-major transformation matrix.
 #[cfg(feature = "row-major")]
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
 pub struct Mat2<T> {
-	a11: T,
-	a12: T,
-	a21: T,
-	a22: T,
+	pub a11: T,
+	pub a12: T,
+	pub a21: T,
+	pub a22: T,
 }
 
 /// 2D column-major transformation matrix.
@@ -23,10 +25,10 @@ pub struct Mat2<T> {
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
 pub struct Mat2<T> {
-	a11: T,
-	a21: T,
-	a12: T,
-	a22: T,
+	pub a11: T,
+	pub a21: T,
+	pub a12: T,
+	pub a22: T,
 }
 
 //----------------------------------------------------------------
@@ -75,6 +77,55 @@ impl<T> Mat2<T> {
 }
 
 //----------------------------------------------------------------
+// Conversions
+
+impl<T> From<Affine2<T>> for Mat2<T> {
+	fn from(affine: Affine2<T>) -> Mat2<T> {
+		Mat2 {
+			a11: affine.a11,
+			a12: affine.a12,
+			a21: affine.a21,
+			a22: affine.a22,
+		}
+	}
+}
+
+impl<T> Mat2<T> {
+	/// Imports as row major.
+	pub fn from_row_major(mat: [[T; 2]; 2]) -> Mat2<T> where T: Copy {
+		Mat2 {
+			a11: mat[0][0],
+			a12: mat[0][1],
+			a21: mat[1][0],
+			a22: mat[1][1],
+		}
+	}
+	/// Imports as column major.
+	pub fn from_column_major(mat: [[T; 2]; 2]) -> Mat2<T> where T: Copy {
+		Mat2 {
+			a11: mat[0][0],
+			a12: mat[1][0],
+			a21: mat[0][1],
+			a22: mat[1][1],
+		}
+	}
+	/// Exports as row major.
+	pub fn into_row_major(self) -> [[T; 2]; 2] {
+		[
+			[self.a11, self.a12],
+			[self.a21, self.a22],
+		]
+	}
+	/// Exports as column major.
+	pub fn into_column_major(self) -> [[T; 2]; 2] {
+		[
+			[self.a11, self.a21],
+			[self.a12, self.a22],
+		]
+	}
+}
+
+//----------------------------------------------------------------
 // Operations
 
 impl<T> Mat2<T> {
@@ -113,12 +164,24 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat2<T>> fo
 		}
 	}
 }
+
+macro_rules! transform {
+	($mat:expr, $vec:expr) => {
+		Vec2 {
+			x: $vec.x * $mat.a11 + $vec.y * $mat.a12,
+			y: $vec.x * $mat.a21 + $vec.y * $mat.a22,
+		}
+	};
+}
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec2<T>> for Mat2<T> {
 	type Output = Vec2<T>;
 	fn mul(self, rhs: Vec2<T>) -> Vec2<T> {
-		Vec2 {
-			x: rhs.x * self.a11 + rhs.y * self.a12,
-			y: rhs.x * self.a21 + rhs.y * self.a22,
-		}
+		transform!(self, rhs)
+	}
+}
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat2<T>> for Vec2<T> {
+	type Output = Vec2<T>;
+	fn mul(self, rhs: Mat2<T>) -> Vec2<T> {
+		transform!(rhs, self)
 	}
 }

@@ -80,13 +80,13 @@ assert_eq!(Vec3 { x: 1, y: 2, z: 3 }, Vec4::new(1, 2, 3, 4).xyz());
 
 `cast<U>(self)` where T: `Cast<U>`: Casts to a vector of type `U` with the same dimensions.
 
-`map<F>(self, F)` where F: `FnMut(T) -> T`: Maps a callable over the components.
+`map<U, F>(self, F)` where F: `FnMut(T) -> U`: Maps a callable over the components.
 
-`zip<F>(self, rhs, F)` where F: `FnMut(T, T) -> T`: Zips two vectors together.
+`zip<U, F>(self, rhs, F)` where F: `FnMut(T, T) -> U`: Zips two vectors together.
 
 `reduce<F>(self, F)` where F: `Fn(T, T) -> T`: Reduces the vector. The `x` component is used as the initial value of the accumulator.
 
-`fold<F>(self, acc, F)` where F: `Fn(T, T) -> T`: Folds the vector.
+`fold<A, F>(self, acc, F)` where F: `Fn(A, T) -> A`: Folds the vector.
 
 ### Examples
 
