@@ -160,3 +160,36 @@ impl<T> Mat3<T> {
 		}
 	}
 }
+
+//----------------------------------------------------------------
+// Operators
+
+impl<T: Copy + ops::Add<Output = T> + Mul<Output = T>> ops::Mul<Mat3<T>> for Mat3<T> {
+	type Output = Mat3<T>;
+	fn mul(self, rhs: Mat3<T>) -> Mat3<T> {
+		Mat3 {
+			a11: self.a11 * rhs.a11 + self.a12 * rhs.a21 + self.a13 * rhs.a31,
+			a12: self.a11 * rhs.a12 + self.a12 * rhs.a22 + self.a13 * rhs.a32,
+			a13: self.a11 * rhs.a13 + self.a12 * rhs.a23 + self.a13 * rhs.a33,
+
+			a21: self.a21 * rhs.a11 + self.a22 * rhs.a21 + self.a23 * rhs.a31,
+			a22: self.a21 * rhs.a12 + self.a22 * rhs.a22 + self.a23 * rhs.a32,
+			a23: self.a21 * rhs.a13 + self.a22 * rhs.a23 + self.a23 * rhs.a33,
+
+			a31: self.a31 * rhs.a11 + self.a32 * rhs.a21 + self.a33 * rhs.a31,
+			a32: self.a31 * rhs.a12 + self.a32 * rhs.a22 + self.a33 * rhs.a32,
+			a33: self.a31 * rhs.a13 + self.a32 * rhs.a23 + self.a33 * rhs.a33,
+		}
+	}
+}
+
+impl<T: Copy + ops::Add<Output = T> + Mul<Output = T>> ops::Mul<Vec3<T>> for Mat3<T> {
+	type Output = Vec3<T>;
+	fn mul(self, rhs: Vec3<T>) -> Mat3<T> {
+		Vec3 {
+			x: self.a11 * rhs.x + self.a12 * rhs.y + self.a13 * rhs.z,
+			y: self.a21 * rhs.x + self.a22 * rhs.y + self.a23 * rhs.z,
+			z: self.a31 * rhs.x + self.a32 * rhs.y + self.a33 * rhs.z,
+		}
+	}
+}

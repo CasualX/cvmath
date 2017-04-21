@@ -52,6 +52,13 @@ impl<T> Mat2<T> {
 			a21: T::zero(), a22: T::one(),
 		}
 	}
+	/// Null matrix.
+	pub fn zero() -> Mat2<T> where T: Zero {
+		Mat2 {
+			a11: T::zero(), a12: T::zero(),
+			a21: T::zero(), a22: T::zero(),
+		}
+	}
 	pub fn translate<V: Into<Vec2<T>>>(self, translate: V) -> Affine2<T> {
 		let translate = translate.into();
 		Affine2 {
@@ -126,7 +133,7 @@ impl<T> Mat2<T> {
 		}
 		else {
 			// Do something like absorb all
-			Mat2::default()
+			Mat2::zero()
 		}
 	}
 }
@@ -187,6 +194,10 @@ impl<T> Mat2<T> {
 
 impl<T> Mat2<T> {
 	/// Compose the matrix from unit vectors.
+	///
+	/// Any vector can be [decomposed](https://en.wikipedia.org/wiki/Vector_decomposition) by multiplying each unit vector with its respective component and then summing the result, in 2D this means `Vec2::unit_x() * vec.x + Vec2::unit_y() * vec.y`.
+	///
+	/// A linear transformation then can be defined as ch
 	pub fn compose(x: Vec2<T>, y: Vec2<T>) -> Mat2<T> {
 		Mat2 {
 			a11: x.x, a12: y.x,
@@ -244,12 +255,6 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat2<T>> fo
 			a21: self.a21 * rhs.a11 + self.a22 * rhs.a21,
 			a22: self.a21 * rhs.a12 + self.a22 * rhs.a22,
 		}
-	}
-}
-impl<T: Copy + Zero + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine2<T>> for Mat2<T> {
-	type Output = Affine2<T>;
-	fn mul(self, rhs: Affine2<T>) -> Affine2<T> {
-		Affine2::from(self) * rhs
 	}
 }
 

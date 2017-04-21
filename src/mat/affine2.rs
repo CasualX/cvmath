@@ -48,6 +48,10 @@ impl<T> Affine2<T> {
 	pub fn identity() -> Affine2<T> where T: Zero + One {
 		Mat2::identity().into()
 	}
+	/// Null matrix.
+	pub fn zero() -> Affine2<T> where T: Zero {
+		Mat2::zero().into()
+	}
 	/// Translation matrix.
 	pub fn translate<V: Into<Vec2<T>>>(trans: V) -> Affine2<T> where T: Zero + One {
 		Mat2::identity().translate(trans)
@@ -198,12 +202,6 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine2<T>>
 			a22: self.a21 * rhs.a12 + self.a22 * rhs.a22,
 			a23: self.a21 * rhs.a13 + self.a22 * rhs.a23 + self.a23,
 		}
-	}
-}
-impl<T: Copy + Zero + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat2<T>> for Affine2<T> {
-	type Output = Affine2<T>;
-	fn mul(self, rhs: Mat2<T>) -> Affine2<T> {
-		self * Affine2::from(rhs)
 	}
 }
 
