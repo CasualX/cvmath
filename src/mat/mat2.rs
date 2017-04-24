@@ -61,6 +61,20 @@ impl<T: Scalar> Mat2<T> {
 			a21: T::zero(), a22: T::zero(),
 		}
 	}
+	/// Diagonal matrix.
+	pub fn diagonal(d: Vec2<T>) -> Mat2<T> {
+		Mat2 {
+			a11: d.x, a12: T::zero(),
+			a21: T::zero(), a22: d.y,
+		}
+	}
+	/// Scalar matrix.
+	pub fn scalar(s: T) -> Mat2<T> {
+		Mat2 {
+			a11: s, a12: T::zero(),
+			a21: T::zero(), a22: s,
+		}
+	}
 	pub fn translate<V: Into<Vec2<T>>>(self, translate: V) -> Affine2<T> {
 		let translate = translate.into();
 		Affine2 {
@@ -216,6 +230,13 @@ impl<T> Mat2<T> {
 			y: self.a22,
 		}
 	}
+	/// Gets the diagonal vector.
+	pub fn d(self) -> Vec2<T> {
+		Vec2 {
+			x: self.a11,
+			y: self.a22,
+		}
+	}
 }
 
 //----------------------------------------------------------------
@@ -223,7 +244,7 @@ impl<T> Mat2<T> {
 
 impl<T: Scalar> Mat2<T> {
 	/// Calculates the determinant.
-	pub fn det(self) -> T where T: Scalar {
+	pub fn det(self) -> T {
 		self.a11 * self.a22 - self.a21 * self.a12
 	}
 	/// Calculates the inverse matrix.
@@ -237,8 +258,22 @@ impl<T: Scalar> Mat2<T> {
 	/// Calculates the transposed matrix.
 	pub fn transpose(self) -> Mat2<T> {
 		Mat2 {
-			a11: self.a11, a12: self.a21,
-			a21: self.a12, a22: self.a22,
+			a11: self.a22, a12: self.a21,
+			a21: self.a12, a22: self.a11,
+		}
+	}
+	/// Calculates the cofactor matrix.
+	pub fn cofactor(self) -> Mat2<T> {
+		Mat2 {
+			a11:  self.a11, a12: -self.a21,
+			a21: -self.a12, a22:  self.a22,
+		}
+	}
+	/// Calculates the adjugate matrix.
+	pub fn adj(self) -> Mat2<T> {
+		Mat2 {
+			a11:  self.a22, a12: -self.a12,
+			a21: -self.a21, a22:  self.a11,
 		}
 	}
 }

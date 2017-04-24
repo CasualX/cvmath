@@ -4,9 +4,8 @@
 
 use ::std::{ops};
 
-use ::num::{Zero, One, Scalar, Float};
+use ::num::{Zero, One, Scalar};
 use ::vec::{Vec3};
-use ::angle::{Angle};
 
 /// 3D transformation matrix.
 ///

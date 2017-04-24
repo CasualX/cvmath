@@ -183,9 +183,9 @@ impl<T> Affine2<T> {
 //----------------------------------------------------------------
 // Operations
 
-impl<T> Affine2<T> {
+impl<T: Scalar> Affine2<T> {
 	/// Calculates the determinant.
-	pub fn det(self) -> T where T: Scalar {
+	pub fn det(self) -> T {
 		self.a11 * self.a22 - self.a21 * self.a12
 	}
 	/// Calculates the inverse matrix.
@@ -197,7 +197,7 @@ impl<T> Affine2<T> {
 	///
 	/// To prove this we only need to prove that translation is invertible with another translation (duh).
 	/// The resulting inverse transform is then the inverse translation followed by the inverse of the matrix without the translation.
-	pub fn inv(self) -> Affine2<T> where T: Scalar + Float {
+	pub fn inv(self) -> Affine2<T> where T: Float {
 		let inv_det = T::one() / self.det();
 		Affine2 {
 			a11: self.a22 * inv_det,
