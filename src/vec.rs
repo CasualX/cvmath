@@ -401,31 +401,6 @@ macro_rules! cvt {
 	};
 }
 
-macro_rules! ops {
-	(Vec1) => {};
-	(Vec2) => {
-		/// Calculates the polar angle.
-		pub fn polar_angle(self) -> Rad<T> where T: Float { Rad::atan2(self.y, self.x) }
-		/// Rotates the vector counter-clockwise by 90°.
-		pub fn ccw(self) -> Vec2<T> { Vec2 { x: self.y, y: -self.x } }
-		/// Rotates the vector clockwise by 90°.
-		pub fn cw(self) -> Vec2<T> { Vec2 { x: -self.y, y: self.x } }
-		/// Calculates the 3D cross product where the inputs are extended with `z = 0` and returns the magnitude of the result.
-		pub fn cross(self, rhs: Vec2<T>) -> T { self.x * rhs.y - self.y * rhs.x }
-	};
-	(Vec3) => {
-		/// Calculates the 3D cross product.
-		pub fn cross(self, rhs: Vec3<T>) -> Vec3<T> {
-			Vec3 {
-				x: self.y * rhs.z - self.z * rhs.y,
-				y: self.z * rhs.x - self.x * rhs.z,
-				z: self.x * rhs.y - self.y * rhs.x,
-			}
-		}
-	};
-	(Vec4) => {};
-}
-
 // This may or may not be horrible abuse of the `macro_rules!` system :)
 macro_rules! vec {
 	($vec:ident $N:tt { $($field:ident $I:tt $T:ident),+ }) => {
@@ -591,7 +566,34 @@ macro_rules! vec {
 			pub fn project(self, v: $vec<T>) -> $vec<T> where T: Float {
 				self * (self.dot(v) / v.dot(v))
 			}
-			ops!($vec);
+			Vec2! { $vec
+				/// Calculates the polar angle.
+				pub fn polar_angle(self) -> Rad<T> where T: Float {
+					Rad::atan2(self.y, self.x)
+				}
+				/// Rotates the vector counter-clockwise by 90°.
+				pub fn ccw(self) -> Vec2<T> {
+					Vec2 { x: self.y, y: -self.x }
+				}
+				/// Rotates the vector clockwise by 90°.
+				pub fn cw(self) -> Vec2<T> {
+					Vec2 { x: -self.y, y: self.x }
+				}
+				/// Calculates the 3D cross product where the inputs are extended with `z = 0` and returns the magnitude of the result.
+				pub fn cross(self, rhs: Vec2<T>) -> T {
+					self.x * rhs.y - self.y * rhs.x
+				}
+			}
+			Vec3! { $vec
+				/// Calculates the 3D cross product.
+				pub fn cross(self, rhs: Vec3<T>) -> Vec3<T> {
+					Vec3 {
+						x: self.y * rhs.z - self.z * rhs.y,
+						y: self.z * rhs.x - self.x * rhs.z,
+						z: self.x * rhs.y - self.y * rhs.x,
+					}
+				}
+			}
 			/// Calculates the inner product.
 			pub fn dot(self, rhs: $vec<T>) -> T {
 				infix!(+ $(self.$field * rhs.$field),+)
@@ -616,8 +618,7 @@ macro_rules! vec {
 			pub fn hadd(self) -> T where T: ops::Add<Output = T> {
 				infix!(+ $(self.$field),+)
 			}
-			Vec2! {
-				$vec
+			Vec2! { $vec
 				/// Horizontal subtracts the components.
 				pub fn hsub(self) -> T where T: ops::Sub<Output = T> {
 					self.x - self.y
