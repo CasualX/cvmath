@@ -61,20 +61,6 @@ impl<T: Scalar> Mat2<T> {
 			a21: T::zero(), a22: T::zero(),
 		}
 	}
-	/// Diagonal matrix.
-	pub fn diagonal(d: Vec2<T>) -> Mat2<T> {
-		Mat2 {
-			a11: d.x, a12: T::zero(),
-			a21: T::zero(), a22: d.y,
-		}
-	}
-	/// Scalar matrix.
-	pub fn scalar(s: T) -> Mat2<T> {
-		Mat2 {
-			a11: s, a12: T::zero(),
-			a21: T::zero(), a22: s,
-		}
-	}
 	pub fn translate<V: Into<Vec2<T>>>(self, translate: V) -> Affine2<T> {
 		let translate = translate.into();
 		Affine2 {
@@ -230,13 +216,6 @@ impl<T> Mat2<T> {
 			y: self.a22,
 		}
 	}
-	/// Gets the diagonal vector.
-	pub fn d(self) -> Vec2<T> {
-		Vec2 {
-			x: self.a11,
-			y: self.a22,
-		}
-	}
 }
 
 //----------------------------------------------------------------
@@ -250,23 +229,13 @@ impl<T: Scalar> Mat2<T> {
 	/// Calculates the inverse matrix.
 	pub fn inv(self) -> Mat2<T> where T: Float {
 		let inv_det = T::one() / self.det();
-		Mat2 {
-			a11:  self.a22 * inv_det, a12: -self.a12 * inv_det,
-			a21: -self.a21 * inv_det, a22:  self.a11 * inv_det,
-		}
+		self.adj() * inv_det
 	}
 	/// Calculates the transposed matrix.
 	pub fn transpose(self) -> Mat2<T> {
 		Mat2 {
 			a11: self.a22, a12: self.a21,
 			a21: self.a12, a22: self.a11,
-		}
-	}
-	/// Calculates the cofactor matrix.
-	pub fn cofactor(self) -> Mat2<T> {
-		Mat2 {
-			a11:  self.a11, a12: -self.a21,
-			a21: -self.a12, a22:  self.a22,
 		}
 	}
 	/// Calculates the adjugate matrix.
@@ -281,28 +250,6 @@ impl<T: Scalar> Mat2<T> {
 //----------------------------------------------------------------
 // Operators
 
-impl<T: ops::Add<Output = T>> ops::Add<Mat2<T>> for Mat2<T> {
-	type Output = Mat2<T>;
-	fn add(self, rhs: Mat2<T>) -> Mat2<T> {
-		Mat2 {
-			a11: self.a11 + rhs.a11,
-			a12: self.a12 + rhs.a12,
-			a21: self.a21 + rhs.a21,
-			a22: self.a22 + rhs.a22,
-		}
-	}
-}
-impl<T: ops::Sub<Output = T>> ops::Sub<Mat2<T>> for Mat2<T> {
-	type Output = Mat2<T>;
-	fn sub(self, rhs: Mat2<T>) -> Mat2<T> {
-		Mat2 {
-			a11: self.a11 - rhs.a11,
-			a12: self.a12 - rhs.a12,
-			a21: self.a21 - rhs.a21,
-			a22: self.a22 - rhs.a22,
-		}
-	}
-}
 impl<T: Copy + ops::Mul<Output = T>> ops::Mul<T> for Mat2<T> {
 	type Output = Mat2<T>;
 	fn mul(self, rhs: T) -> Mat2<T> {
@@ -314,6 +261,15 @@ impl<T: Copy + ops::Mul<Output = T>> ops::Mul<T> for Mat2<T> {
 		}
 	}
 }
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec2<T>> for Mat2<T> {
+	type Output = Vec2<T>;
+	fn mul(self, rhs: Vec2<T>) -> Vec2<T> {
+		Vec2 {
+			x: rhs.x * self.a11 + rhs.y * self.a12,
+			y: rhs.x * self.a21 + rhs.y * self.a22,
+		}
+	}
+}
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat2<T>> for Mat2<T> {
 	type Output = Mat2<T>;
 	fn mul(self, rhs: Mat2<T>) -> Mat2<T> {
@@ -322,16 +278,6 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat2<T>> fo
 			a12: self.a11 * rhs.a12 + self.a12 * rhs.a22,
 			a21: self.a21 * rhs.a11 + self.a22 * rhs.a21,
 			a22: self.a21 * rhs.a12 + self.a22 * rhs.a22,
-		}
-	}
-}
-
-impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec2<T>> for Mat2<T> {
-	type Output = Vec2<T>;
-	fn mul(self, rhs: Vec2<T>) -> Vec2<T> {
-		Vec2 {
-			x: rhs.x * self.a11 + rhs.y * self.a12,
-			y: rhs.x * self.a21 + rhs.y * self.a22,
 		}
 	}
 }
