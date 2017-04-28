@@ -442,6 +442,9 @@ macro_rules! vec {
 			pub fn dup(u: T) -> $vec<T> where T: Copy {
 				$vec { $($field: u),+ }
 			}
+			pub fn zero() -> $vec<T> where T: Zero {
+				$vec { $($field: T::zero()),+ }
+			}
 			unit!($vec);
 		}
 
@@ -480,6 +483,12 @@ macro_rules! vec {
 
 		//----------------------------------------------------------------
 		// Conversions
+
+		impl<T> From<T> for $vec<T> where T: Copy {
+			fn from(val: T) -> $vec<T> {
+				$vec { $($field: val),+ }
+			}
+		}
 
 		impl<T> From<($($T,)+)> for $vec<T> {
 			fn from(val: ($($T,)+)) -> $vec<T> {

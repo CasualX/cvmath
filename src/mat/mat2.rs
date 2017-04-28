@@ -8,8 +8,6 @@ use ::num::{Scalar, Float};
 use ::vec::{Vec2};
 use ::angle::{Angle};
 
-use super::Affine2;
-
 /// 2D transformation matrix.
 ///
 /// A 2x2 row-major matrix.
@@ -61,13 +59,6 @@ impl<T: Scalar> Mat2<T> {
 			a21: T::zero(), a22: T::zero(),
 		}
 	}
-	pub fn translate<V: Into<Vec2<T>>>(self, translate: V) -> Affine2<T> {
-		let translate = translate.into();
-		Affine2 {
-			a11: self.a11, a12: self.a12, a13: translate.x,
-			a21: self.a21, a22: self.a22, a23: translate.y,
-		}
-	}
 	/// Scaling matrix.
 	///
 	/// Scales around the origin.
@@ -114,7 +105,7 @@ impl<T: Scalar> Mat2<T> {
 		}
 		else {
 			// Do something like point reflection instead of NaN
-			Mat2::scale((-T::one(), -T::one()))
+			Mat2::scale(-T::one())
 		}
 	}
 	/// Projection matrix.
@@ -142,15 +133,6 @@ impl<T: Scalar> Mat2<T> {
 
 //----------------------------------------------------------------
 // Conversions
-
-impl<T> From<Affine2<T>> for Mat2<T> {
-	fn from(affine: Affine2<T>) -> Mat2<T> {
-		Mat2 {
-			a11: affine.a11, a12: affine.a12,
-			a21: affine.a21, a22: affine.a22,
-		}
-	}
-}
 
 impl<T> Mat2<T> {
 	/// Imports as row major.
@@ -191,7 +173,7 @@ impl<T> Mat2<T> {
 	///
 	/// Any vector can be [decomposed](https://en.wikipedia.org/wiki/Vector_decomposition) by multiplying each unit vector with its respective component and then summing the result.
 	///
-	/// In 2D space this means `Vec2::unit_x() * vec.x + Vec2::unit_y() * vec.y`.
+	/// In 2D space this means `Vec2::unit_x() * x + Vec2::unit_y() * y`.
 	///
 	/// A linear transformation then can be defined by these unit vectors. The result is a transformation which remaps the unit vectors to their new location.
 	///

@@ -5,7 +5,7 @@ Affine 2D transformation matrix.
 use ::std::{ops};
 
 use ::num::{Scalar, Float};
-use ::vec::{Vec2};
+use ::vec::{Vec2, Vec3};
 use ::angle::{Angle};
 
 use super::Mat2;
@@ -48,31 +48,49 @@ impl<T> Affine2<T> {
 impl<T: Scalar> Affine2<T> {
 	/// Identity matrix.
 	pub fn identity() -> Affine2<T> {
-		Mat2::identity().into()
+		Affine2 {
+			a11: T::one(), a12: T::zero(), a13: T::zero(),
+			a21: T::zero(), a22: T::one(), a23: T::zero(),
+		}
 	}
 	/// Null matrix.
 	pub fn null() -> Affine2<T> {
-		Mat2::null().into()
+		Affine2 {
+			a11: T::zero(), a12: T::zero(), a13: T::zero(),
+			a21: T::zero(), a22: T::zero(), a23: T::zero(),
+		}
 	}
 	/// Translation matrix.
 	pub fn translate<V: Into<Vec2<T>>>(trans: V) -> Affine2<T> {
-		Mat2::identity().translate(trans)
+		let trans = trans.into();
+		Affine2 {
+			a11: T::one(), a12: T::zero(), a13: trans.x,
+			a21: T::zero(), a22: T::one(), a23: trans.y,
+		}
 	}
 	/// Scaling matrix.
 	///
 	/// Scales around the origin.
 	pub fn scale<V: Into<Vec2<T>>>(scale: V) -> Affine2<T> {
-		Mat2::scale(scale).into()
+		let scale = scale.into();
+		Affine2 {
+			a11: scale.x,   a12: T::zero(), a13: T::zero(),
+			a21: T::zero(), a22: scale.y,   a23: T::zero(),
+		}
 	}
 	/// Rotation matrix.
 	///
 	/// Rotates around the origin.
 	pub fn rotate<A: Angle<T = T>>(angle: A) -> Affine2<T> where T: Float {
-		Mat2::rotate(angle).into()
+		Affine2::from_mat(Mat2::rotate(angle), Vec2::zero())
 	}
 	/// Skewing matrix.
 	pub fn skew<V: Into<Vec2<T>>>(skew: V) -> Affine2<T> {
-		Mat2::skew(skew).into()
+		let skew = skew.into();
+		Affine2 {
+			a11: T::one(), a12: skew.x,   a13: T::zero(),
+			a21: skew.y,   a22: T::one(), a23: T::zero(),
+		}
 	}
 	/// Reflection matrix.
 	///
@@ -80,7 +98,7 @@ impl<T: Scalar> Affine2<T> {
 	///
 	/// If `line` is the zero vector, the matrix will be a point reflection around the origin.
 	pub fn reflect<V: Into<Vec2<T>>>(line: V) -> Affine2<T> where T: Float {
-		Mat2::reflect(line).into()
+		Affine2::from_mat(Mat2::reflect(line), Vec2::zero())
 	}
 	/// Projection matrix.
 	///
@@ -88,18 +106,30 @@ impl<T: Scalar> Affine2<T> {
 	///
 	/// If `line` is the zero vector, the matrix is the null matrix.
 	pub fn project<V: Into<Vec2<T>>>(line: V) -> Affine2<T> where T: Float {
-		Mat2::project(line).into()
+		Affine2::from_mat(Mat2::project(line), Vec2::zero())
 	}
 }
 
 //----------------------------------------------------------------
 // Conversions
 
-impl<T: Default> From<Mat2<T>> for Affine2<T> {
-	fn from(mat: Mat2<T>) -> Affine2<T> {
+impl<T> Affine2<T> {
+	pub fn into_mat(self) -> (Mat2<T>, Vec2<T>) {
+		(
+			Mat2 {
+				a11: self.a11, a12: self.a12,
+				a21: self.a21, a22: self.a22,
+			},
+			Vec2 {
+				x: self.a13,
+				y: self.a23,
+			}
+		)
+	}
+	pub fn from_mat(mat: Mat2<T>, vec: Vec2<T>) -> Affine2<T> {
 		Affine2 {
-			a11: mat.a11, a12: mat.a12, a13: T::default(),
-			a21: mat.a21, a22: mat.a22, a23: T::default(),
+			a11: mat.a11, a12: mat.a12, a13: vec.x,
+			a21: mat.a21, a22: mat.a22, a23: vec.y,
 		}
 	}
 }
@@ -144,7 +174,7 @@ impl<T> Affine2<T> {
 	///
 	/// Any vector can be [decomposed](https://en.wikipedia.org/wiki/Vector_decomposition) by multiplying each unit vector with its respective component and then summing the result.
 	///
-	/// In 2D affine space this means `Vec2::unit_x() * vec.x + Vec2::unit_y() * vec.y + translate`.
+	/// In 2D affine space this means `Vec2::unit_x() * x + Vec2::unit_y() * y + translate`.
 	///
 	/// A linear transformation then can be defined by these unit vectors. The result is a transformation which remaps the unit vectors to their new location.
 	///
@@ -213,6 +243,24 @@ impl<T: Scalar> Affine2<T> {
 //----------------------------------------------------------------
 // Operators
 
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec2<T>> for Affine2<T> {
+	type Output = Vec2<T>;
+	fn mul(self, rhs: Vec2<T>) -> Vec2<T> {
+		Vec2 {
+			x: rhs.x * self.a11 + rhs.y * self.a12 + self.a13,
+			y: rhs.x * self.a21 + rhs.y * self.a22 + self.a23,
+		}
+	}
+}
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec3<T>> for Affine2<T> {
+	type Output = Vec2<T>;
+	fn mul(self, rhs: Vec3<T>) -> Vec2<T> {
+		Vec2 {
+			x: rhs.x * self.a11 + rhs.y * self.a12 + rhs.z * self.a13,
+			y: rhs.x * self.a21 + rhs.y * self.a22 + rhs.z * self.a23,
+		}
+	}
+}
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine2<T>> for Affine2<T> {
 	type Output = Affine2<T>;
 	fn mul(self, rhs: Affine2<T>) -> Affine2<T> {
@@ -223,16 +271,6 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine2<T>>
 			a21: self.a21 * rhs.a11 + self.a22 * rhs.a21,
 			a22: self.a21 * rhs.a12 + self.a22 * rhs.a22,
 			a23: self.a21 * rhs.a13 + self.a22 * rhs.a23 + self.a23,
-		}
-	}
-}
-
-impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec2<T>> for Affine2<T> {
-	type Output = Vec2<T>;
-	fn mul(self, rhs: Vec2<T>) -> Vec2<T> {
-		Vec2 {
-			x: rhs.x * self.a11 + rhs.y * self.a12 + self.a13,
-			y: rhs.x * self.a21 + rhs.y * self.a22 + self.a23,
 		}
 	}
 }
