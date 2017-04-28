@@ -40,8 +40,8 @@ impl<T> Affine2<T> {
 	pub fn new(a11: T, a12: T, a13: T,
 	           a21: T, a22: T, a23: T) -> Affine2<T> {
 		Affine2 {
-			a11: a11, a12: a12, a13: a13,
-			a21: a21, a22: a22, a23: a23,
+			a11, a12, a13,
+			a21, a22, a23,
 		}
 	}
 }

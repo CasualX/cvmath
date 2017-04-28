@@ -26,10 +26,7 @@ macro_rules! line {
 	($line:ident $pt:ident) => {
 		impl<T> $line<T> {
 			pub fn new(start: $pt<T>, end: $pt<T>) -> $line<T> {
-				$line {
-					start: start,
-					end: end,
-				}
+				$line { start, end }
 			}
 			pub fn point(pt: $pt<T>) -> $line<T> where T: Copy {
 				$line {

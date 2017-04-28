@@ -348,48 +348,48 @@ macro_rules! unit {
 macro_rules! set {
 	(Vec1) => {
 		/// Sets the `x` component.
-		pub fn set_x(self, x: T) -> Vec1<T> { Vec1 { x: x } }
+		pub fn set_x(self, x: T) -> Vec1<T> { Vec1 { x } }
 	};
 	(Vec2) => {
 		/// Sets the `x` component.
-		pub fn set_x(self, x: T) -> Vec2<T> { Vec2 { x: x, y: self.y } }
+		pub fn set_x(self, x: T) -> Vec2<T> { Vec2 { x, y: self.y } }
 		/// Sets the `y` component.
-		pub fn set_y(self, y: T) -> Vec2<T> { Vec2 { x: self.x, y: y } }
+		pub fn set_y(self, y: T) -> Vec2<T> { Vec2 { x: self.x, y } }
 	};
 	(Vec3) => {
 		/// Sets the `x` component.
-		pub fn set_x(self, x: T) -> Vec3<T> { Vec3 { x: x, y: self.y, z: self.z } }
+		pub fn set_x(self, x: T) -> Vec3<T> { Vec3 { x, y: self.y, z: self.z } }
 		/// Sets the `y` component.
-		pub fn set_y(self, y: T) -> Vec3<T> { Vec3 { x: self.x, y: y, z: self.z } }
+		pub fn set_y(self, y: T) -> Vec3<T> { Vec3 { x: self.x, y, z: self.z } }
 		/// Sets the `z` component.
-		pub fn set_z(self, z: T) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z: z } }
+		pub fn set_z(self, z: T) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z } }
 	};
 	(Vec4) => {
 		/// Sets the `x` component.
-		pub fn set_x(self, x: T) -> Vec4<T> { Vec4 { x: x, y: self.y, z: self.z, w: self.w } }
+		pub fn set_x(self, x: T) -> Vec4<T> { Vec4 { x, y: self.y, z: self.z, w: self.w } }
 		/// Sets the `y` component.
-		pub fn set_y(self, y: T) -> Vec4<T> { Vec4 { x: self.x, y: y, z: self.z, w: self.w } }
+		pub fn set_y(self, y: T) -> Vec4<T> { Vec4 { x: self.x, y, z: self.z, w: self.w } }
 		/// Sets the `z` component.
-		pub fn set_z(self, z: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: z, w: self.w } }
+		pub fn set_z(self, z: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z, w: self.w } }
 		/// Sets the `w` component.
-		pub fn set_w(self, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: self.z, w: w } }
+		pub fn set_w(self, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: self.z, w } }
 	};
 }
 
 macro_rules! cvt {
 	(Vec1) => {
 		/// Extends the 1D vector with a `y` component.
-		pub fn vec2(self, y: T) -> Vec2<T> { Vec2 { x: self.x, y: y } }
+		pub fn vec2(self, y: T) -> Vec2<T> { Vec2 { x: self.x, y } }
 	};
 	(Vec2) => {
 		/// Extends the 2D vector with a `z` component.
-		pub fn vec3(self, z: T) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z: z } }
+		pub fn vec3(self, z: T) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z } }
 		/// Extends the 2D vector with a `z` and `w` component.
-		pub fn vec4(self, z: T, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: z, w: w } }
+		pub fn vec4(self, z: T, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z, w } }
 	};
 	(Vec3) => {
 		/// Extends the 3D vector with a `w` component.
-		pub fn vec4(self, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: self.z, w: w } }
+		pub fn vec4(self, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: self.z, w } }
 		/// Drops the `z` component.
 		pub fn xy(self) -> Vec2<T> { Vec2 { x: self.x, y: self.y } }
 	};
@@ -401,9 +401,9 @@ macro_rules! cvt {
 	};
 }
 
-const VEC_FMT_OPEN: &'static str = "(";
-const VEC_FMT_SEP: &'static str = ",";
-const VEC_FMT_CLOSE: &'static str = ")";
+const VEC_FMT_OPEN: &str = "(";
+const VEC_FMT_SEP: &str = ",";
+const VEC_FMT_CLOSE: &str = ")";
 
 macro_rules! fmt {
 	($ty:ident { $($field:ident),+ }) => {

@@ -24,10 +24,7 @@ macro_rules! rect {
 	($ty:ident $pt:ident { $($field:ident),+ }) => {
 		impl<T> $ty<T> {
 			pub fn new(mins: $pt<T>, maxs: $pt<T>) -> $ty<T> {
-				$ty {
-					mins: mins,
-					maxs: maxs,
-				}
+				$ty { mins, maxs }
 			}
 			pub fn point(pt: $pt<T>) -> $ty<T> where T: Copy {
 				$ty {
@@ -45,10 +42,7 @@ macro_rules! rect {
 				let mins = $pt::max(self.mins, rhs.mins);
 				let maxs = $pt::min(self.maxs, rhs.maxs);
 				if mins <= maxs {
-					Some($ty {
-						mins: mins,
-						maxs: maxs,
-					})
+					Some($ty { mins, maxs })
 				}
 				else {
 					None
