@@ -190,32 +190,6 @@ assert_eq!(12, Vec3::dot(Vec3::new(1, 2, 3), Vec3::new(4, -5, 6)));
 assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross((3, -3, 1).into(), (4, 9, 1).into()));
 ```
 
-## Packed
-
-`unpack32(v)`: Unpacks `u64` to 2×`u32`.
-
-`unpack16(v)`: Unpacks `u64` to 4×`u16` or `u32` to 2×`u16`.
-
-`unpack8(v)`: Unpacks `u32` to 4×`u8` or `u16` to 2×`u8`.
-
-`pack(self)`: Packs back together as unsigned integer.
-
-### Examples
-
-```
-# use cgm::prelude::{Vec2, Vec4};
-assert_eq!(Vec2 { x: 1, y: 2 }, Vec2::unpack32(0x00000002_00000001));
-assert_eq!(Vec2 { x: 1, y: 2 }, Vec2::unpack16(0x0002_0001));
-assert_eq!(Vec2 { x: 1, y: 2 }, Vec2::unpack8(0x02_01));
-
-assert_eq!(Vec4 { x: 1, y: 2, z: 3, w: 4 }, Vec4::unpack16(0x0004_0003_0002_0001));
-assert_eq!(Vec4 { x: 1, y: 2, z: 3, w: 4 }, Vec4::unpack8(0x04_03_02_01));
-
-// Example to unpack RGBA u32 where x: red, y: green, z: blue, w: alpha.
-let color = Vec4::unpack8(0xFFC08040).cast::<f32>() / 255.0;
-assert_eq!(Vec4 { x: 64.0/255.0, y: 128.0/255.0, z: 192.0/255.0, w: 1.0 }, color);
-```
-
 ## Operators
 
 `hadd(self)`: Horizontal adds all components.
@@ -251,7 +225,7 @@ assert_eq!(Vec4 { x: 64.0/255.0, y: 128.0/255.0, z: 192.0/255.0, w: 1.0 }, color
 
 use ::std::{mem, ops};
 
-use ::num::{Scalar, Zero, One, Abs, Min, Max, Float, Cast};
+use ::num::{Scalar, Zero, One, Float, Cast};
 
 use ::angle::{Rad, Angle};
 
@@ -287,31 +261,6 @@ pub struct Vec4<T> {
 	pub y: T,
 	pub z: T,
 	pub w: T,
-}
-
-macro_rules! Vec1 {
-	(Vec1 $($body:tt)*) => { $($body)* };
-	(Vec2 $($body:tt)*) => {};
-	(Vec3 $($body:tt)*) => {};
-	(Vec4 $($body:tt)*) => {};
-}
-macro_rules! Vec2 {
-	(Vec1 $($body:tt)*) => {};
-	(Vec2 $($body:tt)*) => { $($body)* };
-	(Vec3 $($body:tt)*) => {};
-	(Vec4 $($body:tt)*) => {};
-}
-macro_rules! Vec3 {
-	(Vec1 $($body:tt)*) => {};
-	(Vec2 $($body:tt)*) => {};
-	(Vec3 $($body:tt)*) => { $($body)* };
-	(Vec4 $($body:tt)*) => {};
-}
-macro_rules! Vec4 {
-	(Vec1 $($body:tt)*) => {};
-	(Vec2 $($body:tt)*) => {};
-	(Vec3 $($body:tt)*) => {};
-	(Vec4 $($body:tt)*) => { $($body)* };
 }
 
 macro_rules! unit {
@@ -428,7 +377,11 @@ macro_rules! fmt {
 
 // This may or may not be horrible abuse of the `macro_rules!` system :)
 macro_rules! vec {
-	($vec:ident $N:tt { $($field:ident $I:tt $T:ident),+ }) => {
+	(
+		$vec:ident $N:tt
+		{ $($field:ident $I:tt $T:ident),+ }
+		{ $($ops:tt)* }
+	) => {
 
 		//----------------------------------------------------------------
 		// Constructors
@@ -564,6 +517,10 @@ macro_rules! vec {
 			pub fn len(self) -> T where T: Float {
 				self.len_sqr().sqrt()
 			}
+			/// Calculates the manhattan length of the vector.
+			pub fn len_hat(self) -> T {
+				infix!(+ $(self.$field.abs()),+)
+			}
 			/// Calculates the squared euclidean distance to another vector.
 			pub fn dist_sqr(self, to: $vec<T>) -> T {
 				infix!(+ $((to.$field - self.$field) * (to.$field - self.$field)),+)
@@ -571,6 +528,10 @@ macro_rules! vec {
 			/// Calculates the euclidean distance to another vector.
 			pub fn dist(self, to: $vec<T>) -> T where T: Float {
 				self.dist_sqr(to).sqrt()
+			}
+			/// Calculates the manhattan distance to another vector.
+			pub fn dist_hat(self, to: $vec<T>) -> T {
+				infix!(+ $((to.$field - self.$field).abs()),+)
 			}
 			/// Normalizes the vector.
 			pub fn norm(self) -> $vec<T> where T: Float {
@@ -600,34 +561,7 @@ macro_rules! vec {
 			pub fn project(self, v: $vec<T>) -> $vec<T> where T: Float {
 				self * (self.dot(v) / v.dot(v))
 			}
-			Vec2! { $vec
-				/// Calculates the polar angle.
-				pub fn polar_angle(self) -> Rad<T> where T: Float {
-					Rad::atan2(self.y, self.x)
-				}
-				/// Rotates the vector counter-clockwise by 90°.
-				pub fn ccw(self) -> Vec2<T> {
-					Vec2 { x: self.y, y: -self.x }
-				}
-				/// Rotates the vector clockwise by 90°.
-				pub fn cw(self) -> Vec2<T> {
-					Vec2 { x: -self.y, y: self.x }
-				}
-				/// Calculates the 3D cross product where the inputs are extended with `z = 0` and returns the magnitude of the result.
-				pub fn cross(self, rhs: Vec2<T>) -> T {
-					self.x * rhs.y - self.y * rhs.x
-				}
-			}
-			Vec3! { $vec
-				/// Calculates the 3D cross product.
-				pub fn cross(self, rhs: Vec3<T>) -> Vec3<T> {
-					Vec3 {
-						x: self.y * rhs.z - self.z * rhs.y,
-						y: self.z * rhs.x - self.x * rhs.z,
-						z: self.x * rhs.y - self.y * rhs.x,
-					}
-				}
-			}
+			$($ops)*
 			/// Calculates the inner product.
 			pub fn dot(self, rhs: $vec<T>) -> T {
 				infix!(+ $(self.$field * rhs.$field),+)
@@ -642,59 +576,30 @@ macro_rules! vec {
 			pub fn angle(self, rhs: $vec<T>) -> Rad<T> where T: Float {
 				Rad::acos(self.cos_angle(rhs))
 			}
-		}
-
-		//----------------------------------------------------------------
-		// Operators
-
-		impl<T> $vec<T> {
 			/// Horizontal adds all components.
-			pub fn hadd(self) -> T where T: ops::Add<Output = T> {
+			pub fn hadd(self) -> T {
 				infix!(+ $(self.$field),+)
 			}
-			Vec2! { $vec
-				/// Horizontal subtracts the components.
-				pub fn hsub(self) -> T where T: ops::Sub<Output = T> {
-					self.x - self.y
-				}
-			}
 			/// Component wise absolute value.
-			pub fn abs(self) -> $vec<T> where T: Abs<Output = T> {
+			pub fn abs(self) -> $vec<T> {
 				$vec { $($field: self.$field.abs()),+ }
 			}
 			/// Component wise minimum value.
-			pub fn min(self, rhs: $vec<T>) -> $vec<T> where T: Min<Output = T> {
+			pub fn min(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::min(self.$field, rhs.$field)),+ }
 			}
 			/// Component wise maximum value.
-			pub fn max(self, rhs: $vec<T>) -> $vec<T> where T: Max<Output = T> {
+			pub fn max(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::max(self.$field, rhs.$field)),+ }
 			}
 			/// Adds the scaled vector.
-			pub fn mul_add(self, vec: $vec<T>, scale: T) -> $vec<T> where T: Scalar {
+			pub fn mul_add(self, vec: $vec<T>, scale: T) -> $vec<T> {
 				$vec { $($field: self.$field + vec.$field * scale),+ }
 			}
 		}
 
-		// Num traits
-		impl<T: Abs> Abs for $vec<T> {
-			type Output = $vec<T::Output>;
-			fn abs(self) -> $vec<T::Output> {
-				$vec { $($field: self.$field.abs()),+ }
-			}
-		}
-		impl<U, T: Min<U>> Min<$vec<U>> for $vec<T> {
-			type Output = $vec<T::Output>;
-			fn min(self, rhs: $vec<U>) -> $vec<T::Output> {
-				$vec { $($field: self.$field.min(rhs.$field)),+ }
-			}
-		}
-		impl<U, T: Max<U>> Max<$vec<U>> for $vec<T> {
-			type Output = $vec<T::Output>;
-			fn max(self, rhs: $vec<U>) -> $vec<T::Output> {
-				$vec { $($field: self.$field.max(rhs.$field)),+ }
-			}
-		}
+		//----------------------------------------------------------------
+		// Operators
 
 		// Vector addition, subtraction and negation
 		impl<U, T: ops::Add<U>> ops::Add<$vec<U>> for $vec<T> {
@@ -764,89 +669,65 @@ macro_rules! vec {
 }
 
 // vec!(Vec1 1 { x 0 T });
-vec!(Vec2 2 { x 0 T, y 1 T });
-vec!(Vec3 3 { x 0 T, y 1 T, z 2 T });
-vec!(Vec4 4 { x 0 T, y 1 T, z 2 T, w 3 T });
-
-//----------------------------------------------------------------
-// Packed integers
-
-impl Vec2<u32> {
-	/// Unpack `u64` into `u32 u32`.
-	#[inline]
-	pub fn unpack32(v: u64) -> Vec2<u32> {
-		Vec2 {
-			x: ((v & 0x00000000FFFFFFFF) >> 0) as u32,
-			y: ((v & 0xFFFFFFFF00000000) >> 32) as u32,
+vec!(Vec2 2 { x 0 T, y 1 T }
+/* Operations*/ {
+	/// Calculates the polar angle.
+	pub fn polar_angle(self) -> Rad<T> where T: Float {
+		Rad::atan2(self.y, self.x)
+	}
+	/// Rotates the vector counter-clockwise by 90°.
+	pub fn ccw(self) -> Vec2<T> {
+		Vec2 { x: self.y, y: -self.x }
+	}
+	/// Rotates the vector clockwise by 90°.
+	pub fn cw(self) -> Vec2<T> {
+		Vec2 { x: -self.y, y: self.x }
+	}
+	/// Calculates the 3D cross product where the inputs are extended with `z = 0` and returns the magnitude of the result.
+	pub fn cross(self, rhs: Vec2<T>) -> T {
+		self.x * rhs.y - self.y * rhs.x
+	}
+	/// Horizontal subtracts the components.
+	pub fn hsub(self) -> T where T: ops::Sub<Output = T> {
+		self.x - self.y
+	}
+});
+vec!(Vec3 3 { x 0 T, y 1 T, z 2 T }
+/* Operations */ {
+	/// Calculates the 3D cross product.
+	pub fn cross(self, rhs: Vec3<T>) -> Vec3<T> {
+		Vec3 {
+			x: self.y * rhs.z - self.z * rhs.y,
+			y: self.z * rhs.x - self.x * rhs.z,
+			z: self.x * rhs.y - self.y * rhs.x,
 		}
 	}
-	/// Pack into `u64`.
-	#[inline]
-	pub fn pack(self) -> u64 {
-		(self.y as u64) << 32 | (self.x as u64)
-	}
-}
-impl Vec2<u16> {
-	/// Unpack `u32` into `u16 u16`.
-	#[inline]
-	pub fn unpack16(v: u32) -> Vec2<u16> {
-		Vec2 {
-			x: ((v & 0x0000FFFF) >> 0) as u16,
-			y: ((v & 0xFFFF0000) >> 16) as u16,
+	/// Homogenous divide.
+	pub fn hdiv(self) -> Vec2<T> {
+		if self.z != T::zero() {
+			Vec2 {
+				x: self.x / self.z,
+				y: self.x / self.z,
+			}
+		}
+		else {
+			self.xy()
 		}
 	}
-	/// Pack into `u32`.
-	#[inline]
-	pub fn pack(self) -> u32 {
-		(self.y as u32) << 16 | (self.x as u32)
-	}
-}
-impl Vec2<u8> {
-	/// Unpack `u16` into `u8 u8`.
-	#[inline]
-	pub fn unpack8(v: u16) -> Vec2<u8> {
-		Vec2 {
-			x: ((v as u32 & 0x000000FF) >> 0) as u8,
-			y: ((v as u32 & 0x0000FF00) >> 8) as u8,
+});
+vec!(Vec4 4 { x 0 T, y 1 T, z 2 T, w 3 T }
+/* Operations */ {
+	/// Homogenous divide.
+	pub fn hdiv(self) -> Vec3<T> {
+		if self.w != T::zero() {
+			Vec3 {
+				x: self.x / self.w,
+				y: self.y / self.w,
+				z: self.z / self.w,
+			}
+		}
+		else {
+			self.xyz()
 		}
 	}
-	/// Pack into `u16`.
-	#[inline]
-	pub fn pack(self) -> u16 {
-		((self.y as u32) << 8 | (self.x as u32)) as u16
-	}
-}
-impl Vec4<u16> {
-	/// Unpack `u64` into `u16 u16 u16 u16`.
-	#[inline]
-	pub fn unpack16(v: u64) -> Vec4<u16> {
-		Vec4 {
-			x: ((v & 0x000000000000FFFF) >> 0) as u16,
-			y: ((v & 0x00000000FFFF0000) >> 16) as u16,
-			z: ((v & 0x0000FFFF00000000) >> 32) as u16,
-			w: ((v & 0xFFFF000000000000) >> 48) as u16,
-		}
-	}
-	/// Pack into `u64`.
-	#[inline]
-	pub fn pack(self) -> u64 {
-		(self.w as u64) << 48 | (self.z as u64) << 32 | (self.y as u64) << 16 | (self.x as u64)
-	}
-}
-impl Vec4<u8> {
-	/// Unpack `u32` into `u8 u8 u8 u8`.
-	#[inline]
-	pub fn unpack8(v: u32) -> Vec4<u8> {
-		Vec4 {
-			x: ((v & 0x000000FF) >> 0) as u8,
-			y: ((v & 0x0000FF00) >> 8) as u8,
-			z: ((v & 0x00FF0000) >> 16) as u8,
-			w: ((v & 0xFF000000) >> 24) as u8,
-		}
-	}
-	/// Pack into `u32`.
-	#[inline]
-	pub fn pack(self) -> u32 {
-		(self.w as u32) << 24 | (self.z as u32) << 16 | (self.y as u32) << 8 | (self.x as u32)
-	}
-}
+});
