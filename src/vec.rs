@@ -144,6 +144,16 @@ assert_eq!(Vec2::from((2, 3)), Vec2::from([2, 3]));
 
 `angle(self, rhs)`: Calculates the inner angle.
 
+`hadd(self)`: Horizontal adds all components.
+
+`abs(self)`: Component-wise absolute value.
+
+`min(self, rhs)`: Component-wise minimum value.
+
+`max(self, rhs)`: Component-wise maximum value.
+
+`mul_add(self, vec, scale)`: Adds the scaled value.
+
 Exclusive to `Vec2`:
 
 `polar_angle(self)`: Calculates the polar angle.
@@ -153,6 +163,8 @@ Exclusive to `Vec2`:
 `cw(self)`: Rotates the vector clockwise by 90°.
 
 `cross(self, rhs)`: Calculates the 3D cross product where the inputs are extended with `z = 0` and returns the magnitude of the result.
+
+`hsub(self)`: Horizontal subtracts y from x.
 
 Exclusive to `Vec3`:
 
@@ -191,18 +203,6 @@ assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross((3, -3, 1).into(), (4, 9, 1
 ```
 
 ## Operators
-
-`hadd(self)`: Horizontal adds all components.
-
-`hsub(self)`: Horizontal subtracts the components of `Vec2`.
-
-`abs(self)`: Component-wise absolute value.
-
-`min(self, rhs)`: Component-wise minimum value.
-
-`max(self, rhs)`: Component-wise maximum value.
-
-`mul_add(self, vec, scale)`: Adds the scaled value.
 
 `Add`: Adds the vectors component-wise.
 
@@ -265,31 +265,31 @@ pub struct Vec4<T> {
 
 macro_rules! unit {
 	(Vec1) => {
-		/// A unit vector in the `x` direction.
+		/// Unit vector in the `x` direction.
 		pub fn unit_x() -> Vec1<T> where T: Zero + One { Vec1 { x: T::one() } }
 	};
 	(Vec2) => {
-		/// A unit vector in the `x` direction.
+		/// Unit vector in the `x` direction.
 		pub fn unit_x() -> Vec2<T> where T: Zero + One { Vec2 { x: T::one(), y: T::zero() } }
-		/// A unit vector in the `y` direction.
+		/// Unit vector in the `y` direction.
 		pub fn unit_y() -> Vec2<T> where T: Zero + One { Vec2 { x: T::zero(), y: T::one() } }
 	};
 	(Vec3) => {
-		/// A unit vector in the `x` direction.
+		/// Unit vector in the `x` direction.
 		pub fn unit_x() -> Vec3<T> where T: Zero + One { Vec3 { x: T::one(), y: T::zero(), z: T::zero() } }
-		/// A unit vector in the `y` direction.
+		/// Unit vector in the `y` direction.
 		pub fn unit_y() -> Vec3<T> where T: Zero + One { Vec3 { x: T::zero(), y: T::one(), z: T::zero() } }
-		/// A unit vector in the `z` direction.
+		/// Unit vector in the `z` direction.
 		pub fn unit_z() -> Vec3<T> where T: Zero + One { Vec3 { x: T::zero(), y: T::zero(), z: T::one() } }
 	};
 	(Vec4) => {
-		/// A unit vector in the `x` direction.
+		/// Unit vector in the `x` direction.
 		pub fn unit_x() -> Vec4<T> where T: Zero + One { Vec4 { x: T::one(), y: T::zero(), z: T::zero(), w: T::zero() } }
-		/// A unit vector in the `y` direction.
+		/// Unit vector in the `y` direction.
 		pub fn unit_y() -> Vec4<T> where T: Zero + One { Vec4 { x: T::zero(), y: T::one(), z: T::zero(), w: T::zero() } }
-		/// A unit vector in the `z` direction.
+		/// Unit vector in the `z` direction.
 		pub fn unit_z() -> Vec4<T> where T: Zero + One { Vec4 { x: T::zero(), y: T::zero(), z: T::one(), w: T::zero() } }
-		/// A unit vector in the `w` direction.
+		/// Unit vector in the `w` direction.
 		pub fn unit_w() -> Vec4<T> where T: Zero + One { Vec4 { x: T::zero(), y: T::zero(), z: T::zero(), w: T::one() } }
 	};
 }
@@ -394,9 +394,6 @@ macro_rules! vec {
 			/// Constructs a new vector by broadcasting to all its components.
 			pub fn dup(u: T) -> $vec<T> where T: Copy {
 				$vec { $($field: u),+ }
-			}
-			pub fn zero() -> $vec<T> where T: Zero {
-				$vec { $($field: T::zero()),+ }
 			}
 			unit!($vec);
 		}
@@ -669,8 +666,7 @@ macro_rules! vec {
 }
 
 // vec!(Vec1 1 { x 0 T });
-vec!(Vec2 2 { x 0 T, y 1 T }
-/* Operations*/ {
+vec!(Vec2 2 { x 0 T, y 1 T } {
 	/// Calculates the polar angle.
 	pub fn polar_angle(self) -> Rad<T> where T: Float {
 		Rad::atan2(self.y, self.x)
@@ -683,18 +679,23 @@ vec!(Vec2 2 { x 0 T, y 1 T }
 	pub fn cw(self) -> Vec2<T> {
 		Vec2 { x: -self.y, y: self.x }
 	}
-	/// Calculates the 3D cross product where the inputs are extended with `z = 0` and returns the magnitude of the result.
+	/// Calculates the magnitude of the 3D cross product where the inputs are extended with `z = 0`.
+	///
+	/// This result is also equal to the area of the parallelogram between the two vectors.
+	///
+	/// Furthermore this area is signed; a positive value means the `rhs` is on the left side of `self` and a negative value means `rhs` is on the right side.
 	pub fn cross(self, rhs: Vec2<T>) -> T {
 		self.x * rhs.y - self.y * rhs.x
 	}
 	/// Horizontal subtracts the components.
-	pub fn hsub(self) -> T where T: ops::Sub<Output = T> {
+	pub fn hsub(self) -> T {
 		self.x - self.y
 	}
 });
-vec!(Vec3 3 { x 0 T, y 1 T, z 2 T }
-/* Operations */ {
+vec!(Vec3 3 { x 0 T, y 1 T, z 2 T } {
 	/// Calculates the 3D cross product.
+	///
+	/// Effectively calculates the vector perpendicular to both inputs with direction according to the [right-hand rule](https://en.wikipedia.org/wiki/Right-hand_rule).
 	pub fn cross(self, rhs: Vec3<T>) -> Vec3<T> {
 		Vec3 {
 			x: self.y * rhs.z - self.z * rhs.y,
@@ -715,8 +716,7 @@ vec!(Vec3 3 { x 0 T, y 1 T, z 2 T }
 		}
 	}
 });
-vec!(Vec4 4 { x 0 T, y 1 T, z 2 T, w 3 T }
-/* Operations */ {
+vec!(Vec4 4 { x 0 T, y 1 T, z 2 T, w 3 T } {
 	/// Homogenous divide.
 	pub fn hdiv(self) -> Vec3<T> {
 		if self.w != T::zero() {
