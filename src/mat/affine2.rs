@@ -200,8 +200,6 @@ impl<T> Affine2<T> {
 		}
 	}
 	/// Gets the translation vector.
-	///
-	/// Translation is applied after the basis change.
 	pub fn t(self) -> Vec2<T> {
 		Vec2 {
 			x: self.a13,
@@ -268,6 +266,7 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine2<T>>
 			a11: self.a11 * rhs.a11 + self.a12 * rhs.a21,
 			a12: self.a11 * rhs.a12 + self.a12 * rhs.a22,
 			a13: self.a11 * rhs.a13 + self.a12 * rhs.a23 + self.a13,
+
 			a21: self.a21 * rhs.a11 + self.a22 * rhs.a21,
 			a22: self.a21 * rhs.a12 + self.a22 * rhs.a22,
 			a23: self.a21 * rhs.a13 + self.a22 * rhs.a23 + self.a23,
