@@ -78,7 +78,7 @@ assert_eq!(Vec3 { x: 1, y: 2, z: 3 }, Vec4::new(1, 2, 3, 4).xyz());
 
 ## Transformations
 
-`cast<U>(self)` where T: `Cast<U>`: Casts to a vector of type `U` with the same dimensions.
+`cast<U>(self)` where T: `AsCast<U>`: Casts to a vector of type `U` with the same dimensions.
 
 `map<U, F>(self, F)` where F: `FnMut(T) -> U`: Maps a callable over the components.
 
@@ -225,7 +225,7 @@ assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross((3, -3, 1).into(), (4, 9, 1
 
 use ::std::{mem, ops};
 
-use ::num::{Scalar, Zero, One, Float, Cast};
+use ::num::{Scalar, Zero, One, Float, AsCast};
 
 use ::angle::{Rad, Angle};
 
@@ -350,10 +350,6 @@ macro_rules! cvt {
 	};
 }
 
-const VEC_FMT_OPEN: &str = "(";
-const VEC_FMT_SEP: &str = ",";
-const VEC_FMT_CLOSE: &str = ")";
-
 macro_rules! fmt {
 	($ty:ident { $($field:ident),+ }) => {
 		fmt!($ty { $($field),+ } ::std::fmt::Display);
@@ -367,9 +363,9 @@ macro_rules! fmt {
 	($ty:ident { $($field:ident),+ } $fmt:path) => {
 		impl<T: $fmt> $fmt for $ty<T> {
 			fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-				f.write_str(VEC_FMT_OPEN)?;
-				instmt!(f.write_str(VEC_FMT_SEP)?; $(self.$field.fmt(f)?;)+);
-				f.write_str(VEC_FMT_CLOSE)
+				f.write_str("(")?;
+				instmt!(f.write_str(",")?; $(self.$field.fmt(f)?;)+);
+				f.write_str(")")
 			}
 		}
 	};
@@ -408,8 +404,8 @@ macro_rules! vec {
 
 		impl<T> $vec<T> {
 			/// Casts to a vector of different type with the same dimensions.
-			pub fn cast<U>(self) -> $vec<U> where T: Cast<U> {
-				$vec { $($field: self.$field.cast()),+ }
+			pub fn cast<U>(self) -> $vec<U> where T: AsCast<U> {
+				$vec { $($field: self.$field.as_cast()),+ }
 			}
 			/// Maps a callable over the components.
 			pub fn map<U, F: FnMut(T) -> U>(self, mut f: F) -> $vec<U> {

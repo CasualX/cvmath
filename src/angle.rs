@@ -9,7 +9,7 @@ Wishlist:
 
 use ::std::{fmt, ops};
 
-use ::num::{Cast, Float};
+use ::num::{AsCast, Float};
 
 /// Angle units.
 pub trait Angle where Self:
@@ -155,8 +155,8 @@ macro_rules! angle {
 		// Conversions
 
 		impl<T> $ty<T> {
-			pub fn cast<U>(self) -> $ty<U> where T: Cast<U> {
-				$ty(self.0.cast())
+			pub fn cast<U>(self) -> $ty<U> where T: AsCast<U> {
+				$ty(self.0.as_cast())
 			}
 		}
 

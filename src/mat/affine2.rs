@@ -82,7 +82,7 @@ impl<T: Scalar> Affine2<T> {
 	///
 	/// Rotates around the origin.
 	pub fn rotate<A: Angle<T = T>>(angle: A) -> Affine2<T> where T: Float {
-		Affine2::from_mat(Mat2::rotate(angle), Vec2::zero())
+		Affine2::from_mat(Mat2::rotate(angle), Vec2::default())
 	}
 	/// Skewing matrix.
 	pub fn skew<V: Into<Vec2<T>>>(skew: V) -> Affine2<T> {
@@ -98,7 +98,7 @@ impl<T: Scalar> Affine2<T> {
 	///
 	/// If `line` is the zero vector, the matrix will be a point reflection around the origin.
 	pub fn reflect<V: Into<Vec2<T>>>(line: V) -> Affine2<T> where T: Float {
-		Affine2::from_mat(Mat2::reflect(line), Vec2::zero())
+		Affine2::from_mat(Mat2::reflect(line), Vec2::default())
 	}
 	/// Projection matrix.
 	///
@@ -106,7 +106,7 @@ impl<T: Scalar> Affine2<T> {
 	///
 	/// If `line` is the zero vector, the matrix is the null matrix.
 	pub fn project<V: Into<Vec2<T>>>(line: V) -> Affine2<T> where T: Float {
-		Affine2::from_mat(Mat2::project(line), Vec2::zero())
+		Affine2::from_mat(Mat2::project(line), Vec2::default())
 	}
 }
 
