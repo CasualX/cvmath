@@ -8,6 +8,7 @@ Wishlist:
 */
 
 use ::std::{fmt, ops};
+use ::std::str::FromStr;
 
 use ::num::{AsCast, Float};
 
@@ -217,6 +218,23 @@ macro_rules! angle {
 
 		fmt!($ty);
 
+		//----------------------------------------------------------------
+		// Parsing
+
+		impl<T: Float + FromStr> FromStr for $ty<T> {
+			type Err = T::Err;
+			fn from_str(s: &str) -> Result<$ty<T>, T::Err> {
+				if s.ends_with("°") {
+					s[..s.len() - "°".len()].trim_right().parse().map(|a| Deg(a).into())
+				}
+				else if s.ends_with("rad") {
+					s[..s.len() - "rad".len()].trim_right().parse().map(|a| Rad(a).into())
+				}
+				else {
+					s.parse().map($ty)
+				}
+			}
+		}
 	};
 }
 
@@ -233,6 +251,8 @@ impl<T: Float> From<Rad<T>> for Deg<T> {
 		rad.to_deg()
 	}
 }
+
+//----------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -252,21 +272,19 @@ mod tests {
 		assert_eq!(" 12.0°", format!("{:>5.1}", Deg(12.0)));
 	}
 
-	// #[cfg(all(not(feature = "format-rad-pi"), not(feature = "format-rad-tau")))]
 	#[test]
 	fn rad_fmt() {
 		assert_eq!("2.00 rad", format!("{:.2}", Rad(2.0f32)));
 	}
-	// #[cfg(feature = "format-rad-pi")]
-	// #[test]
-	// fn rad_fmt() {
-	// 	assert_eq!("2.00π rad", format!("{:.2}", Rad::<f32>::turn()));
-	// }
-	// #[cfg(feature = "format-rad-tau")]
-	// #[test]
-	// fn rad_fmt() {
-	// 	assert_eq!("1.00τ rad", format!("{:.2}", Rad::<f32>::turn()));
-	// }
+
+	#[test]
+	fn parse() {
+		assert_eq!(Rad::<f32>::turn(), "360°".parse().unwrap());
+		assert_eq!(Rad(1.5f32), "1.5 rad".parse().unwrap());
+		assert_eq!(Rad(2.5f64), "2.5".parse().unwrap());
+		assert_eq!(Deg(180f32), "180°".parse().unwrap());
+		assert_eq!(Deg(90f32), "90".parse().unwrap());
+	}
 
 	#[test]
 	fn from() {

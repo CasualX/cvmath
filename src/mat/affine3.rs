@@ -4,7 +4,7 @@ Affine 3D transformation matrix.
 
 use ::std::{ops};
 
-use ::num::{Scalar, Float};
+use ::num::{Scalar};
 use ::vec::{Vec3, Vec4};
 
 /// Affine 3D transformation matrix.

@@ -115,7 +115,8 @@ assert_eq!(-10, vec.fold(0, |acc, c| acc - c));
 
 ```
 # use cgm::prelude::{Vec2};
-assert_eq!(Vec2::from((2, 3)), Vec2::from([2, 3]));
+let v1: Vec2<_> = From::<(i32, i32)>::from((2, 3));
+assert_eq!(v1, Vec2::from([2, 3]));
 ```
 
 ## Operations where T is `Scalar`
@@ -369,6 +370,26 @@ macro_rules! fmt {
 			}
 		}
 	};
+}
+
+macro_rules! parse_vec_elems {
+	($s:ident, $iter:ident, $next:ident; $field:ident, $($tail:ident),+) => {{
+		$field = {
+			let start = $next;
+			let end = $iter.next().ok_or(ParseVecError::DimMismatch)?;
+			$next = end + 1;
+			$s[start..end].trim().parse()?
+		};
+		parse_vec_elems!($s, $iter, $next; $($tail),+);
+	}};
+	($s:ident, $iter:ident, $next:ident; $field:ident) => {{
+		$field = {
+			if $iter.next().is_some() {
+				return Err(ParseVecError::DimMismatch);
+			}
+			$s[$next..$s.len() - 1].trim().parse()?
+		};
+	}};
 }
 
 // This may or may not be horrible abuse of the `macro_rules!` system :)
@@ -658,6 +679,26 @@ macro_rules! vec {
 		// Formatting
 
 		fmt!($vec { $($field),+ });
+
+		//----------------------------------------------------------------
+		// Parsing
+
+		impl<T: FromStr> FromStr for $vec<T> {
+			type Err = ParseVecError<T::Err>;
+			fn from_str(s: &str) -> Result<$vec<T>, Self::Err> {
+				let bytes = s.as_bytes();
+				// Must be surrounded by parenthesis
+				if bytes.len() < 2 || bytes[0] != b'(' || bytes[bytes.len() - 1] != b')' {
+					return Err(ParseVecError::SyntaxError);
+				}
+				// Comma separated list of values
+				let mut iter = s.bytes().enumerate().filter_map(|(i, v)| if v == b',' { Some(i) } else { None });
+				let mut next = 1;
+				$(let $field;)+
+				parse_vec_elems!(s, iter, next; $($field),+);
+				Ok($vec { $($field),+ })
+			}
+		}
 	}
 }
 
@@ -727,3 +768,46 @@ vec!(Vec4 4 { x 0 T, y 1 T, z 2 T, w 3 T } {
 		}
 	}
 });
+
+//----------------------------------------------------------------
+
+use ::std::fmt;
+
+use ::std::str::FromStr;
+use ::std::error::Error;
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum ParseVecError<E> {
+	/// Missing parentheses surrounding the vector elements.
+	SyntaxError,
+	/// The number of vector elements doesn't match the vector dimensions.
+	DimMismatch,
+	/// Error parsing the vector elements.
+	ParseValue(E),
+}
+impl<E> From<E> for ParseVecError<E> {
+	fn from(err: E) -> ParseVecError<E> {
+		ParseVecError::ParseValue(err)
+	}
+}
+impl<E: Error> fmt::Display for ParseVecError<E> {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		self.description().fmt(f)
+	}
+}
+impl<E: Error> Error for ParseVecError<E> {
+	fn description(&self) -> &str {
+		match *self {
+			ParseVecError::SyntaxError => "syntax error",
+			ParseVecError::DimMismatch => "dim mismatch",
+			ParseVecError::ParseValue(ref inner) => inner.description(),
+		}
+	}
+	fn cause(&self) -> Option<&Error> {
+		match *self {
+			ParseVecError::SyntaxError => None,
+			ParseVecError::DimMismatch => None,
+			ParseVecError::ParseValue(ref inner) => Some(inner),
+		}
+	}
+}
