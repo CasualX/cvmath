@@ -36,7 +36,7 @@ assert!(Vec2::new(1, 9) > Vec2::new(1, -2));
 
 `unit_x()`, `unit_y()`, `unit_z()`, `unit_w()` where T: `Zero` + `One`: Constructs a unit vector along the given axis (given that axis exists for the vector).
 
-`set_x(self, x)`, `set_y(self, y)`, `set_z(self, z)`, `set_w(self, w)`: Note that these return new vectors with the respective component changed.
+`with_x(self, x)`, `with_y(self, y)`, `with_z(self, z)`, `with_w(self, w)`: Note that these return new vectors with the respective component changed.
 
 ### Examples
 
@@ -49,7 +49,7 @@ assert_eq!(Vec3 { x: 42, y: 42, z: 42 }, Vec3::dup(42));
 assert_eq!(Vec2 { x: 0.0, y: 1.0 }, Vec2::unit_y());
 assert_eq!(Vec3 { x: 1, y: 0, z: 0 }, Vec3::unit_x());
 
-assert_eq!(Vec3 { x: -12, y: 0, z: 12 }, Vec3::default().set_x(-12).set_z(12));
+assert_eq!(Vec3 { x: -12, y: 0, z: 12 }, Vec3::default().with_x(-12).with_z(12));
 ```
 
 ## Extending and truncating
@@ -295,34 +295,34 @@ macro_rules! unit {
 	};
 }
 
-macro_rules! set {
+macro_rules! with {
 	(Vec1) => {
 		/// Sets the `x` component.
-		pub fn set_x(self, x: T) -> Vec1<T> { Vec1 { x } }
+		pub fn with_x(self, x: T) { Vec1 { x } }
 	};
 	(Vec2) => {
 		/// Sets the `x` component.
-		pub fn set_x(self, x: T) -> Vec2<T> { Vec2 { x, y: self.y } }
+		pub fn with_x(self, x: T) -> Vec2<T> { Vec2 { x, y: self.y } }
 		/// Sets the `y` component.
-		pub fn set_y(self, y: T) -> Vec2<T> { Vec2 { x: self.x, y } }
+		pub fn with_y(self, y: T) -> Vec2<T> { Vec2 { x: self.x, y } }
 	};
 	(Vec3) => {
 		/// Sets the `x` component.
-		pub fn set_x(self, x: T) -> Vec3<T> { Vec3 { x, y: self.y, z: self.z } }
+		pub fn with_x(self, x: T) -> Vec3<T> { Vec3 { x, y: self.y, z: self.z } }
 		/// Sets the `y` component.
-		pub fn set_y(self, y: T) -> Vec3<T> { Vec3 { x: self.x, y, z: self.z } }
+		pub fn with_y(self, y: T) -> Vec3<T> { Vec3 { x: self.x, y, z: self.z } }
 		/// Sets the `z` component.
-		pub fn set_z(self, z: T) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z } }
+		pub fn with_z(self, z: T) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z } }
 	};
 	(Vec4) => {
 		/// Sets the `x` component.
-		pub fn set_x(self, x: T) -> Vec4<T> { Vec4 { x, y: self.y, z: self.z, w: self.w } }
+		pub fn with_x(self, x: T) -> Vec4<T> { Vec4 { x, y: self.y, z: self.z, w: self.w } }
 		/// Sets the `y` component.
-		pub fn set_y(self, y: T) -> Vec4<T> { Vec4 { x: self.x, y, z: self.z, w: self.w } }
+		pub fn with_y(self, y: T) -> Vec4<T> { Vec4 { x: self.x, y, z: self.z, w: self.w } }
 		/// Sets the `z` component.
-		pub fn set_z(self, z: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z, w: self.w } }
+		pub fn with_z(self, z: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z, w: self.w } }
 		/// Sets the `w` component.
-		pub fn set_w(self, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: self.z, w } }
+		pub fn with_w(self, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: self.z, w } }
 	};
 }
 
@@ -406,7 +406,7 @@ macro_rules! vec {
 		impl<T> $vec<T> {
 			/// Constructs a new vector from components.
 			pub fn new($($field: T),+) -> $vec<T> {
-				$vec { $($field: $field),+ }
+				$vec { $($field),+ }
 			}
 			/// Constructs a new vector by broadcasting to all its components.
 			pub fn dup(u: T) -> $vec<T> where T: Copy {
@@ -416,7 +416,7 @@ macro_rules! vec {
 		}
 
 		impl<T> $vec<T> {
-			set!($vec);
+			with!($vec);
 			cvt!($vec);
 		}
 
