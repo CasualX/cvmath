@@ -548,23 +548,27 @@ macro_rules! vec {
 				infix!(+ $((to.$field - self.$field).abs()),+)
 			}
 			/// Normalizes the vector.
+			///
+			/// The null vector remains null.
 			pub fn norm(self) -> $vec<T> where T: Float {
 				let self_len = self.len();
 				if self_len > T::zero() {
 					self / self_len
 				}
 				else {
-					Self::default()
+					self
 				}
 			}
 			/// Scales the vector such that its length equals the given value.
+			///
+			/// The null vector remains null.
 			pub fn resize(self, len: T) -> $vec<T> where T: Float {
 				let self_len = self.len();
 				if self_len > T::zero() {
 					self * (len / self_len)
 				}
 				else {
-					Self::default()
+					self
 				}
 			}
 			/// Scalar projection of `v` on `self`.
