@@ -115,8 +115,7 @@ assert_eq!(-10, vec.fold(0, |acc, c| acc - c));
 
 ```
 # use cgm::prelude::{Vec2};
-let v1: Vec2<_> = From::<(i32, i32)>::from((2, 3));
-assert_eq!(v1, Vec2::from([2, 3]));
+assert_eq!(Vec2::<i32>::from((2, 3)), Vec2::from([2, 3]));
 ```
 
 ## Operations where T is `Scalar`
@@ -451,7 +450,7 @@ macro_rules! vec {
 		//----------------------------------------------------------------
 		// Conversions
 
-		impl<T> From<T> for $vec<T> where T: Copy {
+		impl<T: Copy> From<T> for $vec<T> {
 			fn from(val: T) -> $vec<T> {
 				$vec { $($field: val),+ }
 			}
