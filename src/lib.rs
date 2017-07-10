@@ -14,6 +14,7 @@ pub mod euler;
 pub mod point;
 pub mod rect;
 pub mod line;
+pub mod poly;
 
 pub mod prelude {
 	pub use ::vec::{Vec2, Vec3, Vec4};
@@ -24,4 +25,5 @@ pub mod prelude {
 	pub use ::point::{Point2, Point3};
 	pub use ::rect::{Rect, Box};
 	pub use ::line::{Line2, Line3};
+	pub use ::poly::{Polyline2, Polyline3, Polygon2, Polygon3};
 }
