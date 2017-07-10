@@ -131,6 +131,27 @@ impl<T> Affine3<T> {
 // Operations
 
 impl<T: Scalar> Affine3<T> {
+	pub fn det(self) -> T {
+		self.a11 * self.a22 * self.a33 + self.a12 * self.a23 * self.a31 + self.a13 * self.a21 * self.a32
+			- self.a13 * self.a22 * self.a31 - self.a12 * self.a21 * self.a33 - self.a11 * self.a23 * self.a32
+	}
+	pub fn inv(self) -> Affine3<T> {
+		let inv_det = T::one() / self.det();
+		Affine3 {
+			a11: (self.a22 * self.a33 - self.a23 * self.a32) * inv_det,
+			a12: (self.a13 * self.a32 - self.a12 * self.a33) * inv_det,
+			a13: (self.a12 * self.a23 - self.a13 * self.a22) * inv_det,
+			a14: (self.a12 * self.a24 * self.a33 + self.a13 * self.a22 * self.a34 + self.a14 * self.a23 * self.a32 - self.a12 * self.a23 * self.a34 - self.a13 * self.a24 * self.a32 - self.a14 * self.a22 * self.a33) * inv_det,
+			a21: (self.a23 * self.a31 - self.a21 * self.a33) * inv_det,
+			a22: (self.a11 * self.a33 - self.a13 * self.a31) * inv_det,
+			a23: (self.a13 * self.a21 - self.a11 * self.a23) * inv_det,
+			a24: (self.a11 * self.a23 * self.a34 + self.a13 * self.a24 * self.a31 + self.a14 * self.a21 * self.a33 - self.a11 * self.a24 * self.a33 - self.a13 * self.a21 * self.a34 - self.a14 * self.a23 * self.a31) * inv_det,
+			a31: (self.a21 * self.a32 - self.a22 * self.a31) * inv_det,
+			a32: (self.a12 * self.a31 - self.a11 * self.a32) * inv_det,
+			a33: (self.a11 * self.a22 - self.a12 * self.a21) * inv_det,
+			a34: (self.a11 * self.a24 * self.a32 + self.a12 * self.a21 * self.a34 + self.a14 * self.a22 * self.a31 - self.a11 * self.a22 * self.a34 - self.a12 * self.a24 * self.a31 - self.a14 * self.a21 * self.a32) * inv_det,
+		}
+	}
 }
 
 //----------------------------------------------------------------
