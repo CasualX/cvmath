@@ -7,7 +7,7 @@ pub mod num;
 pub mod angle;
 
 pub mod vec;
-pub mod mask;
+pub mod bools;
 pub mod mat;
 pub mod euler;
 
@@ -18,7 +18,7 @@ pub mod poly;
 
 pub mod prelude {
 	pub use ::vec::{Vec2, Vec3, Vec4};
-	pub use ::mask::{Mask2, Mask3, Mask4};
+	pub use ::bools::{Bool2, Bool3, Bool4};
 	pub use ::mat::{Mat2, Affine2};
 	pub use ::euler::{Euler};
 
