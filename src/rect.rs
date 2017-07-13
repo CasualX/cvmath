@@ -23,11 +23,11 @@ impl<T> Rect<T> {
 			maxs: Point2 { x: T::one(), y: T::one() },
 		}
 	}
-	pub fn new(mins: Point2<T>, maxs: Point2<T>) -> Rect<T> {
-		Rect { mins, maxs }
+	pub fn new<P>(mins: P, maxs: P) -> Rect<T> where P: Into<Point2<T>> {
+		Rect { mins: mins.into(), maxs: maxs.into() }
 	}
-	pub fn point(pt: Point2<T>) -> Rect<T> where Point2<T>: Copy {
-		Rect { mins: pt, maxs: pt }
+	pub fn point<P>(pt: P) -> Rect<T> where P: Copy + Into<Point2<T>> {
+		Rect { mins: pt.into(), maxs: pt.into() }
 	}
 	pub fn swap(self) -> Rect<T> {
 		Rect { mins: self.maxs, maxs: self.mins }
