@@ -155,8 +155,9 @@ impl<T> Mat3<T> {
 
 impl<T: Scalar> Mat3<T> {
 	pub fn det(self) -> T {
-		self.a11 * self.a22 * self.a33 + self.a12 * self.a23 * self.a31 + self.a13 * self.a21 * self.a32
-			- self.a13 * self.a22 * self.a31 - self.a12 * self.a21 * self.a33 - self.a11 * self.a23 * self.a32
+		self.a11 * (self.a22 * self.a33 - self.a23 * self.a32) +
+		self.a12 * (self.a23 * self.a31 - self.a21 * self.a33) +
+		self.a13 * (self.a21 * self.a32 - self.a22 * self.a31)
 	}
 	pub fn inv(self) -> Mat3<T> where T: Float {
 		let inv_det = T::one() / self.det();
