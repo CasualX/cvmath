@@ -8,7 +8,7 @@ use ::num::{Scalar, Float};
 use ::vec::{Vec2, Vec3};
 use ::angle::{Angle};
 
-use super::Mat2;
+use super::{Mat2, Transform2};
 
 /// Affine 2D transformation matrix.
 ///
@@ -274,3 +274,19 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine2<T>>
 		}
 	}
 }
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat2<T>> for Affine2<T> {
+	type Output = Affine2<T>;
+	fn mul(self, rhs: Mat2<T>) -> Affine2<T> {
+		Affine2 {
+			a11: self.a11 * rhs.a11 + self.a12 * rhs.a21,
+			a12: self.a11 * rhs.a12 + self.a12 * rhs.a22,
+			a13: self.a13,
+
+			a21: self.a21 * rhs.a11 + self.a22 * rhs.a21,
+			a22: self.a21 * rhs.a12 + self.a22 * rhs.a22,
+			a23: self.a23,
+		}
+	}
+}
+
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> Transform2<T> for Affine2<T> {}

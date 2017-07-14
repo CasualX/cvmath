@@ -8,6 +8,8 @@ use ::num::{Scalar, Float};
 use ::vec::{Vec2};
 use ::angle::{Angle};
 
+use super::{Affine2, Transform2};
+
 /// 2D transformation matrix.
 ///
 /// A 2x2 row-major matrix.
@@ -244,6 +246,7 @@ impl<T: Copy + ops::Mul<Output = T>> ops::Mul<T> for Mat2<T> {
 		}
 	}
 }
+
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec2<T>> for Mat2<T> {
 	type Output = Vec2<T>;
 	fn mul(self, rhs: Vec2<T>) -> Vec2<T> {
@@ -253,6 +256,7 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec2<T>> fo
 		}
 	}
 }
+
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat2<T>> for Mat2<T> {
 	type Output = Mat2<T>;
 	fn mul(self, rhs: Mat2<T>) -> Mat2<T> {
@@ -264,3 +268,19 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat2<T>> fo
 		}
 	}
 }
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine2<T>> for Mat2<T> {
+	type Output = Affine2<T>;
+	fn mul(self, rhs: Affine2<T>) -> Affine2<T> {
+		Affine2 {
+			a11: self.a11 * rhs.a11 + self.a12 * rhs.a21,
+			a12: self.a11 * rhs.a12 + self.a12 * rhs.a22,
+			a13: self.a11 * rhs.a13 + self.a12 * rhs.a23,
+
+			a21: self.a21 * rhs.a11 + self.a22 * rhs.a21,
+			a22: self.a21 * rhs.a12 + self.a22 * rhs.a22,
+			a23: self.a21 * rhs.a13 + self.a22 * rhs.a23,
+		}
+	}
+}
+
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> Transform2<T> for Mat2<T> {}
