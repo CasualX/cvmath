@@ -65,7 +65,7 @@ impl<T: Scalar> Mat3<T> {
 		}
 	}
 	/// Scaling matrix.
-	pub fn scale<V: Into<Vec3<T>>>(scale: V) -> Mat3<T> {
+	pub fn scale<V>(scale: V) -> Mat3<T> where V: Into<Vec3<T>> {
 		let scale = scale.into();
 		Mat3 {
 			a11: scale.x,   a12: T::zero(), a13: T::zero(),
@@ -117,7 +117,8 @@ impl<T> Mat3<T> {
 // Decomposition
 
 impl<T> Mat3<T> {
-	pub fn compose(x: Vec3<T>, y: Vec3<T>, z: Vec3<T>) -> Mat3<T> {
+	pub fn compose<V>(x: V, y: V, z: V) -> Mat3<T> where V: Into<Vec3<T>> {
+		let (x, y, z) = (x.into(), y.into(), z.into());
 		Mat3 {
 			a11: x.x, a12: y.x, a13: z.x,
 			a21: x.y, a22: y.y, a23: z.y,

@@ -86,7 +86,8 @@ impl<T> Affine3<T> {
 // Decomposition
 
 impl<T> Affine3<T> {
-	pub fn compose(x: Vec3<T>, y: Vec3<T>, z: Vec3<T>, t: Vec3<T>) -> Affine3<T> {
+	pub fn compose<V>(x: V, y: V, z: V, t: V) -> Affine3<T> where V: Into<Vec3<T>> {
+		let (x, y, z, t) = (x.into(), y.into(), z.into(), t.into());
 		Affine3 {
 			a11: x.x, a12: y.x, a13: z.x, a14: t.x,
 			a21: x.y, a22: y.y, a23: z.y, a24: t.y,

@@ -61,7 +61,7 @@ impl<T: Scalar> Affine2<T> {
 		}
 	}
 	/// Translation matrix.
-	pub fn translate<V: Into<Vec2<T>>>(trans: V) -> Affine2<T> {
+	pub fn translate<V>(trans: V) -> Affine2<T> where V: Into<Vec2<T>> {
 		let trans = trans.into();
 		Affine2 {
 			a11: T::one(), a12: T::zero(), a13: trans.x,
@@ -71,7 +71,7 @@ impl<T: Scalar> Affine2<T> {
 	/// Scaling matrix.
 	///
 	/// Scales around the origin.
-	pub fn scale<V: Into<Vec2<T>>>(scale: V) -> Affine2<T> {
+	pub fn scale<V>(scale: V) -> Affine2<T> where V: Into<Vec2<T>> {
 		let scale = scale.into();
 		Affine2 {
 			a11: scale.x,   a12: T::zero(), a13: T::zero(),
@@ -81,11 +81,11 @@ impl<T: Scalar> Affine2<T> {
 	/// Rotation matrix.
 	///
 	/// Rotates around the origin.
-	pub fn rotate<A: Angle<T = T>>(angle: A) -> Affine2<T> where T: Float {
+	pub fn rotate<A>(angle: A) -> Affine2<T> where T: Float, A: Angle<T = T> {
 		Affine2::from_mat(Mat2::rotate(angle), Vec2::default())
 	}
 	/// Skewing matrix.
-	pub fn skew<V: Into<Vec2<T>>>(skew: V) -> Affine2<T> {
+	pub fn skew<V>(skew: V) -> Affine2<T> where V: Into<Vec2<T>> {
 		let skew = skew.into();
 		Affine2 {
 			a11: T::one(), a12: skew.x,   a13: T::zero(),
@@ -97,7 +97,7 @@ impl<T: Scalar> Affine2<T> {
 	/// Reflects around the line defined by the line going through the origin and `line`.
 	///
 	/// If `line` is the zero vector, the matrix will be a point reflection around the origin.
-	pub fn reflect<V: Into<Vec2<T>>>(line: V) -> Affine2<T> where T: Float {
+	pub fn reflect<V>(line: V) -> Affine2<T> where T: Float, V: Into<Vec2<T>> {
 		Affine2::from_mat(Mat2::reflect(line), Vec2::default())
 	}
 	/// Projection matrix.
@@ -105,7 +105,7 @@ impl<T: Scalar> Affine2<T> {
 	/// Projects onto the line defined by the line going through the origin and `line`.
 	///
 	/// If `line` is the zero vector, the matrix is the null matrix.
-	pub fn project<V: Into<Vec2<T>>>(line: V) -> Affine2<T> where T: Float {
+	pub fn project<V>(line: V) -> Affine2<T> where T: Float, V: Into<Vec2<T>> {
 		Affine2::from_mat(Mat2::project(line), Vec2::default())
 	}
 }
@@ -179,7 +179,8 @@ impl<T> Affine2<T> {
 	/// A linear transformation then can be defined by these unit vectors. The result is a transformation which remaps the unit vectors to their new location.
 	///
 	/// These unit vectors are simply the columns of the transformation matrix and as such can be trivially decomposed.
-	pub fn compose(x: Vec2<T>, y: Vec2<T>, t: Vec2<T>) -> Affine2<T> {
+	pub fn compose<V>(x: V, y: V, t: V) -> Affine2<T> where V: Into<Vec2<T>> {
+		let (x, y, t) = (x.into(), y.into(), t.into());
 		Affine2 {
 			a11: x.x, a12: y.x, a13: t.x,
 			a21: x.y, a22: y.y, a23: t.y,

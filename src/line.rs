@@ -25,13 +25,16 @@ pub struct Line3<T> {
 macro_rules! line {
 	($line:ident $pt:ident) => {
 		impl<T> $line<T> {
-			pub fn new(start: $pt<T>, end: $pt<T>) -> $line<T> {
-				$line { start, end }
-			}
-			pub fn point(pt: $pt<T>) -> $line<T> where T: Copy {
+			pub fn new<P>(start: P, end: P) -> $line<T> where P: Into<$pt<T>> {
 				$line {
-					start: pt,
-					end: pt,
+					start: start.into(),
+					end: end.into(),
+				}
+			}
+			pub fn point<P>(pt: P) -> $line<T> where P: Copy + Into<$pt<T>> {
+				$line {
+					start: pt.into(),
+					end: pt.into(),
 				}
 			}
 			pub fn swap(self) -> $line<T> {

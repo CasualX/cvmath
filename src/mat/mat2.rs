@@ -62,7 +62,7 @@ impl<T: Scalar> Mat2<T> {
 	/// Scaling matrix.
 	///
 	/// Scales around the origin.
-	pub fn scale<V: Into<Vec2<T>>>(scale: V) -> Mat2<T> {
+	pub fn scale<V>(scale: V) -> Mat2<T> where V: Into<Vec2<T>> {
 		let scale = scale.into();
 		Mat2 {
 			a11: scale.x,   a12: T::zero(),
@@ -72,7 +72,7 @@ impl<T: Scalar> Mat2<T> {
 	/// Rotation matrix.
 	///
 	/// Rotates around the origin.
-	pub fn rotate<A: Angle<T = T>>(angle: A) -> Mat2<T> where T: Float {
+	pub fn rotate<A>(angle: A) -> Mat2<T> where T: Float, A: Angle<T = T> {
 		let (cy, cx) = angle.sin_cos();
 		Mat2 {
 			a11: cx, a12: -cy,
@@ -80,7 +80,7 @@ impl<T: Scalar> Mat2<T> {
 		}
 	}
 	/// Skewing matrix.
-	pub fn skew<V: Into<Vec2<T>>>(skew: V) -> Mat2<T> {
+	pub fn skew<V>(skew: V) -> Mat2<T> where V: Into<Vec2<T>> {
 		let skew = skew.into();
 		Mat2 {
 			a11: T::one(), a12: skew.x,
@@ -92,7 +92,7 @@ impl<T: Scalar> Mat2<T> {
 	/// Reflects around the line defined by the line going through the origin and `line`.
 	///
 	/// If `line` is the zero vector, the matrix will be a point reflection around the origin.
-	pub fn reflect<V: Into<Vec2<T>>>(axis: V) -> Mat2<T> where T: Float {
+	pub fn reflect<V>(axis: V) -> Mat2<T> where T: Float, V: Into<Vec2<T>> {
 		let l = axis.into();
 		let ls = l.dot(l);
 		if ls > T::zero() {
@@ -113,7 +113,7 @@ impl<T: Scalar> Mat2<T> {
 	/// Projects onto the line defined by the line going through the origin and `line`.
 	///
 	/// If `line` is the zero vector, the matrix is the null matrix.
-	pub fn project<V: Into<Vec2<T>>>(axis: V) -> Mat2<T> where T: Float {
+	pub fn project<V>(axis: V) -> Mat2<T> where T: Float, V: Into<Vec2<T>> {
 		let u = axis.into();
 		let us = u.dot(u);
 		if us > T::zero() {
@@ -178,7 +178,8 @@ impl<T> Mat2<T> {
 	/// A linear transformation then can be defined by these unit vectors. The result is a transformation which remaps the unit vectors to their new location.
 	///
 	/// These unit vectors are simply the columns of the transformation matrix and as such can be trivially decomposed.
-	pub fn compose(x: Vec2<T>, y: Vec2<T>) -> Mat2<T> {
+	pub fn compose<V>(x: V, y: V) -> Mat2<T> where V: Into<Vec2<T>> {
+		let (x, y) = (x.into(), y.into());
 		Mat2 {
 			a11: x.x, a12: y.x,
 			a21: x.y, a22: y.y,
