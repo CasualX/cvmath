@@ -203,6 +203,7 @@ impl<T: Copy + ops::Mul<Output = T>> ops::Mul<T> for Mat3<T> {
 		}
 	}
 }
+
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec3<T>> for Mat3<T> {
 	type Output = Vec3<T>;
 	fn mul(self, rhs: Vec3<T>) -> Vec3<T> {
@@ -213,6 +214,7 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec3<T>> fo
 		}
 	}
 }
+
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat3<T>> for Mat3<T> {
 	type Output = Mat3<T>;
 	fn mul(self, rhs: Mat3<T>) -> Mat3<T> {

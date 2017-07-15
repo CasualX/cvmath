@@ -251,6 +251,7 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec2<T>> fo
 		}
 	}
 }
+
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec3<T>> for Affine2<T> {
 	type Output = Vec2<T>;
 	fn mul(self, rhs: Vec3<T>) -> Vec2<T> {
@@ -260,6 +261,7 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec3<T>> fo
 		}
 	}
 }
+
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine2<T>> for Affine2<T> {
 	type Output = Affine2<T>;
 	fn mul(self, rhs: Affine2<T>) -> Affine2<T> {

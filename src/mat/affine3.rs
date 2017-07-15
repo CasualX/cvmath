@@ -7,6 +7,8 @@ use ::std::{ops};
 use ::num::{Scalar};
 use ::vec::{Vec3, Vec4};
 
+use super::{Mat3, Transform3};
+
 /// Affine 3D transformation matrix.
 ///
 /// A 3x4 row-major matrix.
@@ -175,6 +177,7 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec3<T>> fo
 		}
 	}
 }
+
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec4<T>> for Affine3<T> {
 	type Output = Vec3<T>;
 	fn mul(self, rhs: Vec4<T>) -> Vec3<T> {
@@ -185,6 +188,7 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec4<T>> fo
 		}
 	}
 }
+
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine3<T>> for Affine3<T> {
 	type Output = Affine3<T>;
 	fn mul(self, rhs: Affine3<T>) -> Affine3<T> {
@@ -206,3 +210,26 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine3<T>>
 		}
 	}
 }
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat3<T>> for Affine3<T> {
+	type Output = Affine3<T>;
+	fn mul(self, rhs: Mat3<T>) -> Affine3<T> {
+		Affine3 {
+			a11: self.a11 * rhs.a11 + self.a12 * rhs.a21 + self.a13 * rhs.a31,
+			a12: self.a11 * rhs.a12 + self.a12 * rhs.a22 + self.a13 * rhs.a32,
+			a13: self.a11 * rhs.a13 + self.a12 * rhs.a23 + self.a13 * rhs.a33,
+			a14: self.a14,
+
+			a21: self.a21 * rhs.a11 + self.a22 * rhs.a21 + self.a23 * rhs.a31,
+			a22: self.a21 * rhs.a12 + self.a22 * rhs.a22 + self.a23 * rhs.a32,
+			a23: self.a21 * rhs.a13 + self.a22 * rhs.a23 + self.a23 * rhs.a33,
+			a24: self.a24,
+
+			a31: self.a31 * rhs.a11 + self.a32 * rhs.a21 + self.a33 * rhs.a31,
+			a32: self.a31 * rhs.a12 + self.a32 * rhs.a22 + self.a33 * rhs.a32,
+			a33: self.a31 * rhs.a13 + self.a32 * rhs.a23 + self.a33 * rhs.a33,
+			a34: self.a34,
+		}
+	}
+}
+
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> Transform3<T> for Affine3<T> {}
