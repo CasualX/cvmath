@@ -203,6 +203,13 @@ impl<T: Copy + ops::Mul<Output = T>> ops::Mul<T> for Mat3<T> {
 		}
 	}
 }
+impl<T: Copy + ops::MulAssign> ops::MulAssign<T> for Mat3<T> {
+	fn mul_assign(&mut self, rhs: T) {
+		self.a11 *= rhs; self.a12 *= rhs; self.a13 *= rhs;
+		self.a21 *= rhs; self.a22 *= rhs; self.a23 *= rhs;
+		self.a31 *= rhs; self.a32 *= rhs; self.a33 *= rhs;
+	}
+}
 
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec3<T>> for Mat3<T> {
 	type Output = Vec3<T>;
@@ -252,6 +259,11 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine3<T>>
 			a33: self.a31 * rhs.a13 + self.a32 * rhs.a23 + self.a33 * rhs.a33,
 			a34: self.a31 * rhs.a14 + self.a32 * rhs.a24 + self.a33 * rhs.a34,
 		}
+	}
+}
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Mat3<T>> for Mat3<T> {
+	fn mul_assign(&mut self, rhs: Mat3<T>) {
+		*self = *self * rhs;
 	}
 }
 

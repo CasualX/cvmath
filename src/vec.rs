@@ -637,6 +637,16 @@ macro_rules! vec {
 				$vec { $($field: -self.$field),+ }
 			}
 		}
+		impl<U, T: ops::AddAssign<U>> ops::AddAssign<$vec<U>> for $vec<T> {
+			fn add_assign(&mut self, rhs: $vec<U>) {
+				$(self.$field += rhs.$field;)+
+			}
+		}
+		impl<U, T: ops::SubAssign<U>> ops::SubAssign<$vec<U>> for $vec<T> {
+			fn sub_assign(&mut self, rhs: $vec<U>) {
+				$(self.$field -= rhs.$field;)+
+			}
+		}
 
 		// Scalar multiplication, division and remainder
 		impl<U: Scalar, T: ops::Mul<U>> ops::Mul<U> for $vec<T> {
@@ -657,6 +667,21 @@ macro_rules! vec {
 				$vec { $($field: self.$field % rhs),+ }
 			}
 		}
+		impl<U: Scalar, T: ops::MulAssign<U>> ops::MulAssign<U> for $vec<T> {
+			fn mul_assign(&mut self, rhs: U) {
+				$(self.$field *= rhs;)+
+			}
+		}
+		impl<U: Scalar, T: ops::DivAssign<U>> ops::DivAssign<U> for $vec<T> {
+			fn div_assign(&mut self, rhs: U) {
+				$(self.$field /= rhs;)+
+			}
+		}
+		impl<U: Scalar, T: ops::RemAssign<U>> ops::RemAssign<U> for $vec<T> {
+			fn rem_assign(&mut self, rhs: U) {
+				$(self.$field %= rhs;)+
+			}
+		}
 
 		// Vector multiplication, division and remainder
 		impl<U, T: ops::Mul<U>> ops::Mul<$vec<U>> for $vec<T> {
@@ -675,6 +700,21 @@ macro_rules! vec {
 			type Output = $vec<T::Output>;
 			fn rem(self, rhs: $vec<U>) -> $vec<T::Output> {
 				$vec { $($field: self.$field % rhs.$field),+ }
+			}
+		}
+		impl<U, T: ops::MulAssign<U>> ops::MulAssign<$vec<U>> for $vec<T> {
+			fn mul_assign(&mut self, rhs: $vec<U>) {
+				$(self.$field *= rhs.$field;)+
+			}
+		}
+		impl<U, T: ops::DivAssign<U>> ops::DivAssign<$vec<U>> for $vec<T> {
+			fn div_assign(&mut self, rhs: $vec<U>) {
+				$(self.$field /= rhs.$field;)+
+			}
+		}
+		impl<U, T: ops::RemAssign<U>> ops::RemAssign<$vec<U>> for $vec<T> {
+			fn rem_assign(&mut self, rhs: $vec<U>) {
+				$(self.$field %= rhs.$field;)+
 			}
 		}
 

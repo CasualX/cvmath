@@ -27,15 +27,18 @@ pub trait AsCast<T> {
 	fn as_cast(self) -> T;
 }
 
-pub trait Scalar where Self: Copy + Default + Zero + One +
-	fmt::Display + fmt::Debug +
-	ops::Add<Output = Self> + ops::Sub<Output = Self> +
-	ops::Mul<Output = Self> + ops::Div<Output = Self> +
-	ops::Neg<Output = Self> + ops::Rem<Output = Self> +
-	Min<Output = Self> + Max<Output = Self> + Abs<Output = Self> +
-	cmp::PartialEq + cmp::PartialOrd {}
+pub trait Scalar where Self
+	: Copy + Default + Zero + One
+	+ fmt::Display + fmt::Debug
+	+ ops::Add<Output = Self> + ops::Sub<Output = Self>
+	+ ops::Mul<Output = Self> + ops::Div<Output = Self>
+	+ ops::Neg<Output = Self> + ops::Rem<Output = Self>
+	+ ops::AddAssign + ops::SubAssign + ops::MulAssign + ops::DivAssign
+	+ Min<Output = Self> + Max<Output = Self> + Abs<Output = Self>
+	+ cmp::PartialEq + cmp::PartialOrd {}
 
-pub trait Int where Self: Scalar + cmp::Eq + cmp::Ord {}
+pub trait Int where Self
+	: Scalar + cmp::Eq + cmp::Ord {}
 pub trait Float where Self: Scalar {
 	fn literal(f: f64) -> Self;
 	fn is_finite(self) -> bool;

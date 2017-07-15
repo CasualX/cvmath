@@ -123,6 +123,18 @@ macro_rules! rect {
 				$ty { mins: self.mins - rhs, maxs: self.maxs - rhs }
 			}
 		}
+		impl<U, T: ops::AddAssign<U>> ops::AddAssign<$pt<U>> for $ty<T> where $pt<U>: Copy {
+			fn add_assign(&mut self, rhs: $pt<U>) {
+				self.mins += rhs;
+				self.maxs += rhs;
+			}
+		}
+		impl<U, T: ops::SubAssign<U>> ops::SubAssign<$pt<U>> for $ty<T> where $pt<U>: Copy {
+			fn sub_assign(&mut self, rhs: $pt<U>) {
+				self.mins -= rhs;
+				self.maxs -= rhs;
+			}
+		}
 	};
 }
 

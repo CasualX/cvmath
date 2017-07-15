@@ -246,6 +246,14 @@ impl<T: Copy + ops::Mul<Output = T>> ops::Mul<T> for Mat2<T> {
 		}
 	}
 }
+impl<T: Copy + ops::MulAssign> ops::MulAssign<T> for Mat2<T> {
+	fn mul_assign(&mut self, rhs: T) {
+		self.a11 *= rhs;
+		self.a12 *= rhs;
+		self.a21 *= rhs;
+		self.a22 *= rhs;
+	}
+}
 
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec2<T>> for Mat2<T> {
 	type Output = Vec2<T>;
@@ -280,6 +288,11 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine2<T>>
 			a22: self.a21 * rhs.a12 + self.a22 * rhs.a22,
 			a23: self.a21 * rhs.a13 + self.a22 * rhs.a23,
 		}
+	}
+}
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Mat2<T>> for Mat2<T> {
+	fn mul_assign(&mut self, rhs: Mat2<T>) {
+		*self = *self * rhs;
 	}
 }
 

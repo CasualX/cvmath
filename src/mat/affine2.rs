@@ -290,5 +290,15 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat2<T>> fo
 		}
 	}
 }
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Affine2<T>> for Affine2<T> {
+	fn mul_assign(&mut self, rhs: Affine2<T>) {
+		*self = *self * rhs;
+	}
+}
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Mat2<T>> for Affine2<T> {
+	fn mul_assign(&mut self, rhs: Mat2<T>) {
+		*self = *self * rhs;
+	}
+}
 
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> Transform2<T> for Affine2<T> {}
