@@ -547,20 +547,20 @@ macro_rules! vec {
 				infix!(+ $((to.$field - self.$field).abs()),+)
 			}
 			/// Normalizes the vector.
-			///
-			/// The null vector remains null.
 			pub fn norm(self) -> $vec<T> where T: Float {
+				self.norm_len().0
+			}
+			/// Calculates the normalized vector and its length.
+			pub fn norm_len(self) -> ($vec<T>, T) where T: Float {
 				let self_len = self.len();
 				if self_len > T::zero() {
-					self / self_len
+					(self / self_len, self_len)
 				}
 				else {
-					self
+					(self, self_len)
 				}
 			}
 			/// Scales the vector such that its length equals the given value.
-			///
-			/// The null vector remains null.
 			pub fn resize(self, len: T) -> $vec<T> where T: Float {
 				let self_len = self.len();
 				if self_len > T::zero() {
@@ -612,6 +612,30 @@ macro_rules! vec {
 			/// Adds the scaled vector.
 			pub fn mul_add(self, vec: $vec<T>, scale: T) -> $vec<T> {
 				$vec { $($field: self.$field + vec.$field * scale),+ }
+			}
+			/// Linear interpolates between the vectors.
+			pub fn lerp(self, rhs: $vec<T>, t: T) -> $vec<T> {
+				self + (rhs - self) * t
+			}
+			// Spherical lerp with constant velocity.
+			pub fn slerp(self, rhs: $vec<T>, t: T) -> $vec<T> where T: Float {
+				let (v0, len0) = self.norm_len();
+				let (v1, len1) = rhs.norm_len();
+				let len = len0 + (len1 - len0) * t;
+
+				let dot = v0.dot(v1);
+				let theta = Rad::acos(dot) * t;
+				let (sin, cos) = theta.sin_cos();
+
+				let v2 = (v1 - v0 * dot).norm();
+				(v0 * cos + v2 * sin) * len
+			}
+			// Spherical lerp without constant velocity.
+			pub fn nlerp(self, rhs: $vec<T>, t: T) -> $vec<T> where T: Float {
+				let self_len = self.len();
+				let rhs_len = rhs.len();
+				let len = self_len + (rhs_len - self_len) * t;
+				self.lerp(rhs, t).resize(len)
 			}
 		}
 

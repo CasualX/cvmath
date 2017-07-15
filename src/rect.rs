@@ -1,5 +1,5 @@
 /*!
-Rectangle and Box.
+Rectangle and Cuboid.
 */
 
 use ::std::ops;
@@ -16,23 +16,6 @@ pub struct Rect<T> {
 	pub maxs: Point2<T>,
 }
 
-impl<T> Rect<T> {
-	pub fn unit() -> Rect<T> where T: Zero + One {
-		Rect {
-			mins: Point2 { x: T::zero(), y: T::zero() },
-			maxs: Point2 { x: T::one(), y: T::one() },
-		}
-	}
-	pub fn new<P>(mins: P, maxs: P) -> Rect<T> where P: Into<Point2<T>> {
-		Rect { mins: mins.into(), maxs: maxs.into() }
-	}
-	pub fn point<P>(pt: P) -> Rect<T> where P: Copy + Into<Point2<T>> {
-		Rect { mins: pt.into(), maxs: pt.into() }
-	}
-	pub fn swap(self) -> Rect<T> {
-		Rect { mins: self.maxs, maxs: self.mins }
-	}
-}
 impl<T: Scalar> Rect<T> {
 	pub fn left(self) -> T { self.mins.x }
 	pub fn right(self) -> T { self.maxs.x }
@@ -77,13 +60,36 @@ impl<T: Scalar> Rect<T> {
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
 #[repr(C)]
-pub struct Box<T> {
+pub struct Cuboid<T> {
 	pub mins: Point3<T>,
 	pub maxs: Point3<T>,
 }
 
 macro_rules! rect {
 	($ty:ident $pt:ident { $($field:ident),+ }) => {
+		impl<T> $ty<T> {
+			pub fn unit() -> $ty<T> where T: Zero + One + Copy {
+				$ty {
+					mins: $pt::dup(T::zero()),
+					maxs: $pt::dup(T::one()),
+				}
+			}
+			pub fn new(mins: $pt<T>, maxs: $pt<T>) -> $ty<T> {
+				$ty { mins, maxs }
+			}
+			pub fn point(pt: $pt<T>) -> $ty<T> where $pt<T>: Copy {
+				$ty {
+					mins: pt,
+					maxs: pt,
+				}
+			}
+			pub fn swap(self) -> $ty<T> {
+				$ty {
+					mins: self.maxs,
+					maxs: self.mins,
+				}
+			}
+		}
 		impl<T: Scalar> $ty<T> {
 			pub fn contains(self, pt: $pt<T>) -> bool {
 				pt >= self.mins && pt <= self.maxs
@@ -139,4 +145,4 @@ macro_rules! rect {
 }
 
 rect!(Rect Point2 { x, y });
-rect!(Box Point3 { x, y, z });
+rect!(Cuboid Point3 { x, y, z });
