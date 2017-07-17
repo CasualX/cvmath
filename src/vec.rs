@@ -223,7 +223,7 @@ assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross((3, -3, 1).into(), (4, 9, 1
 ```
 */
 
-use ::std::{mem, ops};
+use ::std::{mem, ops, slice};
 
 use ::num::{Scalar, Zero, One, Float, AsCast};
 
@@ -497,7 +497,12 @@ macro_rules! vec {
 				<Self as AsRef<[T; $N]>>::as_ref(self)
 			}
 		}
-		
+		impl<T> $vec<T> {
+			pub fn as_bytes(&self) -> &[u8] {
+				unsafe { slice::from_raw_parts(self as *const _ as *const u8, mem::size_of_val(self)) }
+			}
+		}
+
 		impl<T> AsMut<($($T,)+)> for $vec<T> {
 			fn as_mut(&mut self) -> &mut ($($T,)+) {
 				unsafe { mem::transmute(self) }
