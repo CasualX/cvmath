@@ -21,7 +21,7 @@ An overview of their implementations:
 # use cgm::prelude::{Vec2, Vec3};
 assert_eq!("(2,3,4)", format!("{}", Vec3::new(2, 3, 4)));
 assert_eq!("(2.300,2.142)", format!("{:.3}", Vec2::new(2.3, 2.14159278)));
-assert_eq!("Vec2 { x: 16, y: 25 }", format!("{:?}", Vec2::new(16, 25)));
+assert_eq!("(16,25)", format!("{:?}", Vec2::new(16, 25)));
 assert_eq!("(  2,  3, 14)", format!("{:>3}", Vec3::new(2, 3, 14)));
 
 assert_eq!(Vec2 { x: -5, y: 9 }, Vec2::new(-5, 9));
@@ -223,21 +223,21 @@ assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross((3, -3, 1).into(), (4, 9, 1
 ```
 */
 
-use ::std::{mem, ops, slice};
+use ::std::{fmt, mem, ops, slice};
 
 use ::num::{Scalar, Zero, One, Float, AsCast};
 
 use ::angle::{Rad, Angle};
 
 // /// A 1-dimensional vector.
-// #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+// #[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 // #[repr(C)]
 // pub struct Vec1<T> {
 // 	pub x: T,
 // }
 
 /// A 2-dimensional vector.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(C)]
 pub struct Vec2<T> {
 	pub x: T,
@@ -245,7 +245,7 @@ pub struct Vec2<T> {
 }
 
 /// A 3-dimensional vector.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(C)]
 pub struct Vec3<T> {
 	pub x: T,
@@ -254,7 +254,7 @@ pub struct Vec3<T> {
 }
 
 /// A 4-dimensional vector.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(C)]
 pub struct Vec4<T> {
 	pub x: T,
@@ -352,17 +352,18 @@ macro_rules! cvt {
 
 macro_rules! fmt {
 	($ty:ident { $($field:ident),+ }) => {
-		fmt!($ty { $($field),+ } ::std::fmt::Display);
-		fmt!($ty { $($field),+ } ::std::fmt::Binary);
-		fmt!($ty { $($field),+ } ::std::fmt::Octal);
-		fmt!($ty { $($field),+ } ::std::fmt::LowerHex);
-		fmt!($ty { $($field),+ } ::std::fmt::UpperHex);
-		fmt!($ty { $($field),+ } ::std::fmt::LowerExp);
-		fmt!($ty { $($field),+ } ::std::fmt::UpperExp);
+		fmt!($ty { $($field),+ } fmt::Display);
+		fmt!($ty { $($field),+ } fmt::Debug);
+		fmt!($ty { $($field),+ } fmt::Binary);
+		fmt!($ty { $($field),+ } fmt::Octal);
+		fmt!($ty { $($field),+ } fmt::LowerHex);
+		fmt!($ty { $($field),+ } fmt::UpperHex);
+		fmt!($ty { $($field),+ } fmt::LowerExp);
+		fmt!($ty { $($field),+ } fmt::UpperExp);
 	};
 	($ty:ident { $($field:ident),+ } $fmt:path) => {
 		impl<T: $fmt> $fmt for $ty<T> {
-			fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 				f.write_str("(")?;
 				instmt!(f.write_str(",")?; $(self.$field.fmt(f)?;)+);
 				f.write_str(")")
@@ -842,8 +843,6 @@ vec!(Vec4 4 { x 0 T, y 1 T, z 2 T, w 3 T } {
 });
 
 //----------------------------------------------------------------
-
-use ::std::fmt;
 
 use ::std::str::FromStr;
 use ::std::error::Error;

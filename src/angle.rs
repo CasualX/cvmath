@@ -65,12 +65,12 @@ pub trait Angle where Self:
 }
 
 /// Angle in degrees.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(C)]
 pub struct Deg<T>(pub T);
 
 /// Angle in radians.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(C)]
 pub struct Rad<T>(pub T);
 
@@ -119,9 +119,10 @@ macro_rules! fmt {
 		}
 	};
 	($ty:ident) => {
-		fmt!($ty ::std::fmt::Display);
-		fmt!($ty ::std::fmt::UpperExp);
-		fmt!($ty ::std::fmt::LowerExp);
+		fmt!($ty fmt::Display);
+		fmt!($ty fmt::Debug);
+		fmt!($ty fmt::UpperExp);
+		fmt!($ty fmt::LowerExp);
 	};
 }
 
