@@ -24,7 +24,7 @@ Comparison masks are boolean vectors to be consumed by `select`.
 ### Examples
 
 ```
-# use cgm::prelude::{Vec2, Bool2};
+# use cvmath::prelude::{Vec2, Bool2};
 assert_eq!(Bool2 { x: true, y: false }, Vec2::new(1, 2).eq(Vec2::new(1, -2)));
 ```
 
@@ -41,7 +41,7 @@ assert_eq!(Bool2 { x: true, y: false }, Vec2::new(1, 2).eq(Vec2::new(1, -2)));
 ### Examples
 
 ```
-# use cgm::prelude::{Bool2};
+# use cvmath::prelude::{Bool2};
 assert!(Bool2 { x: true, y: false }.any());
 assert!(Bool2 { x: true, y: true }.all());
 assert!(Bool2 { x: false, y: false }.none());

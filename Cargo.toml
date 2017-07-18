@@ -1,9 +1,9 @@
 [package]
-name = "cgm"
+name = "cvmath"
 version = "0.1.0"
-authors = ["CasualX <CasualX@github.com>"]
+authors = ["Casper <CasualX@users.noreply.github.com>"]
 
-description = "Computer Graphics Math Library"
+description = "Computer Vector Graphics Math Library"
 
 # documentation =
 # homepage =
@@ -11,7 +11,7 @@ repository = "https://github.com/CasualX/cgmath"
 
 readme = "readme.md"
 
-keywords = ["vector", "matrix"]
+keywords = ["cg", "cgmath", "matrix"]
 
 license = "MIT"
 

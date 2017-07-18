@@ -1,5 +1,5 @@
-extern crate cgm;
-use cgm::prelude as cgmath;
+extern crate cvmath;
+use cvmath::prelude as cgmath;
 
 type Point2 = cgmath::Point2<f64>;
 type Line2 = cgmath::Line2<f64>;
