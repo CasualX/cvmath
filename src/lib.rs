@@ -25,6 +25,6 @@ pub mod prelude {
 
 	pub use ::point::{Point2, Point3};
 	pub use ::rect::{Rect, Cuboid};
-	pub use ::line::{Line2, Line3};
+	pub use ::line::{Line, Line2, Line3};
 	pub use ::poly::{Polyline2, Polyline3, Polygon2, Polygon3};
 }

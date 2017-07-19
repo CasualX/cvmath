@@ -590,6 +590,10 @@ macro_rules! vec {
 			pub fn project(self, v: $vec<T>) -> $vec<T> where T: Float {
 				self * (self.dot(v) / v.dot(v))
 			}
+			/// Saturated projection of `v` on `self`.
+			pub fn project_sat(self, v: $vec<T>) -> $vec<T> where T: Float {
+				self * (self.dot(v) / v.dot(v)).min(T::one()).max(T::zero())
+			}
 			$($ops)*
 			/// Calculates the inner product.
 			pub fn dot(self, rhs: $vec<T>) -> T {
