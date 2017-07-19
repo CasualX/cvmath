@@ -6,6 +6,7 @@ use ::std::{ops};
 
 use ::num::{Scalar, Float};
 use ::vec::{Vec3};
+use ::angle::{Angle};
 
 use super::{Affine3, Transform3};
 
@@ -73,6 +74,30 @@ impl<T: Scalar> Mat3<T> {
 			a11: scale.x,   a12: T::zero(), a13: T::zero(),
 			a21: T::zero(), a22: scale.y,   a23: T::zero(),
 			a31: T::zero(), a32: T::zero(), a33: scale.z,
+		}
+	}
+	pub fn rotate_x<A>(angle: A) -> Mat3<T> where T: Float, A: Angle<T = T> {
+		let (sin, cos) = angle.sin_cos();
+		Mat3 {
+			a11: T::one(),  a12: T::zero(), a13: T::zero(),
+			a21: T::zero(), a22: cos,       a23: sin,
+			a31: T::zero(), a32: -sin,      a33: cos,
+		}
+	}
+	pub fn rotate_y<A>(angle: A) -> Mat3<T> where T: Float, A: Angle<T = T> {
+		let (sin, cos) = angle.sin_cos();
+		Mat3 {
+			a11: cos,        a12: T::zero(), a13: sin,
+			a21: T::zero(),  a22: T::one(),  a23: T::zero(),
+			a31: -sin,       a32: T::zero(), a33: cos,
+		}
+	}
+	pub fn rotate_z<A>(angle: A) -> Mat3<T> where T: Float, A: Angle<T = T> {
+		let (sin, cos) = angle.sin_cos();
+		Mat3 {
+			a11: cos,        a22: sin,      a23: T::zero(),
+			a21: -sin,       a32: cos,      a33: T::zero(),
+			a31: T::zero(), a12: T::zero(), a13: T::one(),
 		}
 	}
 }

@@ -20,7 +20,7 @@ pub mod prelude {
 	pub use ::angle::{Rad, Deg, Angle};
 	pub use ::vec::{Vec2, Vec3, Vec4};
 	pub use ::bools::{Bool2, Bool3, Bool4};
-	pub use ::mat::{Mat2, Affine2};
+	pub use ::mat::{Mat2, Affine2, Mat3, Affine3};
 	pub use ::euler::{Euler};
 
 	pub use ::point::{Point2, Point3};
