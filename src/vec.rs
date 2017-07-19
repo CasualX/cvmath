@@ -138,6 +138,8 @@ assert_eq!(Vec2::<i32>::from((2, 3)), Vec2::from([2, 3]));
 
 `project(self, v)` where T: `Float`: Projection of `v` on `self`.
 
+`project_sat(self, v)` where T: `Float`: Saturated projection of `v` on `self`.
+
 `dot(self, rhs)`: Calculates the inner product.
 
 `cos_angle(self, rhs)`: Calculates the cosine of the inner angle.
@@ -187,6 +189,11 @@ assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2(0.0, 0.0).norm());
 
 assert_eq!(Vec2 { x: 1.5, y: 2.0 }, Vec2(3.0, 4.0).resize(2.5));
 assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2(0.0, 0.0).resize(2.0));
+
+assert_eq!(2.0, Vec2(3.0, 4.0).scalar_project(Vec2(2.0, 1.0)));
+assert_eq!(2.0, Vec2(3.0, 4.0).project(Vec2(2.0, 1.0)).len());
+assert_eq!(Vec2(-3.0, -4.0) , Vec2(3.0, 4.0).project(Vec2(-5.0, -2.5)));
+assert_eq!(Vec2(0.0, 0.0) , Vec2(3.0, 4.0).project_sat(Vec2(-5.0, -2.5)));
 
 assert_eq!(2.2, Vec2(3.0, 4.0).scalar_project(Vec2(1.0, 2.0)));
 assert_eq!(2.0, Vec3(4.0, 2.0, 4.0).scalar_project(Vec3(1.0, 4.0, 0.0)));
@@ -584,15 +591,18 @@ macro_rules! vec {
 			}
 			/// Scalar projection of `v` on `self`.
 			pub fn scalar_project(self, v: $vec<T>) -> T where T: Float {
-				self.dot(v) / self.len()
+				let len = self.len();
+				if len > T::zero() { self.dot(v) / len } else { len }
 			}
 			/// Projection of `v` on `self`.
 			pub fn project(self, v: $vec<T>) -> $vec<T> where T: Float {
-				self * (self.dot(v) / v.dot(v))
+				let len_sqr = self.len_sqr();
+				if len_sqr > T::zero() { self * (self.dot(v) / self.len_sqr()) } else { self }
 			}
 			/// Saturated projection of `v` on `self`.
 			pub fn project_sat(self, v: $vec<T>) -> $vec<T> where T: Float {
-				self * (self.dot(v) / v.dot(v)).min(T::one()).max(T::zero())
+				let len_sqr = self.len_sqr();
+				if len_sqr > T::zero() { self * (self.dot(v) / self.len_sqr()).min(T::one()).max(T::zero()) } else { self }
 			}
 			$($ops)*
 			/// Calculates the inner product.
