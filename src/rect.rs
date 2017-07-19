@@ -90,6 +90,12 @@ macro_rules! rect {
 				}
 			}
 		}
+
+		#[allow(non_snake_case)]
+		pub fn $ty<T>(mins: $pt<T>, maxs: $pt<T>) -> $ty<T> {
+			$ty { mins, maxs }
+		}
+
 		impl<T: Scalar> $ty<T> {
 			pub fn contains(self, pt: $pt<T>) -> bool {
 				pt >= self.mins && pt <= self.maxs

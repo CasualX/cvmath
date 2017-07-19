@@ -25,7 +25,7 @@ Comparison masks are boolean vectors to be consumed by `select`.
 
 ```
 # use cvmath::prelude::{Vec2, Bool2};
-assert_eq!(Bool2 { x: true, y: false }, Vec2::new(1, 2).eq(Vec2::new(1, -2)));
+assert_eq!(Bool2 { x: true, y: false }, Vec2(1, 2).eq(Vec2(1, -2)));
 ```
 
 ## Comparison operators
@@ -60,6 +60,12 @@ pub type Bool4 = Vec4<bool>;
 
 macro_rules! bools {
 	($bools:ident $vec:ident { $($field:ident),+ }) => {
+
+		#[allow(non_snake_case)]
+		pub fn $bools($($field: bool),+) -> $bools {
+			$bools { $($field),+ }
+		}
+
 		//----------------------------------------------------------------
 		// Comparison masks
 

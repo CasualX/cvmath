@@ -63,7 +63,7 @@ macro_rules! poly {
 					None
 				}
 				else {
-					let line = $line::new(self.pts[0], self.pts[1]);
+					let line = $line(self.pts[0], self.pts[1]);
 					self.pts = &self.pts[1..];
 					Some(line)
 				}
@@ -81,7 +81,7 @@ macro_rules! poly {
 					None
 				}
 				else {
-					Some($line::new(self.pts[len - 2], self.pts[len - 1]))
+					Some($line(self.pts[len - 2], self.pts[len - 1]))
 				}
 			}
 		}
@@ -93,7 +93,7 @@ macro_rules! poly {
 					None
 				}
 				else {
-					let line = $line::new(self.pts[len - 2], self.pts[len - 1]);
+					let line = $line(self.pts[len - 2], self.pts[len - 1]);
 					self.pts = &self.pts[..len - 1];
 					Some(line)
 				}
@@ -157,7 +157,7 @@ macro_rules! poly {
 					None
 				}
 				else {
-					let line = unsafe { $line::new(*self.start, *self.end) };
+					let line = unsafe { $line(*self.start, *self.end) };
 					self.start = self.end;
 					self.end = unsafe { self.end.offset(1) };
 					Some(line)

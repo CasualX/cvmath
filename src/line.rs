@@ -44,6 +44,12 @@ macro_rules! line {
 				}
 			}
 		}
+
+		#[allow(non_snake_case)]
+		pub fn $line<T>(start: $pt<T>, end: $pt<T>) -> $line<T> {
+			$line { start, end }
+		}
+
 		impl<T: Scalar> $line<T> {
 			/// Projects the point on the line.
 			pub fn project(self, pt: $pt<T>) -> $pt<T> where T: Float {

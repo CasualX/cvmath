@@ -19,13 +19,13 @@ An overview of their implementations:
 
 ```
 # use cvmath::prelude::{Vec2, Vec3};
-assert_eq!("(2,3,4)", format!("{}", Vec3::new(2, 3, 4)));
-assert_eq!("(2.300,2.142)", format!("{:.3}", Vec2::new(2.3, 2.14159278)));
-assert_eq!("(16,25)", format!("{:?}", Vec2::new(16, 25)));
-assert_eq!("(  2,  3, 14)", format!("{:>3}", Vec3::new(2, 3, 14)));
+assert_eq!("(2,3,4)", format!("{}", Vec3(2, 3, 4)));
+assert_eq!("(2.300,2.142)", format!("{:.3}", Vec2(2.3, 2.14159278)));
+assert_eq!("(16,25)", format!("{:?}", Vec2(16, 25)));
+assert_eq!("(  2,  3, 14)", format!("{:>3}", Vec3(2, 3, 14)));
 
-assert_eq!(Vec2 { x: -5, y: 9 }, Vec2::new(-5, 9));
-assert!(Vec2::new(1, 9) > Vec2::new(1, -2));
+assert_eq!(Vec2 { x: -5, y: 9 }, Vec2(-5, 9));
+assert!(Vec2(1, 9) > Vec2(1, -2));
 ```
 
 ## Constructors
@@ -42,7 +42,7 @@ assert!(Vec2::new(1, 9) > Vec2::new(1, -2));
 
 ```
 # use cvmath::prelude::{Vec2, Vec3};
-assert_eq!(Vec2 { x: 1, y: 2 }, Vec2::new(1, 2));
+assert_eq!(Vec2 { x: 1, y: 2 }, Vec2(1, 2));
 
 assert_eq!(Vec3 { x: 42, y: 42, z: 42 }, Vec3::dup(42));
 
@@ -66,14 +66,14 @@ assert_eq!(Vec3 { x: -12, y: 0, z: 12 }, Vec3::default().with_x(-12).with_z(12))
 
 ```
 # use cvmath::prelude::{Vec2, Vec3, Vec4};
-assert_eq!(Vec3 { x: 3, y: 4, z: 5 }, Vec2::new(3, 4).vec3(5));
+assert_eq!(Vec3 { x: 3, y: 4, z: 5 }, Vec2(3, 4).vec3(5));
 
-assert_eq!(Vec4 { x: -1, y: -2, z: -3, w: -4 }, Vec3::new(-1, -2, -3).vec4(-4));
+assert_eq!(Vec4 { x: -1, y: -2, z: -3, w: -4 }, Vec3(-1, -2, -3).vec4(-4));
 
-assert_eq!(Vec2 { x: 2, y: 1 }, Vec3::new(2, 1, 0).xy());
-assert_eq!(Vec2 { x: 1, y: 2 }, Vec4::new(1, 2, 3, 4).xy());
+assert_eq!(Vec2 { x: 2, y: 1 }, Vec3(2, 1, 0).xy());
+assert_eq!(Vec2 { x: 1, y: 2 }, Vec4(1, 2, 3, 4).xy());
 
-assert_eq!(Vec3 { x: 1, y: 2, z: 3 }, Vec4::new(1, 2, 3, 4).xyz());
+assert_eq!(Vec3 { x: 1, y: 2, z: 3 }, Vec4(1, 2, 3, 4).xyz());
 ```
 
 ## Transformations
@@ -92,15 +92,15 @@ assert_eq!(Vec3 { x: 1, y: 2, z: 3 }, Vec4::new(1, 2, 3, 4).xyz());
 
 ```
 # use cvmath::prelude::{Vec2, Vec3};
-assert_eq!(Vec2 { x: 2, y: 4 }, Vec2::new(2.2, 4.9).cast());
+assert_eq!(Vec2 { x: 2, y: 4 }, Vec2(2.2, 4.9).cast());
 
-assert_eq!(Vec2 { x: 2, y: 4 }, Vec2::new(1, 2).map(|c| c * 2));
+assert_eq!(Vec2 { x: 2, y: 4 }, Vec2(1, 2).map(|c| c * 2));
 
-let left = Vec2::new(1, 2);
-let right = Vec2::new(1, -1);
+let left = Vec2(1, 2);
+let right = Vec2(1, -1);
 assert_eq!(Vec2 { x: 3, y: 3 }, Vec2::zip(left, right, |a, b| a * 2 + b));
 
-let vec = Vec3::new(5, 3, 2);
+let vec = Vec3(5, 3, 2);
 assert_eq!(0, vec.reduce(|acc, c| acc - c));
 assert_eq!(-10, vec.fold(0, |acc, c| acc - c));
 ```
@@ -174,32 +174,32 @@ Exclusive to `Vec3`:
 
 ```
 # use cvmath::prelude::{Vec2, Vec3};
-assert_eq!(Vec2 { x: 9, y: 16 }, Vec2::new(3, 4).sqr());
+assert_eq!(Vec2 { x: 9, y: 16 }, Vec2(3, 4).sqr());
 
-assert_eq!(25, Vec2::new(3, 4).len_sqr());
-assert_eq!(5.0, Vec2::new(3.0, 4.0).len());
+assert_eq!(25, Vec2(3, 4).len_sqr());
+assert_eq!(5.0, Vec2(3.0, 4.0).len());
 
-assert_eq!(2, Vec2::dist_sqr(Vec2::new(1, 1), Vec2::new(2, 2)));
-assert_eq!(5.0, Vec2::dist(Vec2::new(10.0, 10.0), Vec2::new(13.0, 14.0)));
+assert_eq!(2, Vec2::dist_sqr(Vec2(1, 1), Vec2(2, 2)));
+assert_eq!(5.0, Vec2::dist(Vec2(10.0, 10.0), Vec2(13.0, 14.0)));
 
-assert_eq!(Vec2 { x: 0.6, y: 0.8 }, Vec2::new(3.0, 4.0).norm());
-assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2::new(0.0, 0.0).norm());
+assert_eq!(Vec2 { x: 0.6, y: 0.8 }, Vec2(3.0, 4.0).norm());
+assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2(0.0, 0.0).norm());
 
-assert_eq!(Vec2 { x: 1.5, y: 2.0 }, Vec2::new(3.0, 4.0).resize(2.5));
-assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2::new(0.0, 0.0).resize(2.0));
+assert_eq!(Vec2 { x: 1.5, y: 2.0 }, Vec2(3.0, 4.0).resize(2.5));
+assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2(0.0, 0.0).resize(2.0));
 
-assert_eq!(2.2, Vec2::new(3.0, 4.0).scalar_project(Vec2::new(1.0, 2.0)));
-assert_eq!(2.0, Vec3::new(4.0, 2.0, 4.0).scalar_project(Vec3::new(1.0, 4.0, 0.0)));
+assert_eq!(2.2, Vec2(3.0, 4.0).scalar_project(Vec2(1.0, 2.0)));
+assert_eq!(2.0, Vec3(4.0, 2.0, 4.0).scalar_project(Vec3(1.0, 4.0, 0.0)));
 
-assert_eq!(12, Vec3::new(3, 4, 5).hadd());
-assert_eq!(-1, Vec2::new(3, 4).hsub());
+assert_eq!(12, Vec3(3, 4, 5).hadd());
+assert_eq!(-1, Vec2(3, 4).hsub());
 
-assert_eq!(Vec2 { x: 4, y: -3 }, Vec2::new(3, 4).ccw());
-assert_eq!(Vec2 { x: -4, y: 3 }, Vec2::new(3, 4).cw());
-assert_eq!(10, Vec2::cross(Vec2::new(3, 4), Vec2::new(-1, 2)));
+assert_eq!(Vec2 { x: 4, y: -3 }, Vec2(3, 4).ccw());
+assert_eq!(Vec2 { x: -4, y: 3 }, Vec2(3, 4).cw());
+assert_eq!(10, Vec2::cross(Vec2(3, 4), Vec2(-1, 2)));
 
-assert_eq!(12, Vec3::dot(Vec3::new(1, 2, 3), Vec3::new(4, -5, 6)));
-assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross((3, -3, 1).into(), (4, 9, 1).into()));
+assert_eq!(12, Vec3::dot(Vec3(1, 2, 3), Vec3(4, -5, 6)));
+assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross(Vec3(3, -3, 1), Vec3(4, 9, 1)));
 ```
 
 ## Operators
@@ -413,6 +413,12 @@ macro_rules! vec {
 				$vec { $($field: u),+ }
 			}
 			unit!($vec);
+		}
+
+		/// Constructs a new vector from components.
+		#[allow(non_snake_case)]
+		pub fn $vec<T>($($field: T),+) -> $vec<T> {
+			$vec { $($field),+ }
 		}
 
 		impl<T> $vec<T> {
