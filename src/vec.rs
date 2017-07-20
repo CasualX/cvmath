@@ -639,11 +639,20 @@ macro_rules! vec {
 			pub fn mul_add(self, vec: $vec<T>, scale: T) -> $vec<T> {
 				$vec { $($field: self.$field + vec.$field * scale),+ }
 			}
-			/// Linear interpolates between the vectors.
+			/// Linear interpolation between the vectors.
+			///
+			/// <!--LERP--><svg width="400" height="120" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><line x1="40" y1="100" x2="104" y2="84" stroke-width="1" stroke="green" /><line x1="104" y1="84" x2="200" y2="60" stroke-width="1" stroke="blue" /><line x1="200" y1="60" x2="360" y2="20" stroke-width="1" stroke="black" /><circle cx="40" cy="100" r="2" fill="black" /><circle cx="360" cy="20" r="2" fill="black" /><circle cx="104" cy="84" r="2" fill="green" /><circle cx="200" cy="60" r="2" fill="blue" /><text x="20" y="90" fill="black">self</text><text x="345" y="40" fill="black">rhs</text><text x="84" y="104" fill="green">t = 0.2</text><text x="180" y="80" fill="blue">t = 0.5</text></svg>
 			pub fn lerp(self, rhs: $vec<T>, t: T) -> $vec<T> {
 				self + (rhs - self) * t
 			}
-			// Spherical lerp with constant velocity.
+			/// Spherical interpolation between the vectors with constant velocity.
+			///
+			/// Linear interpolation between the vector angles and their lengths.
+			///
+			/// This is fairly expensive to calculate requiring trigonometric functions.
+			/// If constant velocity isn't required, see the less expensive [nlerp](#method.nlerp).
+			///
+			/// <!--SLERP--><svg width="400" height="140" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path d="M200 136.33249 L100 70 M105.54859 70.68052 L100 70 L102.78474 74.84719" stroke-width="0.5" stroke="black" fill="none" /><line x1="200" y1="136.33249" x2="300" y2="70" stroke-width="0.5" stroke="black" /><path d="M200 136.33249 L143.25452 30.597214 M147.82173 33.820652 L143.25452 30.597214 L143.41609 36.185047" stroke-width="0.25" stroke="green" fill="none" /><path d="M200 136.33249 L200 16.332481 M202.5 21.332481 L200 16.332481 L197.5 21.332481" stroke-width="0.25" stroke="green" fill="none" /><path d="M200 136.33249 L256.74548 30.597221 M256.5839 36.185055 L256.74548 30.597221 L252.17827 33.82066" stroke-width="0.5" stroke="green" fill="none" /><path d="M88.950035 90.85828 A120 120 0 0 1 100 70" stroke-width="0.5" stroke="black" fill="none" /><path d="M100 70 A120 120 0 0 1 256.74548 30.597221" stroke-width="1" stroke="green" fill="none" /><path d="M256.74548 30.597221 A120 120 0 0 1 300 70" stroke-width="1" stroke="black" fill="none" /><path d="M300 70 A120 120 0 0 1 311.05 90.85829" stroke-width="0.5" stroke="black" fill="none" /><line x1="100" y1="70" x2="250" y2="70" stroke-width="0.5" stroke="blue" /><circle cx="100" cy="70" r="2" fill="black" /><circle cx="300" cy="70" r="2" fill="black" /><circle cx="250" cy="70" r="2" fill="blue" /><circle cx="256.74548" cy="30.597221" r="2" fill="green" /><text x="98.25452" y="25.597214" fill="green" font-size="10">t = 0.25</text><text x="180" y="11.332481" fill="green" font-size="10">t = 0.50</text><text x="256.74548" y="25.597221" fill="green" font-size="10">t = 0.75</text><text x="230" y="90" fill="blue">lerp</text><text x="196.74548" y="40.59722" fill="green">slerp</text><text x="50" y="70" fill="black">self</text><text x="310" y="70" fill="black">rhs</text></svg>
 			pub fn slerp(self, rhs: $vec<T>, t: T) -> $vec<T> where T: Float {
 				let (v0, len0) = self.norm_len();
 				let (v1, len1) = rhs.norm_len();
@@ -656,7 +665,9 @@ macro_rules! vec {
 				let v2 = (v1 - v0 * dot).norm();
 				(v0 * cos + v2 * sin) * len
 			}
-			// Spherical lerp without constant velocity.
+			/// Cheap spherical interpolation between the vectors without constant velocity.
+			///
+			/// <!--NLERP--><svg width="400" height="140" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path d="M200 136.33249 L100 70 M105.54859 70.68052 L100 70 L102.78474 74.84719" stroke-width="0.5" stroke="black" fill="none" /><line x1="200" y1="136.33249" x2="300" y2="70" stroke-width="0.5" stroke="black" /><path d="M200 136.33249 L127.768486 40.50657 M132.7745 42.994495 L127.768486 40.50657 L128.78177 46.00414" stroke-width="0.25" stroke="green" fill="none" /><path d="M200 136.33249 L200 16.332497 M202.5 21.332497 L200 16.332497 L197.5 21.332497" stroke-width="0.25" stroke="green" fill="none" /><path d="M200 136.33249 L272.2315 40.50657 M271.21823 46.00414 L272.2315 40.50657 L267.2255 42.994495" stroke-width="0.5" stroke="green" fill="none" /><path d="M94.97722 78.27897 A120 120 0 0 1 100 70" stroke-width="0.5" stroke="black" fill="none" /><path d="M100 70 A120 120 0 0 1 272.2315 40.50657" stroke-width="1" stroke="green" fill="none" /><path d="M272.2315 40.50657 A120 120 0 0 1 300 70" stroke-width="1" stroke="black" fill="none" /><path d="M300 70 A120 120 0 0 1 305.02277 78.27897" stroke-width="0.5" stroke="black" fill="none" /><line x1="100" y1="70" x2="250" y2="70" stroke-width="0.5" stroke="blue" /><circle cx="100" cy="70" r="2" fill="black" /><circle cx="300" cy="70" r="2" fill="black" /><circle cx="250" cy="70" r="2" fill="blue" /><circle cx="272.2315" cy="40.50657" r="2" fill="green" /><text x="82.768486" y="35.50657" fill="green" font-size="10">t = 0.25</text><text x="180" y="11.332497" fill="green" font-size="10">t = 0.50</text><text x="272.2315" y="35.50657" fill="green" font-size="10">t = 0.75</text><text x="230" y="90" fill="blue">lerp</text><text x="212.2315" y="50.50657" fill="green">nlerp</text><text x="50" y="70" fill="black">self</text><text x="310" y="70" fill="black">rhs</text></svg>
 			pub fn nlerp(self, rhs: $vec<T>, t: T) -> $vec<T> where T: Float {
 				let self_len = self.len();
 				let rhs_len = rhs.len();
