@@ -419,6 +419,10 @@ macro_rules! vec {
 			pub fn dup(u: T) -> $vec<T> where T: Copy {
 				$vec { $($field: u),+ }
 			}
+			/// Returns the origin for the vector space.
+			pub fn origin() -> $vec<T> where T: Zero {
+				$vec { $($field: T::zero()),+ }
+			}
 			unit!($vec);
 		}
 
@@ -464,7 +468,7 @@ macro_rules! vec {
 		//----------------------------------------------------------------
 		// Conversions
 
-		impl<T: Copy> From<T> for $vec<T> {
+		impl<T: Scalar> From<T> for $vec<T> {
 			fn from(val: T) -> $vec<T> {
 				$vec { $($field: val),+ }
 			}
