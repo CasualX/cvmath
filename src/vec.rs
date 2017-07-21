@@ -446,20 +446,20 @@ macro_rules! vec {
 				$vec { $($field: self.$field.as_cast()),+ }
 			}
 			/// Maps a callable over the components.
-			pub fn map<U, F: FnMut(T) -> U>(self, mut f: F) -> $vec<U> {
+			pub fn map<U, F>(self, mut f: F) -> $vec<U> where F: FnMut(T) -> U {
 				$vec { $($field: f(self.$field)),+ }
 			}
 			/// Zips two vectors together.
-			pub fn zip<U, F: FnMut(T, T) -> U>(self, rhs: $vec<T>, mut f: F) -> $vec<U> {
+			pub fn zip<U, F>(self, rhs: $vec<T>, mut f: F) -> $vec<U> where F: FnMut(T, T) -> U {
 				$vec { $($field: f(self.$field, rhs.$field)),+ }
 			}
 			/// Reduces the vector.
-			pub fn reduce<F: Fn(T, T) -> T>(self, f: F) -> T {
+			pub fn reduce<F>(self, f: F) -> T where F: Fn(T, T) -> T {
 				// These will end up nested without temporaries which won't work with `FnMut`...
 				fold!(f, $(self.$field),+)
 			}
 			/// Folds the vector.
-			pub fn fold<A, F: Fn(A, T) -> A>(self, acc: A, f: F) -> A {
+			pub fn fold<A, F>(self, acc: A, f: F) -> A where F: Fn(A, T) -> A {
 				// These will end up nested without temporaries which won't work with `FnMut`...
 				fold!(f, acc, $(self.$field),+)
 			}
@@ -540,40 +540,128 @@ macro_rules! vec {
 		//----------------------------------------------------------------
 		// Operations
 
+		/// Operations on vectors of scalars.
 		impl<T: Scalar> $vec<T> {
 			/// Squares the components.
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2, Vec3};
+			/// let this = Vec2 { x: -3, y: 4 };
+			/// assert_eq!(Vec2(9, 16), this.sqr());
+			///
+			/// let this = Vec3 { x: 2, y: 3, z: -6 };
+			/// assert_eq!(Vec3(4, 9, 36), this.sqr());
+			/// ```
 			pub fn sqr(self) -> $vec<T> {
 				$vec { $($field: self.$field * self.$field),+ }
 			}
 			/// Calculates the squared length of the vector.
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2, Vec3};
+			/// let this = Vec2 { x: -3, y: 4 };
+			/// assert_eq!(25, this.len_sqr());
+			///
+			/// let this = Vec3 { x: 2, y: -3, z: 6 };
+			/// assert_eq!(49, this.len_sqr());
+			/// ```
 			pub fn len_sqr(self) -> T {
 				infix!(+ $(self.$field * self.$field),+)
 			}
 			/// Calculates the length of the vector.
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2, Vec3};
+			/// let this = Vec2 { x: -3.0, y: 4.0 };
+			/// assert_eq!(5.0, this.len());
+			///
+			/// let this = Vec3 { x: -2.0, y: 3.0, z: -6.0 };
+			/// assert_eq!(7.0, this.len());
+			/// ```
 			pub fn len(self) -> T where T: Float {
 				self.len_sqr().sqrt()
 			}
 			/// Calculates the manhattan length of the vector.
+			///
+			/// <!--LEN_HAT--><svg width="400" height="120" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M40 100 L360.5 20 M353.70688 25.818361 L360.5 20 L351.76944 18.056509" stroke="black" /><path fill="none" d="M40 100 L360.5 100 M352.5 104 L360.5 100 L352.5 96" stroke="grey" stroke-width="0.5" /><path fill="none" d="M360.5 100 L360.5 20 M364.5 28 L360.5 20 L356.5 28" stroke="grey" stroke-width="0.5" /><circle cx="40" cy="100" r="2" /><text x="365.5" y="20">this</text><text x="200.25" y="115" fill="grey">x</text><text x="365.5" y="60" fill="grey">y</text></svg>
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2, Vec3};
+			/// let this = Vec2 { x: 3, y: 4 };
+			/// assert_eq!(7, this.len_hat());
+			///
+			/// let this = Vec3 { x: 2, y: -3, z: -6 };
+			/// assert_eq!(11, this.len_hat());
+			/// ```
 			pub fn len_hat(self) -> T {
 				infix!(+ $(self.$field.abs()),+)
 			}
 			/// Calculates the squared euclidean distance to another vector.
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2};
+			/// let this = Vec2 { x: 1, y: 1 };
+			/// let to = Vec2 { x: 2, y: 2 };
+			/// assert_eq!(2, this.dist_sqr(to));
+			/// ```
 			pub fn dist_sqr(self, to: $vec<T>) -> T {
 				infix!(+ $((to.$field - self.$field) * (to.$field - self.$field)),+)
 			}
 			/// Calculates the euclidean distance to another vector.
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2};
+			/// let this = Vec2 { x: 10.0, y: 10.0 };
+			/// let to = Vec2 { x: 13.0, y: 14.0 };
+			/// assert_eq!(5.0, this.dist(to));
+			/// ```
 			pub fn dist(self, to: $vec<T>) -> T where T: Float {
 				self.dist_sqr(to).sqrt()
 			}
 			/// Calculates the manhattan distance to another vector.
+			///
+			/// <!--DIST_HAT--><svg width="400" height="120" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><line x1="40" y1="100" x2="360.5" y2="20" stroke="black" /><path fill="none" d="M40 100 L360.5 100 M352.5 104 L360.5 100 L352.5 96" stroke="grey" stroke-width="0.5" /><path fill="none" d="M360.5 100 L360.5 20 M364.5 28 L360.5 20 L356.5 28" stroke="grey" stroke-width="0.5" /><circle cx="40" cy="100" r="2" /><circle cx="360.5" cy="20" r="2" /><text x="20" y="90">this</text><text x="365.5" y="20">to</text><text x="200.25" y="115" fill="grey">x</text><text x="365.5" y="60" fill="grey">y</text></svg>
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2, Vec3};
+			/// let this = Vec2 { x: 1.0, y: 5.0 };
+			/// let to = Vec2 { x: 5.0, y: 2.0 };
+			/// assert_eq!(7.0, this.dist_hat(to));
+			///
+			/// let this = Vec3 { x: 1.0, y: 5.0, z: -1.0 };
+			/// let to = Vec3 { x: 2.0, y: 3.0, z: 1.0 };
+			/// assert_eq!(5.0, this.dist_hat(to));
+			/// ```
 			pub fn dist_hat(self, to: $vec<T>) -> T {
 				infix!(+ $((to.$field - self.$field).abs()),+)
 			}
 			/// Normalizes the vector.
+			///
+			/// After normalizing the vector has the length `1.0` except the null vector remains null.
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2, Vec3};
+			/// let this = Vec2 { x: 3.0, y: -4.0 };
+			/// assert_eq!(Vec2(0.6, -0.8), this.norm());
+			///
+			/// let this = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
+			/// assert_eq!(this, this.norm());
+			/// ```
 			pub fn norm(self) -> $vec<T> where T: Float {
 				self.norm_len().0
 			}
 			/// Calculates the normalized vector and its length.
+			///
+			/// After normalizing the vector has the length `1.0` except the null vector remains null.
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2, Vec3};
+			/// let this = Vec2 { x: 3.0, y: -4.0 };
+			/// assert_eq!((Vec2(0.6, -0.8), 5.0), this.norm_len());
+			///
+			/// let this = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
+			/// assert_eq!((this, 0.0), this.norm_len());
+			/// ```
 			pub fn norm_len(self) -> ($vec<T>, T) where T: Float {
 				let self_len = self.len();
 				if self_len > T::zero() {
@@ -583,59 +671,186 @@ macro_rules! vec {
 					(self, self_len)
 				}
 			}
-			/// Scales the vector such that its length equals the given value.
+			/// Resizes the vector to the given length.
+			///
+			/// The null vector remains null.
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2, Vec3};
+			/// let this = Vec2 { x: -3.0, y: -4.0 };
+			/// assert_eq!(Vec2(-1.5, -2.0), this.resize(2.5));
+			///
+			/// let this = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
+			/// assert_eq!(Vec3(0.0, 0.0, 0.0), this.resize(2.0));
+			/// ```
 			pub fn resize(self, len: T) -> $vec<T> where T: Float {
 				let self_len = self.len();
 				if self_len > T::zero() {
 					self * (len / self_len)
 				}
-				else {
-					self
-				}
+				else { self }
 			}
-			/// Scalar projection of `v` on `self`.
+			/// Calculates the length of `v` projected onto `self`.
+			///
+			/// <!--SCALAR_PROJECT--><svg width="400" height="200" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M40 160 L360 120 M352.5579 124.96139 L360 120 L351.56564 117.02317" stroke="black" /><path fill="none" d="M40 160 L200 20 M196.6134 28.278343 L200 20 L191.34537 22.257729" stroke="black" /><circle cx="40" cy="160" r="2" fill="black" /><line x1="214.76923" y1="138.15384" x2="200" y2="20" stroke="black" stroke-dasharray="5, 5" stroke-width="0.5" /><line x1="194.92368" y1="140.63454" x2="192.44298" y2="120.78898" stroke="black" stroke-width="0.5" /><line x1="192.44298" y1="120.78898" x2="212.28854" y2="118.30828" stroke="black" stroke-width="0.5" /><line x1="41.860523" y1="174.88417" x2="216.62975" y2="153.03801" stroke="black" stroke-width="1.5" /><line x1="41.395393" y1="171.16313" x2="42.325653" y2="178.60521" stroke="black" stroke-width="1.5" /><line x1="216.16461" y1="149.31697" x2="217.09488" y2="156.75905" stroke="black" stroke-width="1.5" /><text x="205" y="25" fill="black">v</text><text x="340" y="142" fill="black">self</text></svg>
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2, Vec3};
+			/// let this = Vec2 { x: 3.0, y: 4.0 };
+			/// let v = Vec2 { x: 1.0, y: 2.0 };
+			/// assert_eq!(2.2, this.scalar_project(v));
+			///
+			/// let this = Vec3 { x: 4.0, y: 2.0, z: 4.0 };
+			/// let v = Vec3 { x: 1.0, y: 4.0, z: 0.0 };
+			/// assert_eq!(2.0, this.scalar_project(v));
+			/// ```
 			pub fn scalar_project(self, v: $vec<T>) -> T where T: Float {
 				let len = self.len();
-				if len > T::zero() { self.dot(v) / len } else { len }
+				if len > T::zero() {
+					self.dot(v) / len
+				}
+				else { len }
 			}
 			/// Projection of `v` on `self`.
+			///
+			/// <!--PROJECT-->
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2, Vec3};
+			/// let this = Vec2 { x: 3.0, y: 4.0 };
+			/// let v = Vec2 { x: -5.0, y: -2.5 };
+			/// assert_eq!(Vec2(-3.0, -4.0), this.project(v));
+			///
+			/// let this = Vec3 { x: 3.0, y: 4.0, z: 0.0 };
+			/// let v = Vec3 { x: -5.0, y: -2.5, z: 0.0 };
+			/// assert_eq!(Vec3(-3.0, -4.0, 0.0), this.project(v));
+			/// ```
 			pub fn project(self, v: $vec<T>) -> $vec<T> where T: Float {
 				let len_sqr = self.len_sqr();
-				if len_sqr > T::zero() { self * (self.dot(v) / self.len_sqr()) } else { self }
+				if len_sqr > T::zero() {
+					self * (self.dot(v) / len_sqr)
+				}
+				else { self }
 			}
-			/// Saturated projection of `v` on `self`.
+			/// Projection of `v` on `self` clamped on `self`.
+			///
+			/// <!--PROJECT_SAT-->
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2, Vec3};
+			/// let this = Vec2 { x: 3.0, y: 4.0 };
+			/// let v = Vec2 { x: -5.0, y: -2.5 };
+			/// assert_eq!(Vec2(0.0, 0.0), this.project_sat(v));
+			/// ```
 			pub fn project_sat(self, v: $vec<T>) -> $vec<T> where T: Float {
 				let len_sqr = self.len_sqr();
-				if len_sqr > T::zero() { self * (self.dot(v) / self.len_sqr()).min(T::one()).max(T::zero()) } else { self }
+				if len_sqr > T::zero() {
+					self * (self.dot(v) / len_sqr).min(T::one()).max(T::zero())
+				}
+				else { self }
+			}
+			/// Reflects `v` around `self`.
+			///
+			/// <!--REFLECT_2D--><svg width="400" height="200" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><line x1="140" y1="20" x2="175.29413" y2="161.17647" stroke="black" stroke-width="0.5" stroke-dasharray="5, 5" /><line x1="157.64706" y1="90.588234" x2="57.647064" y2="190.58823" stroke="black" stroke-width="0.5" stroke-dasharray="5, 5" /><line x1="57.647064" y1="190.58823" x2="175.29413" y2="161.17647" stroke="black" stroke-width="0.5" stroke-dasharray="5, 5" /><path fill="none" d="M40 120 L140 20 M137.17157 28.485283 L140 20 L131.51471 22.828426" stroke="black" /><path fill="none" d="M40 120 L290 57.5 M283.209 63.320854 L290 57.5 L281.2687 55.559715" stroke="black" /><path fill="none" d="M40 120 L175.29413 161.17647 M166.47609 162.67386 L175.29413 161.17647 L168.80537 155.02048" stroke="red" /><circle cx="157.64706" cy="90.588234" r="2" fill="black" /><text x="140" y="20" fill="black">v</text><text x="290" y="57.5" fill="black">self</text><text x="165.64706" y="100.588234" fill="black">p</text><text x="175.29413" y="161.17647" fill="red">result</text><text x="52.647064" y="175.58823" fill="black">-v</text><text x="151.76471" y="182.05882" fill="black">+p</text></svg>
+			///
+			/// <!--REFLECT_3D-->
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2};
+			/// let this = Vec2 { x: 4.0, y: 4.0 };
+			/// let v = Vec2 { x: 1.0, y: 3.0 };
+			/// assert_eq!(Vec2(3.0, 1.0), this.reflect(v));
+			/// ```
+			pub fn reflect(self, v: $vec<T>) -> $vec<T> where T: Float {
+				let p = self.project(v);
+				p + p - v
 			}
 			$($ops)*
-			/// Calculates the inner product.
+			/// Calculates the dot product.
+			///
+			/// <!--DOT-->
+			///
+			/// ```
+			///# use cvmath::vec::{Vec3};
+			/// let lhs = Vec3 { x: 1, y: 2, z: 3 };
+			/// let rhs = Vec3 { x: 4, y: -5, z: 6 };
+			/// assert_eq!(12, Vec3::dot(lhs, rhs));
+			/// ```
 			pub fn dot(self, rhs: $vec<T>) -> T {
 				infix!(+ $(self.$field * rhs.$field),+)
 			}
-			/// Calculates the cosine of the inner angle.
+			/// Calculates the cosine of the angle between two vectors.
+			///
+			/// <!--COS_ANGLE-->
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2};
+			/// let lhs = Vec2 { x: 1.0, y: 1.0 };
+			/// let rhs = Vec2 { x: 1.0, y: 0.0 };
+			/// let sqrt_2_div_2 = 1.0 / 2_f32.sqrt(); // √2 ÷ 2
+			/// assert_eq!(sqrt_2_div_2, lhs.cos_angle(rhs));
+			/// ```
 			pub fn cos_angle(self, rhs: $vec<T>) -> T where T: Float {
 				// |self| * |rhs| <=> √(self ∙ self * rhs ∙ rhs)
 				let d = (self.dot(self) * rhs.dot(rhs)).sqrt();
 				self.dot(rhs) / d
 			}
-			/// Calculates the inner angle.
+			/// Calculates the angle between two vectors.
+			///
+			/// <!--ANGLE-->
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2};
+			///# use cvmath::angle::{Deg, Angle};
+			/// let lhs = Vec2 { x: 1.0, y: 1.0 };
+			/// let rhs = Vec2 { x: 1.0, y: 0.0 };
+			/// assert_eq!(Deg(45_f32), lhs.angle(rhs).to_deg());
+			/// ```
 			pub fn angle(self, rhs: $vec<T>) -> Rad<T> where T: Float {
 				Rad::acos(self.cos_angle(rhs))
 			}
 			/// Horizontal adds all components.
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2, Vec3};
+			/// let this = Vec2 { x: -2, y: 7 };
+			/// assert_eq!(5, this.hadd());
+			///
+			/// let this = Vec3 { x: 3, y: 4, z: 5 };
+			/// assert_eq!(12, this.hadd());
+			/// ```
 			pub fn hadd(self) -> T {
 				infix!(+ $(self.$field),+)
 			}
 			/// Component wise absolute value.
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2};
+			/// let this = Vec2 { x: -3, y: 5 };
+			/// assert_eq!(Vec2(3, 5), this.abs());
+			/// ```
 			pub fn abs(self) -> $vec<T> {
 				$vec { $($field: self.$field.abs()),+ }
 			}
 			/// Component wise minimum value.
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2};
+			/// let lhs = Vec2 { x: -3, y: 5 };
+			/// let rhs = Vec2 { x: 0, y: 2 };
+			/// assert_eq!(Vec2(-3, 2), lhs.min(rhs));
+			/// ```
 			pub fn min(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::min(self.$field, rhs.$field)),+ }
 			}
 			/// Component wise maximum value.
+			///
+			/// ```
+			///# use cvmath::vec::{Vec2};
+			/// let lhs = Vec2 { x: -3, y: 5 };
+			/// let rhs = Vec2 { x: 0, y: 2 };
+			/// assert_eq!(Vec2(0, 5), lhs.max(rhs));
+			/// ```
 			pub fn max(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::max(self.$field, rhs.$field)),+ }
 			}
@@ -813,26 +1028,69 @@ macro_rules! vec {
 // vec!(Vec1 1 { x 0 T });
 vec!(Vec2 2 { x 0 T, y 1 T } {
 	/// Calculates the polar angle.
+	///
+	/// <!--POLAR_ANGLE-->
+	///
+	/// ```
+	///# use cvmath::vec::{Vec2};
+	///# use cvmath::angle::{Angle, Rad};
+	/// let this = Vec2 { x: 1.0, y: 1.0 };
+	/// assert_eq!(Rad::eight(), this.polar_angle());
+	/// ```
 	pub fn polar_angle(self) -> Rad<T> where T: Float {
 		Rad::atan2(self.y, self.x)
 	}
 	/// Rotates the vector counter-clockwise by 90°.
+	///
+	/// The resulting vector is perpendicular to the given vector.
+	///
+	/// ```
+	///# use cvmath::vec::{Vec2};
+	/// let this = Vec2 { x: 3.0, y: 4.0 };
+	/// assert_eq!(Vec2(4.0, -3.0), this.ccw());
+	/// ```
 	pub fn ccw(self) -> Vec2<T> {
 		Vec2 { x: self.y, y: -self.x }
 	}
 	/// Rotates the vector clockwise by 90°.
+	///
+	/// The resulting vector is perpendicular to the given vector.
+	///
+	/// ```
+	///# use cvmath::vec::{Vec2};
+	/// let this = Vec2 { x: 3.0, y: 4.0 };
+	/// assert_eq!(Vec2(-4.0, 3.0), this.cw());
+	/// ```
 	pub fn cw(self) -> Vec2<T> {
 		Vec2 { x: -self.y, y: self.x }
 	}
 	/// Calculates the magnitude of the 3D cross product where the inputs are extended with `z = 0`.
 	///
-	/// This result is also equal to the area of the parallelogram between the two vectors.
+	/// This result is equal to the area of the parallelogram between the two vectors.
+	/// This result is equal to twice the area of the triangle between the two vectors.
 	///
 	/// Furthermore this area is signed; a positive value means the `rhs` is on the left side of `self` and a negative value means `rhs` is on the right side.
+	///
+	/// <!--CROSS_2D-->
+	///
+	/// ```
+	///# use cvmath::vec::{Vec2};
+	/// let lhs = Vec2 { x: -3, y: -4 };
+	/// let rhs = Vec2 { x: -1, y: 2 };
+	/// assert_eq!(-10, lhs.cross(rhs));
+	/// // Area under the parallelogram defined by (origin, lhs, rhs, lhs + rhs) equals 10
+	/// // Area under the triangle defined by (origin, lhs, rhs) equals 5
+	/// ```
 	pub fn cross(self, rhs: Vec2<T>) -> T {
 		self.x * rhs.y - self.y * rhs.x
 	}
 	/// Horizontal subtracts the components.
+	///
+	/// ```
+	///# use cvmath::vec::{Vec2};
+	/// let this = Vec2 { x: 3, y: 4 };
+	/// assert_eq!(-1, this.hsub());
+	/// ```
 	pub fn hsub(self) -> T {
 		self.x - self.y
 	}
@@ -841,6 +1099,15 @@ vec!(Vec3 3 { x 0 T, y 1 T, z 2 T } {
 	/// Calculates the 3D cross product.
 	///
 	/// Effectively calculates the vector perpendicular to both inputs with direction according to the [right-hand rule](https://en.wikipedia.org/wiki/Right-hand_rule).
+	///
+	/// <!--CROSS_3D-->
+	///
+	/// ```
+	///# use cvmath::vec::{Vec3};
+	/// let lhs = Vec3 { x: 3, y: -3, z: 1 };
+	/// let rhs = Vec3 { x: 4, y: 9, z: 1 };
+	/// assert_eq!(Vec3(-12, 1, 39), lhs.cross(rhs));
+	/// ```
 	pub fn cross(self, rhs: Vec3<T>) -> Vec3<T> {
 		Vec3 {
 			x: self.y * rhs.z - self.z * rhs.y,
@@ -848,7 +1115,7 @@ vec!(Vec3 3 { x 0 T, y 1 T, z 2 T } {
 			z: self.x * rhs.y - self.y * rhs.x,
 		}
 	}
-	/// Homogenous divide.
+	/// Homogeneous divide.
 	pub fn hdiv(self) -> Vec2<T> {
 		if self.z != T::zero() {
 			Vec2 {
@@ -856,13 +1123,11 @@ vec!(Vec3 3 { x 0 T, y 1 T, z 2 T } {
 				y: self.x / self.z,
 			}
 		}
-		else {
-			self.xy()
-		}
+		else { self.xy() }
 	}
 });
 vec!(Vec4 4 { x 0 T, y 1 T, z 2 T, w 3 T } {
-	/// Homogenous divide.
+	/// Homogeneous divide.
 	pub fn hdiv(self) -> Vec3<T> {
 		if self.w != T::zero() {
 			Vec3 {
@@ -871,9 +1136,7 @@ vec!(Vec4 4 { x 0 T, y 1 T, z 2 T, w 3 T } {
 				z: self.z / self.w,
 			}
 		}
-		else {
-			self.xyz()
-		}
+		else { self.xyz() }
 	}
 });
 
