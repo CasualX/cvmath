@@ -49,8 +49,8 @@ impl<T: Scalar> Affine2<T> {
 	/// Identity matrix.
 	pub fn identity() -> Affine2<T> {
 		Affine2 {
-			a11: T::one(), a12: T::zero(), a13: T::zero(),
-			a21: T::zero(), a22: T::one(), a23: T::zero(),
+			a11: T::one(),  a12: T::zero(), a13: T::zero(),
+			a21: T::zero(), a22: T::one(),  a23: T::zero(),
 		}
 	}
 	/// Null matrix.
@@ -64,8 +64,8 @@ impl<T: Scalar> Affine2<T> {
 	pub fn translate<V>(trans: V) -> Affine2<T> where V: Into<Vec2<T>> {
 		let trans = trans.into();
 		Affine2 {
-			a11: T::one(), a12: T::zero(), a13: trans.x,
-			a21: T::zero(), a22: T::one(), a23: trans.y,
+			a11: T::one(),  a12: T::zero(), a13: trans.x,
+			a21: T::zero(), a22: T::one(),  a23: trans.y,
 		}
 	}
 	/// Scaling matrix.
@@ -179,8 +179,7 @@ impl<T> Affine2<T> {
 	/// A linear transformation then can be defined by these unit vectors. The result is a transformation which remaps the unit vectors to their new location.
 	///
 	/// These unit vectors are simply the columns of the transformation matrix and as such can be trivially decomposed.
-	pub fn compose<V>(x: V, y: V, t: V) -> Affine2<T> where V: Into<Vec2<T>> {
-		let (x, y, t) = (x.into(), y.into(), t.into());
+	pub fn compose<V>(x: Vec2<T>, y: Vec2<T>, t: Vec2<T>) -> Affine2<T> {
 		Affine2 {
 			a11: x.x, a12: y.x, a13: t.x,
 			a21: x.y, a22: y.y, a23: t.y,
@@ -214,7 +213,7 @@ impl<T> Affine2<T> {
 
 impl<T: Scalar> Affine2<T> {
 	/// Calculates the determinant.
-	pub fn det(self) -> T {
+	pub fn det(&self) -> T {
 		self.a11 * self.a22 - self.a21 * self.a12
 	}
 	/// Calculates the inverse matrix.
@@ -222,20 +221,24 @@ impl<T: Scalar> Affine2<T> {
 	/// Note that even though this matrix isn't strictly square, if an inverse exists, it will also be an affine transform.
 	///
 	/// This can be intuitively realized when you consider matrices as geometric linear transforms.
-	/// Any affine transform, if its determinant isn't zero, has an inverse affine transform.
+	/// Any affine transform (with non-zero determinant) has an inverse affine transform.
 	///
 	/// To prove this we only need to prove that translation is invertible with another translation (duh).
 	/// The resulting inverse transform is then the inverse translation followed by the inverse of the matrix without the translation.
-	pub fn inv(self) -> Affine2<T> where T: Float {
-		let inv_det = T::one() / self.det();
-		Affine2 {
-			a11: self.a22 * inv_det,
-			a12: -self.a12 * inv_det,
-			a13: (self.a12 * self.a23 - self.a13 * self.a22) * inv_det,
-			a21: -self.a21 * inv_det,
-			a22: self.a11 * inv_det,
-			a23: (self.a13 * self.a21 - self.a11 * self.a23) * inv_det,
+	pub fn inverse(&self) -> Affine2<T> where T: Float {
+		let det = self.det();
+		if det != T::zero() {
+			let inv_det = T::one() / det;
+			Affine2 {
+				a11: self.a22 * inv_det,
+				a12: -self.a12 * inv_det,
+				a13: (self.a12 * self.a23 - self.a13 * self.a22) * inv_det,
+				a21: -self.a21 * inv_det,
+				a22: self.a11 * inv_det,
+				a23: (self.a13 * self.a21 - self.a11 * self.a23) * inv_det,
+			}
 		}
+		else { *self }
 	}
 }
 

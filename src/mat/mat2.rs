@@ -180,8 +180,7 @@ impl<T> Mat2<T> {
 	/// A linear transformation then can be defined by these unit vectors. The result is a transformation which remaps the unit vectors to their new location.
 	///
 	/// These unit vectors are simply the columns of the transformation matrix and as such can be trivially decomposed.
-	pub fn compose<V>(x: V, y: V) -> Mat2<T> where V: Into<Vec2<T>> {
-		let (x, y) = (x.into(), y.into());
+	pub fn compose<V>(x: Vec2<T>, y: Vec2<T>) -> Mat2<T> {
 		Mat2 {
 			a11: x.x, a12: y.x,
 			a21: x.y, a22: y.y,
@@ -208,23 +207,26 @@ impl<T> Mat2<T> {
 
 impl<T: Scalar> Mat2<T> {
 	/// Calculates the determinant.
-	pub fn det(self) -> T {
+	pub fn det(&self) -> T {
 		self.a11 * self.a22 - self.a21 * self.a12
 	}
 	/// Calculates the inverse matrix.
-	pub fn inv(self) -> Mat2<T> where T: Float {
-		let inv_det = T::one() / self.det();
-		self.adj() * inv_det
+	pub fn inverse(&self) -> Mat2<T> where T: Float {
+		let det = self.det();
+		if det != T::zero() {
+			self.adjugate() * (T::one() / det)
+		}
+		else { *self }
 	}
 	/// Calculates the transposed matrix.
-	pub fn transpose(self) -> Mat2<T> {
+	pub fn transpose(&self) -> Mat2<T> {
 		Mat2 {
 			a11: self.a22, a12: self.a21,
 			a21: self.a12, a22: self.a11,
 		}
 	}
 	/// Calculates the adjugate matrix.
-	pub fn adj(self) -> Mat2<T> {
+	pub fn adjugate(&self) -> Mat2<T> {
 		Mat2 {
 			a11:  self.a22, a12: -self.a12,
 			a21: -self.a21, a22:  self.a11,

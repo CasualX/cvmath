@@ -144,8 +144,7 @@ impl<T> Mat3<T> {
 // Decomposition
 
 impl<T> Mat3<T> {
-	pub fn compose<V>(x: V, y: V, z: V) -> Mat3<T> where V: Into<Vec3<T>> {
-		let (x, y, z) = (x.into(), y.into(), z.into());
+	pub fn compose<V>(x: Vec3<T>, y: Vec3<T>, z: Vec3<T>) -> Mat3<T> {
 		Mat3 {
 			a11: x.x, a12: y.x, a13: z.x,
 			a21: x.y, a22: y.y, a23: z.y,
@@ -182,23 +181,26 @@ impl<T> Mat3<T> {
 // Operations
 
 impl<T: Scalar> Mat3<T> {
-	pub fn det(self) -> T {
+	pub fn det(&self) -> T {
 		self.a11 * (self.a22 * self.a33 - self.a23 * self.a32) +
 		self.a12 * (self.a23 * self.a31 - self.a21 * self.a33) +
 		self.a13 * (self.a21 * self.a32 - self.a22 * self.a31)
 	}
-	pub fn inv(self) -> Mat3<T> where T: Float {
-		let inv_det = T::one() / self.det();
-		self.adj() * inv_det
+	pub fn inverse(&self) -> Mat3<T> where T: Float {
+		let det = self.det();
+		if det != T::zero() {
+			self.adjugate() * (T::one() / det)
+		}
+		else { *self }
 	}
-	pub fn transpose(self) -> Mat3<T> {
+	pub fn transpose(&self) -> Mat3<T> {
 		Mat3 {
 			a11: self.a11, a12: self.a21, a13: self.a31,
 			a21: self.a12, a22: self.a22, a23: self.a32,
 			a31: self.a13, a32: self.a23, a33: self.a33,
 		}
 	}
-	pub fn adj(self) -> Mat3<T> {
+	pub fn adjugate(&self) -> Mat3<T> {
 		Mat3 {
 			a11: self.a22 * self.a33 - self.a23 * self.a32,
 			a12: self.a13 * self.a32 - self.a12 * self.a33,
