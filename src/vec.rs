@@ -801,7 +801,7 @@ macro_rules! vec {
 			///
 			/// ```
 			///# use cvmath::vec::{Vec2};
-			///# use cvmath::angle::{Deg, Angle};
+			///# use cvmath::angle::{Deg};
 			/// let lhs = Vec2 { x: 1.0, y: 1.0 };
 			/// let rhs = Vec2 { x: 1.0, y: 0.0 };
 			/// assert_eq!(Deg(45_f32), lhs.angle(rhs).to_deg());
@@ -1033,7 +1033,7 @@ vec!(Vec2 2 { x 0 T, y 1 T } {
 	///
 	/// ```
 	///# use cvmath::vec::{Vec2};
-	///# use cvmath::angle::{Angle, Rad};
+	///# use cvmath::angle::{Rad};
 	/// let this = Vec2 { x: 1.0, y: 1.0 };
 	/// assert_eq!(Rad::eight(), this.polar_angle());
 	/// ```

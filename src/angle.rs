@@ -154,6 +154,50 @@ macro_rules! angle {
 		}
 
 		//----------------------------------------------------------------
+		// Inherent methods
+
+		impl<T: Float> $ty<T> {
+			/// Returns a full turn of `360°` or `2π rad`.
+			pub fn turn() -> $ty<T> { Angle::turn() }
+			/// Returns a half turn of `180°` or `π rad`.
+			pub fn half() -> $ty<T> { Angle::half() }
+			/// Returns a third turn of `120°` or `2π/3 rad`.
+			pub fn third() -> $ty<T> { Angle::third() }
+			/// Returns a quarter turn of `90°` or `π/2 rad`.
+			pub fn quarter() -> $ty<T> { Angle::quarter() }
+			/// Returns a fifth turn of `72°` or `2π/5 rad`.
+			pub fn fifth() -> $ty<T> { Angle::fifth() }
+			/// Returns a sixth turn of `60°` or `π/3 rad`.
+			pub fn sixth() -> $ty<T> { Angle::sixth() }
+			/// Returns an eight turn of `45°` or `π/4 rad`.
+			pub fn eight() -> $ty<T> { Angle::eight() }
+			/// Returns a turn of `0°` or `0π rad`.
+			pub fn zero() -> $ty<T> { Angle::zero() }
+			/// Normalizes the angle to range `[-180°, 180°]` or `[-π rad, π rad]`.
+			pub fn norm(self) -> $ty<T> { Angle::norm(self) }
+			/// Sine.
+			pub fn sin(self) -> T { Angle::sin(self) }
+			/// Cosine.
+			pub fn cos(self) -> T { Angle::cos(self) }
+			/// Tangent.
+			pub fn tan(self) -> T { Angle::tan(self) }
+			/// Calculates the sine and cosine efficiently.
+			pub fn sin_cos(self) -> (T, T) { Angle::sin_cos(self) }
+			pub fn asin(sin: T) -> $ty<T> { Angle::asin(sin) }
+			pub fn acos(cos: T) -> $ty<T> { Angle::acos(cos) }
+			pub fn atan(tan: T) -> $ty<T> { Angle::atan(tan) }
+			pub fn atan2(y: T, x: T) -> $ty<T> { Angle::atan2(y, x) }
+			/// Converts from degrees.
+			pub fn from_deg(deg: Deg<T>) -> $ty<T> { Angle::from_deg(deg) }
+			/// Converts from radians.
+			pub fn from_rad(rad: Rad<T>) -> $ty<T> { Angle::from_rad(rad) }
+			/// Converts to degrees.
+			pub fn to_deg(self) -> Deg<T> { Angle::to_deg(self) }
+			/// Converts to radians.
+			pub fn to_rad(self) -> Rad<T> { Angle::to_rad(self) }
+		}
+
+		//----------------------------------------------------------------
 		// Conversions
 
 		impl<T> $ty<T> {
