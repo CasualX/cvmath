@@ -232,7 +232,7 @@ assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross(Vec3(3, -3, 1), Vec3(4, 9, 
 
 use ::std::{fmt, mem, ops, slice};
 
-use ::num::{Scalar, Zero, One, Float, AsCast};
+use ::num::{Scalar, Zero, One, Float, AsCast, Extrema, SpatialOrd};
 
 use ::angle::{Rad, Angle};
 
@@ -897,6 +897,26 @@ macro_rules! vec {
 
 		//----------------------------------------------------------------
 		// Operators
+
+		impl<T: Extrema> Extrema<$vec<T>> for $vec<T> {
+			type Output = $vec<T::Output>;
+			fn min(self, rhs: $vec<T>) -> $vec<T::Output> {
+				$vec { $($field: T::min(self.$field, rhs.$field)),+ }
+			}
+			fn max(self, rhs: $vec<T>) -> $vec<T::Output> {
+				$vec { $($field: T::max(self.$field, rhs.$field)),+ }
+			}
+			fn min_max(self, rhs: $vec<T>) -> ($vec<T::Output>, $vec<T::Output>) {
+				let temp = $vec { $($field: self.$field.min_max(rhs.$field)),+ };
+				($vec { $($field: temp.$field.0),+ }, $vec { $($field: temp.$field.1),+ })
+			}
+		}
+		impl<T: PartialOrd> SpatialOrd<$vec<T>> for $vec<T> {
+			fn spatial_lt(&self, rhs: &$vec<T>) -> bool { $(self.$field < rhs.$field &&)+ true }
+			fn spatial_le(&self, rhs: &$vec<T>) -> bool { $(self.$field <= rhs.$field &&)+ true }
+			fn spatial_gt(&self, rhs: &$vec<T>) -> bool { $(self.$field > rhs.$field &&)+ true }
+			fn spatial_ge(&self, rhs: &$vec<T>) -> bool { $(self.$field >= rhs.$field &&)+ true }
+		}
 
 		// Vector addition, subtraction and negation
 		impl<U, T: ops::Add<U>> ops::Add<$vec<U>> for $vec<T> {

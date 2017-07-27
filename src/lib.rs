@@ -12,7 +12,7 @@ pub mod mat;
 pub mod euler;
 
 pub mod point;
-pub mod rect;
+pub mod bounds;
 pub mod line;
 pub mod poly;
 
@@ -24,7 +24,7 @@ pub mod prelude {
 	pub use ::euler::{Euler};
 
 	pub use ::point::{Point2, Point3};
-	pub use ::rect::{Rect, Cuboid};
+	pub use ::bounds::{Bounds, Rect, Cuboid};
 	pub use ::line::{Line, Line2, Line3};
 	pub use ::poly::{Polyline2, Polyline3, Polygon2, Polygon3};
 }

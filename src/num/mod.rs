@@ -10,13 +10,20 @@ pub trait Zero where Self: Sized + ops::Add<Output = Self> + ops::Mul<Output = S
 pub trait One where Self: Sized + ops::Mul<Output = Self> {
 	fn one() -> Self;
 }
-pub trait Min<Rhs = Self> {
-	type Output;
+pub trait Extrema<Rhs = Self>: Sized {
+	type Output: Extrema;
 	fn min(self, rhs: Rhs) -> Self::Output;
-}
-pub trait Max<Rhs = Self> {
-	type Output;
 	fn max(self, rhs: Rhs) -> Self::Output;
+	fn min_max(self, rhs: Rhs) -> (Self::Output, Self::Output);
+	fn clamp(self, min: Rhs, max: Rhs) -> Self::Output where Self::Output: Extrema<Rhs, Output = Self::Output> {
+		self.min(min).max(max)
+	}
+}
+pub trait SpatialOrd<Rhs = Self> {
+	fn spatial_lt(&self, rhs: &Rhs) -> bool;
+	fn spatial_le(&self, rhs: &Rhs) -> bool;
+	fn spatial_gt(&self, rhs: &Rhs) -> bool;
+	fn spatial_ge(&self, rhs: &Rhs) -> bool;
 }
 pub trait Abs {
 	type Output;
@@ -34,7 +41,7 @@ pub trait Scalar where Self
 	+ ops::Mul<Output = Self> + ops::Div<Output = Self>
 	+ ops::Neg<Output = Self> + ops::Rem<Output = Self>
 	+ ops::AddAssign + ops::SubAssign + ops::MulAssign + ops::DivAssign
-	+ Min<Output = Self> + Max<Output = Self> + Abs<Output = Self>
+	+ Extrema<Output = Self> + Abs<Output = Self>
 	+ cmp::PartialEq + cmp::PartialOrd {}
 
 pub trait Int where Self
@@ -65,13 +72,29 @@ macro_rules! float {
 		impl One for $ty {
 			fn one() -> $ty { 1.0 }
 		}
-		impl Min<$ty> for $ty {
+		impl Extrema<$ty> for $ty {
 			type Output = $ty;
 			fn min(self, rhs: $ty) -> $ty { if self < rhs { self } else { rhs } }
-		}
-		impl Max<$ty> for $ty {
-			type Output = $ty;
 			fn max(self, rhs: $ty) -> $ty { if self > rhs { self } else { rhs } }
+			fn min_max(self, rhs: $ty) -> ($ty, $ty) { if self < rhs { (self, rhs) } else { (rhs, self) } }
+		}
+		impl SpatialOrd<$ty> for $ty {
+			fn spatial_lt(&self, rhs: &$ty) -> bool { *self < *rhs }
+			fn spatial_le(&self, rhs: &$ty) -> bool { *self <= *rhs }
+			fn spatial_gt(&self, rhs: &$ty) -> bool { *self > *rhs }
+			fn spatial_ge(&self, rhs: &$ty) -> bool { *self >= *rhs }
+		}
+		impl<'a> Extrema<&'a $ty> for &'a $ty {
+			type Output = &'a $ty;
+			fn min(self, rhs: &'a $ty) -> &'a $ty { if self < rhs { self } else { rhs } }
+			fn max(self, rhs: &'a $ty) -> &'a $ty { if self > rhs { self } else { rhs } }
+			fn min_max(self, rhs: &'a $ty) -> (&'a $ty, &'a $ty) { if self < rhs { (self, rhs) } else { (rhs, self) } }
+		}
+		impl<'a> SpatialOrd<&'a $ty> for &'a $ty {
+			fn spatial_lt(&self, rhs: &&'a $ty) -> bool { **self < **rhs }
+			fn spatial_le(&self, rhs: &&'a $ty) -> bool { **self <= **rhs }
+			fn spatial_gt(&self, rhs: &&'a $ty) -> bool { **self > **rhs }
+			fn spatial_ge(&self, rhs: &&'a $ty) -> bool { **self >= **rhs }
 		}
 		impl Abs for $ty {
 			type Output = $ty;
@@ -118,13 +141,29 @@ macro_rules! int {
 		impl One for $ty {
 			fn one() -> $ty { 1 }
 		}
-		impl Min<$ty> for $ty {
+		impl Extrema<$ty> for $ty {
 			type Output = $ty;
 			fn min(self, rhs: $ty) -> $ty { cmp::min(self, rhs) }
-		}
-		impl Max<$ty> for $ty {
-			type Output = $ty;
 			fn max(self, rhs: $ty) -> $ty { cmp::max(self, rhs) }
+			fn min_max(self, rhs: $ty) -> ($ty, $ty) { (cmp::min(self, rhs), cmp::max(self, rhs)) }
+		}
+		impl SpatialOrd<$ty> for $ty {
+			fn spatial_lt(&self, rhs: &$ty) -> bool { *self < *rhs }
+			fn spatial_le(&self, rhs: &$ty) -> bool { *self <= *rhs }
+			fn spatial_gt(&self, rhs: &$ty) -> bool { *self > *rhs }
+			fn spatial_ge(&self, rhs: &$ty) -> bool { *self >= *rhs }
+		}
+		impl<'a> Extrema<&'a $ty> for &'a $ty {
+			type Output = &'a $ty;
+			fn min(self, rhs: &'a $ty) -> &'a $ty { cmp::min(self, rhs) }
+			fn max(self, rhs: &'a $ty) -> &'a $ty { cmp::max(self, rhs) }
+			fn min_max(self, rhs: &'a $ty) -> (&'a $ty, &'a $ty) { (Self::min(self, rhs), Self::max(self, rhs)) }
+		}
+		impl<'a> SpatialOrd<&'a $ty> for &'a $ty {
+			fn spatial_lt(&self, rhs: &&'a $ty) -> bool { **self < **rhs }
+			fn spatial_le(&self, rhs: &&'a $ty) -> bool { **self <= **rhs }
+			fn spatial_gt(&self, rhs: &&'a $ty) -> bool { **self > **rhs }
+			fn spatial_ge(&self, rhs: &&'a $ty) -> bool { **self >= **rhs }
 		}
 		impl Abs for $ty {
 			type Output = $ty;
