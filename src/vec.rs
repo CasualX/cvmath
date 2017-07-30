@@ -225,16 +225,13 @@ assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross(Vec3(3, -3, 1), Vec3(4, 9, 
 
 ### Examples
 
-```
-# use cvmath::prelude::{Vec2, Vec3};
-```
 */
 
 use ::std::{fmt, mem, ops, slice};
 
 use ::num::{Scalar, Zero, One, Float, AsCast, Extrema, SpatialOrd};
 
-use ::angle::{Rad, Angle};
+use ::angle::{Rad};
 
 // /// A 1-dimensional vector.
 // #[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -737,7 +734,7 @@ macro_rules! vec {
 			/// <!--PROJECT_SAT-->
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2, Vec3};
+			///# use cvmath::vec::{Vec2};
 			/// let this = Vec2 { x: 3.0, y: 4.0 };
 			/// let v = Vec2 { x: -5.0, y: -2.5 };
 			/// assert_eq!(Vec2(0.0, 0.0), this.project_sat(v));
