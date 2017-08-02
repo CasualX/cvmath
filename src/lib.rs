@@ -8,6 +8,7 @@ pub mod angle;
 
 pub mod vec;
 pub mod bools;
+mod packed;
 pub mod mat;
 pub mod euler;
 
