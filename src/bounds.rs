@@ -78,24 +78,98 @@ impl<T> Bounds<T> {
 
 impl<T> Bounds<T> {
 	/// Returns whether the point `rhs` is contained within `self`.
+	///
+	/// <!--CONTAINS-->
+	///
+	/// ```
+	/// use cvmath::prelude::{Bounds, Point2};
+	///
+	/// let bounds = Bounds::new(Point2(1, 1), Point2(4, 3));
+	/// assert!(bounds.contains(&Point2(1, 1)));
+	/// assert!(bounds.contains(&Point2(3, 2)));
+	///
+	/// assert!(!bounds.contains(&Point2(0, 0)));
+	/// ```
 	pub fn contains(&self, rhs: &T) -> bool where T: SpatialOrd {
 		rhs.spatial_ge(&self.mins) && rhs.spatial_le(&self.maxs)
 	}
 	/// Returns whether the bounds `rhs` is fully contained within `self`.
+	///
+	/// <!--ENCLOSES-->
+	///
+	/// ```
+	/// use cvmath::prelude::{Bounds, Point2};
+	///
+	/// let bounds = Bounds::new(Point2(1, 1), Point2(4, 3));
+	/// let small = Bounds::new(Point2(2, 2), Point2(3, 3));
+	/// assert!(bounds.encloses(&small));
+	/// assert!(!small.encloses(&bounds));
+	///
+	/// let overlap = Bounds::new(Point2(2, 0), Point2(3, 2));
+	/// assert!(!bounds.encloses(&overlap));
+	/// assert!(!overlap.encloses(&bounds));
+	/// ```
 	pub fn encloses(&self, rhs: &Bounds<T>) -> bool where T: SpatialOrd {
 		rhs.mins.spatial_ge(&self.mins) && rhs.maxs.spatial_le(&self.maxs)
 	}
 	/// Returns whether `rhs` is overlapped with `self`.
+	///
+	/// <!--OVERLAPS-->
+	///
+	/// ```
+	/// use cvmath::prelude::{Bounds, Point2};
+	///
+	/// let bounds = Bounds::new(Point2(1, 1), Point2(4, 3));
+	/// let overlap = Bounds::new(Point2(2, 0), Point2(3, 2));
+	/// assert!(bounds.overlaps(&overlap));
+	/// assert!(overlap.overlaps(&bounds));
+	/// ```
 	pub fn overlaps(&self, rhs: &Bounds<T>) -> bool where T: SpatialOrd {
 		rhs.maxs.spatial_ge(&self.mins) && rhs.mins.spatial_le(&self.maxs)
 	}
 	/// Returns the new bounds containing both `rhs` and `self`.
+	///
+	/// <!--UNION-->
+	///
+	/// ```
+	/// use cvmath::prelude::{Bounds, Point2};
+	///
+	/// let bounds = Bounds::new(Point2(1, 1), Point2(4, 3));
+	/// let other = Bounds::new(Point2(2, 0), Point2(3, 2));
+	/// let result = Bounds::new(Point2(1, 0), Point2(4, 3));
+	///
+	/// assert_eq!(result, bounds.union(other));
+	/// assert_eq!(result, other.union(bounds));
+	/// ```
 	pub fn union(self, rhs: Bounds<T>) -> Bounds<T::Output> where T: Extrema {
 		let mins = self.mins.min(rhs.mins);
 		let maxs = self.maxs.max(rhs.maxs);
 		Bounds { mins, maxs }
 	}
 	/// Returns the overlapping area (if any) between `rhs` and `self`.
+	///
+	/// <!--INTERSECT-->
+	///
+	/// ```
+	/// use cvmath::prelude::{Bounds, Point2};
+	///
+	/// let bounds = Bounds::new(Point2(1, 1), Point2(4, 3));
+	/// let other = Bounds::new(Point2(2, 0), Point2(3, 2));
+	/// let result = Bounds::new(Point2(2, 1), Point2(3, 2));
+	///
+	/// assert_eq!(Some(result), bounds.intersect(other));
+	/// assert_eq!(Some(result), other.intersect(bounds));
+	///
+	/// let touching = Bounds::new(Point2(0, 1), Point2(1, 3));
+	/// let result = Bounds::new(Point2(1, 1), Point2(1, 3));
+	///
+	/// assert_eq!(Some(result), bounds.intersect(touching));
+	/// assert_eq!(Some(result), touching.intersect(bounds));
+	///
+	/// let negative = Bounds::new(Point2(-1, -1), Point2(0, 0));
+	/// assert_eq!(None, bounds.intersect(negative));
+	/// assert_eq!(None, negative.intersect(bounds));
+	/// ```
 	pub fn intersect(self, rhs: Bounds<T>) -> Option<Bounds<T::Output>> where T: Extrema, T::Output: SpatialOrd {
 		let mins = self.mins.max(rhs.mins);
 		let maxs = self.maxs.min(rhs.maxs);
@@ -109,18 +183,26 @@ impl<T> Bounds<T> {
 }
 impl<T> Bounds<T> {
 	/// Returns whether `rhs` is strictly contained within `self`.
+	///
+	/// <!--STRICTLY_CONTAINS-->
 	pub fn strictly_contains(&self, rhs: &T) -> bool where T: SpatialOrd {
 		rhs.spatial_ge(&self.mins) && rhs.spatial_lt(&self.maxs)
 	}
 	/// Returns whether `rhs` is strictly contained within `self`.
+	///
+	/// <!--STRICTLY_ENCLOSES-->
 	pub fn strictly_encloses(&self, rhs: &Bounds<T>) -> bool where T: SpatialOrd {
 		rhs.mins.spatial_gt(&self.mins) && rhs.maxs.spatial_lt(&self.maxs)
 	}
 	/// Returns whether `rhs` is strictly overlapped with `self`.
+	///
+	/// <!--STRICTLY_OVERLAPS-->
 	pub fn strictly_overlaps(&self, rhs: &Bounds<T>) -> bool where T: SpatialOrd {
 		rhs.maxs.spatial_gt(&self.mins) && rhs.mins.spatial_lt(&self.maxs)
 	}
 	/// Returns the overlapping area (not empty) between `rhs` and `self`.
+	///
+	/// <!--STRICTLY_INTERSECT-->
 	pub fn strictly_intersect(self, rhs: Bounds<T>) -> Option<Bounds<T::Output>> where T: Extrema, T::Output: SpatialOrd {
 		let mins = self.mins.max(rhs.mins);
 		let maxs = self.maxs.min(rhs.maxs);
