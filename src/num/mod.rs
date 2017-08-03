@@ -157,7 +157,7 @@ macro_rules! int {
 			type Output = &'a $ty;
 			fn min(self, rhs: &'a $ty) -> &'a $ty { cmp::min(self, rhs) }
 			fn max(self, rhs: &'a $ty) -> &'a $ty { cmp::max(self, rhs) }
-			fn min_max(self, rhs: &'a $ty) -> (&'a $ty, &'a $ty) { (Self::min(self, rhs), Self::max(self, rhs)) }
+			fn min_max(self, rhs: &'a $ty) -> (&'a $ty, &'a $ty) { (cmp::min(self, rhs), cmp::max(self, rhs)) }
 		}
 		impl<'a> SpatialOrd<&'a $ty> for &'a $ty {
 			fn spatial_lt(&self, rhs: &&'a $ty) -> bool { **self < **rhs }

@@ -1,10 +1,5 @@
 /*!
 Angles.
-
-Wishlist:
-
-* Have language support for traits like `Float` and `Integer` allowing number literals in generic contexts.
-
 */
 
 use ::std::{fmt, ops};
@@ -50,9 +45,9 @@ pub trait Angle where Self:
 	fn tan(self) -> Self::T;
 	/// Calculates the sine and cosine efficiently.
 	fn sin_cos(self) -> (Self::T, Self::T);
-	fn asin(Self::T) -> Self;
-	fn acos(Self::T) -> Self;
-	fn atan(Self::T) -> Self;
+	fn asin(sin: Self::T) -> Self;
+	fn acos(cos: Self::T) -> Self;
+	fn atan(tan: Self::T) -> Self;
 	fn atan2(y: Self::T, x: Self::T) -> Self;
 	/// Converts from degrees.
 	fn from_deg(deg: Deg<Self::T>) -> Self { deg.into() }

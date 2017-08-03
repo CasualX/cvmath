@@ -11,7 +11,7 @@ Comparison masks are boolean vectors to be consumed by `select`.
 
 `eq(self, rhs)`: Creates a mask for equal components.
 
-`ne(self, rhs)`: Creates a mask for inequal components.
+`ne(self, rhs)`: Creates a mask for unequal components.
 
 `lt(self, rhs)`: Creates a mask for left-hand side components are less than the right-hand side.
 
