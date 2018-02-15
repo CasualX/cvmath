@@ -181,14 +181,14 @@ fn nlerp() -> String {
 // Drawing for scalar_project
 
 fn scalar_project() -> String {
-	let v = Point2(200.0, 20.0);
-	let this = Point2(360.0, 120.0);
+	let v = Point2(360.0, 120.0);
+	let this = Point2(200.0, 20.0);
 	let origin = Point2(40.0, 160.0);
 
 	let p = origin + (this - origin).project(v - origin);
 
 	// Calculate the right angle symbol
-	let ra = (this - origin).resize(20.0);
+	let ra = (v - origin).resize(20.0);
 	let pra1 = p - ra;
 	let pra2 = pra1 + ra.ccw();
 	let pra3 = pra2 + ra;
@@ -207,14 +207,14 @@ fn scalar_project() -> String {
 	svg.arrow(origin..this, ARROW_SIZE).stroke("black");
 	svg.arrow(origin..v, ARROW_SIZE).stroke("black");
 	svg.circle(origin, 2.0).fill("black");
-	svg.line(p..v).stroke("black").stroke_dasharray(&[5.0, 5.0]).stroke_width(0.5);
+	svg.line(p..this).stroke("black").stroke_dasharray(&[5.0, 5.0]).stroke_width(0.5);
 	svg.line(pra1..pra2).stroke("black").stroke_width(0.5);
 	svg.line(pra2..pra3).stroke("black").stroke_width(0.5);
 	svg.line(sl1..sl2).stroke("black").stroke_width(1.5);
 	svg.line(sll1..sll2).stroke("black").stroke_width(1.5);
 	svg.line(slr1..slr2).stroke("black").stroke_width(1.5);
-	svg.text(v + Vec2(5.0, 5.0), "v").fill("black");
-	svg.text(this + Vec2(-20.0, 22.0), "self").fill("black");
+	svg.text(this + Vec2(5.0, 5.0), "self").fill("black");
+	svg.text(v + Vec2(-20.0, 22.0), "v").fill("black");
 	svg.close()
 }
 
@@ -223,10 +223,10 @@ fn scalar_project() -> String {
 
 fn reflect_2d() -> String {
 	// Calculate data
-	let this = Vec2 { x: 10.0, y: 2.5 };
-	let v = Vec2 { x: 4.0, y: 4.0 };
+	let v = Vec2 { x: 10.0, y: 2.5 };
+	let this = Vec2 { x: 4.0, y: 4.0 };
 	let p = this.project(v);
-	let pv = p - v;
+	let pv = p - this;
 	let result = p + pv;
 	let origin = Vec2::origin();
 
@@ -240,7 +240,7 @@ fn reflect_2d() -> String {
 	let origin = transform * origin;
 
 	let mut svg = SvgWriter::new(400, 200);
-	svg.line(v..result).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
+	svg.line(this..result).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
 	svg.line(p..pv).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
 	svg.line(pv..result).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
 	svg.arrow(origin..v, ARROW_SIZE).stroke("black");
@@ -251,7 +251,7 @@ fn reflect_2d() -> String {
 	svg.text(this, "self").fill("black");
 	svg.text(p + Vec2(8.0, 10.0), "p").fill("black");
 	svg.text(result, "result").fill("red");
-	svg.text(p.lerp(pv, 0.9) + Vec2(-15.0, -5.0), "-v").fill("black");
+	svg.text(p.lerp(pv, 0.9) + Vec2(-15.0, -5.0), "-self").fill("black");
 	svg.text(pv.lerp(result, 0.8) + Vec2(0.0, 15.0), "+p").fill("black");
 	svg.close()
 }

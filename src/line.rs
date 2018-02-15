@@ -12,11 +12,11 @@ use ::num::{Scalar, Float};
 pub trait Line<P> {
 	type T;
 	fn swap(self) -> Self;
-	/// Projects the point on the line.
+	/// Projects the point onto the line.
 	fn project(&self, pt: P) -> P where Self::T: Float;
 	/// Point to line distance.
 	fn dist(&self, pt: P) -> Self::T where Self::T: Float;
-	/// Projects the point on the line segment, clamping at the end points.
+	/// Projects the point onto the line segment, clamping at the end points.
 	fn segment_project(&self, pt: P) -> P where Self::T: Float;
 	/// Point to line segment distance.
 	fn segment_dist(&self, pt: P) -> Self::T where Self::T: Float;
@@ -58,17 +58,17 @@ macro_rules! line {
 		}
 
 		impl<T: Scalar> $line<T> where T: Float {
-			/// Projects the point on the line.
+			/// Projects the point onto the line.
 			pub fn project(&self, pt: $pt<T>) -> $pt<T> {
-				self.start + (self.end - self.start).project(pt - self.start)
+				self.start + (pt - self.start).project(self.end - self.start)
 			}
 			/// Point to line distance.
 			pub fn dist(&self, pt: $pt<T>) -> T {
 				self.project(pt).dist(pt)
 			}
-			/// Projects the point on the line segment, clamping at the end points.
+			/// Projects the point onto the line segment, clamping at the end points.
 			pub fn segment_project(&self, pt: $pt<T>) -> $pt<T> {
-				self.start + (self.end - self.start).project_sat(pt - self.start)
+				self.start + (pt - self.start).project_sat(self.end - self.start)
 			}
 			/// Point to line segment distance.
 			pub fn segment_dist(&self, pt: $pt<T>) -> T {

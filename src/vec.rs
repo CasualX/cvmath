@@ -134,11 +134,11 @@ assert_eq!(Vec2::<i32>::from((2, 3)), Vec2::from([2, 3]));
 
 `resize(self, len)` where T: `Float`: Scales the vector such that its length equals the given value. The vector with length zero remains zero.
 
-`scalar_project(self, v)` where T: `Float`: Scalar projection of `v` on `self`.
+`scalar_project(self, v)` where T: `Float`: Scalar projection of `self` onto `v`.
 
-`project(self, v)` where T: `Float`: Projection of `v` on `self`.
+`project(self, v)` where T: `Float`: Projection of `self` onto `v`.
 
-`project_sat(self, v)` where T: `Float`: Saturated projection of `v` on `self`.
+`project_sat(self, v)` where T: `Float`: Saturated projection of `self` onto `v`.
 
 `dot(self, rhs)`: Calculates the inner product.
 
@@ -190,13 +190,13 @@ assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2(0.0, 0.0).norm());
 assert_eq!(Vec2 { x: 1.5, y: 2.0 }, Vec2(3.0, 4.0).resize(2.5));
 assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2(0.0, 0.0).resize(2.0));
 
-assert_eq!(2.0, Vec2(3.0, 4.0).scalar_project(Vec2(2.0, 1.0)));
-assert_eq!(2.0, Vec2(3.0, 4.0).project(Vec2(2.0, 1.0)).len());
-assert_eq!(Vec2(-3.0, -4.0) , Vec2(3.0, 4.0).project(Vec2(-5.0, -2.5)));
-assert_eq!(Vec2(0.0, 0.0) , Vec2(3.0, 4.0).project_sat(Vec2(-5.0, -2.5)));
+assert_eq!(2.0, Vec2(2.0, 1.0).scalar_project(Vec2(3.0, 4.0)));
+assert_eq!(2.0, Vec2(2.0, 1.0).project(Vec2(3.0, 4.0)).len());
+assert_eq!(Vec2(-3.0, -4.0), Vec2(-5.0, -2.5).project(Vec2(3.0, 4.0)));
+assert_eq!(Vec2(0.0, 0.0), Vec2(-5.0, -2.5).project_sat(Vec2(3.0, 4.0)));
 
-assert_eq!(2.2, Vec2(3.0, 4.0).scalar_project(Vec2(1.0, 2.0)));
-assert_eq!(2.0, Vec3(4.0, 2.0, 4.0).scalar_project(Vec3(1.0, 4.0, 0.0)));
+assert_eq!(2.2, Vec2(1.0, 2.0).scalar_project(Vec2(3.0, 4.0)));
+assert_eq!(2.0, Vec3(1.0, 4.0, 0.0).scalar_project(Vec3(4.0, 2.0, 4.0)));
 
 assert_eq!(12, Vec3(3, 4, 5).hadd());
 assert_eq!(-1, Vec2(3, 4).hsub());
@@ -687,80 +687,80 @@ macro_rules! vec {
 				}
 				else { self }
 			}
-			/// Calculates the length of `v` projected onto `self`.
+			/// Calculates the length of `self` projected onto `v`.
 			///
-			/// <!--SCALAR_PROJECT--><svg width="400" height="200" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M40 160 L360 120 M352.5579 124.96139 L360 120 L351.56564 117.02317" stroke="black" /><path fill="none" d="M40 160 L200 20 M196.6134 28.278343 L200 20 L191.34537 22.257729" stroke="black" /><circle cx="40" cy="160" r="2" fill="black" /><line x1="214.76923" y1="138.15384" x2="200" y2="20" stroke="black" stroke-dasharray="5, 5" stroke-width="0.5" /><line x1="194.92368" y1="140.63454" x2="192.44298" y2="120.78898" stroke="black" stroke-width="0.5" /><line x1="192.44298" y1="120.78898" x2="212.28854" y2="118.30828" stroke="black" stroke-width="0.5" /><line x1="41.860523" y1="174.88417" x2="216.62975" y2="153.03801" stroke="black" stroke-width="1.5" /><line x1="41.395393" y1="171.16313" x2="42.325653" y2="178.60521" stroke="black" stroke-width="1.5" /><line x1="216.16461" y1="149.31697" x2="217.09488" y2="156.75905" stroke="black" stroke-width="1.5" /><text x="205" y="25" fill="black">v</text><text x="340" y="142" fill="black">self</text></svg>
+			/// <!--SCALAR_PROJECT--><svg width="400" height="200" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M40 160 L200 20 M196.6134 28.278343 L200 20 L191.34537 22.257729" stroke="black" /><path fill="none" d="M40 160 L360 120 M352.5579 124.96139 L360 120 L351.56564 117.02317" stroke="black" /><circle cx="40" cy="160" r="2" fill="black" /><line x1="214.76923" y1="138.15384" x2="200" y2="20" stroke="black" stroke-dasharray="5, 5" stroke-width="0.5" /><line x1="194.92368" y1="140.63454" x2="192.44298" y2="120.78898" stroke="black" stroke-width="0.5" /><line x1="192.44298" y1="120.78898" x2="212.28854" y2="118.30828" stroke="black" stroke-width="0.5" /><line x1="41.860523" y1="174.88417" x2="216.62975" y2="153.03801" stroke="black" stroke-width="1.5" /><line x1="41.395393" y1="171.16313" x2="42.325653" y2="178.60521" stroke="black" stroke-width="1.5" /><line x1="216.16461" y1="149.31697" x2="217.09488" y2="156.75905" stroke="black" stroke-width="1.5" /><text x="205" y="25" fill="black">self</text><text x="340" y="142" fill="black">v</text></svg>
 			///
 			/// ```
 			///# use cvmath::vec::{Vec2, Vec3};
-			/// let this = Vec2 { x: 3.0, y: 4.0 };
-			/// let v = Vec2 { x: 1.0, y: 2.0 };
+			/// let this = Vec2 { x: 1.0, y: 2.0 };
+			/// let v = Vec2 { x: 3.0, y: 4.0 };
 			/// assert_eq!(2.2, this.scalar_project(v));
 			///
-			/// let this = Vec3 { x: 4.0, y: 2.0, z: 4.0 };
-			/// let v = Vec3 { x: 1.0, y: 4.0, z: 0.0 };
+			/// let this = Vec3 { x: 1.0, y: 4.0, z: 0.0 };
+			/// let v = Vec3 { x: 4.0, y: 2.0, z: 4.0 };
 			/// assert_eq!(2.0, this.scalar_project(v));
 			/// ```
 			pub fn scalar_project(self, v: $vec<T>) -> T where T: Float {
-				let len = self.len();
+				let len = v.len();
 				if len > T::zero() {
-					self.dot(v) / len
+					v.dot(self) / len
 				}
 				else { len }
 			}
-			/// Projection of `v` on `self`.
+			/// Projection of `self` onto `v`.
 			///
 			/// <!--PROJECT-->
 			///
 			/// ```
 			///# use cvmath::vec::{Vec2, Vec3};
-			/// let this = Vec2 { x: 3.0, y: 4.0 };
-			/// let v = Vec2 { x: -5.0, y: -2.5 };
+			/// let this = Vec2 { x: -5.0, y: -2.5 };
+			/// let v = Vec2 { x: 3.0, y: 4.0 };
 			/// assert_eq!(Vec2(-3.0, -4.0), this.project(v));
 			///
-			/// let this = Vec3 { x: 3.0, y: 4.0, z: 0.0 };
-			/// let v = Vec3 { x: -5.0, y: -2.5, z: 0.0 };
+			/// let this = Vec3 { x: -5.0, y: -2.5, z: 0.0 };
+			/// let v = Vec3 { x: 3.0, y: 4.0, z: 0.0 };
 			/// assert_eq!(Vec3(-3.0, -4.0, 0.0), this.project(v));
 			/// ```
 			pub fn project(self, v: $vec<T>) -> $vec<T> where T: Float {
-				let len_sqr = self.len_sqr();
+				let len_sqr = v.len_sqr();
 				if len_sqr > T::zero() {
-					self * (self.dot(v) / len_sqr)
+					v * (v.dot(self) / len_sqr)
 				}
-				else { self }
+				else { v }
 			}
-			/// Projection of `v` on `self` clamped on `self`.
+			/// Projection of `self` onto `v` clamped to `v`.
 			///
 			/// <!--PROJECT_SAT-->
 			///
 			/// ```
 			///# use cvmath::vec::{Vec2};
-			/// let this = Vec2 { x: 3.0, y: 4.0 };
-			/// let v = Vec2 { x: -5.0, y: -2.5 };
+			/// let this = Vec2 { x: -5.0, y: -2.5 };
+			/// let v = Vec2 { x: 3.0, y: 4.0 };
 			/// assert_eq!(Vec2(0.0, 0.0), this.project_sat(v));
 			/// ```
-			pub fn project_sat(self, v: $vec<T>) -> $vec<T> where T: Float {
-				let len_sqr = self.len_sqr();
+			pub fn project_sat(self, v: $vec<T>) -> $vec<T> {
+				let len_sqr = v.len_sqr();
 				if len_sqr > T::zero() {
-					self * (self.dot(v) / len_sqr).min(T::one()).max(T::zero())
+					v * (v.dot(self) / len_sqr).min(T::one()).max(T::zero())
 				}
-				else { self }
+				else { v }
 			}
-			/// Reflects `v` around `self`.
+			/// Reflects `self` around `v`.
 			///
-			/// <!--REFLECT_2D--><svg width="400" height="200" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><line x1="140" y1="20" x2="175.29413" y2="161.17647" stroke="black" stroke-width="0.5" stroke-dasharray="5, 5" /><line x1="157.64706" y1="90.588234" x2="57.647064" y2="190.58823" stroke="black" stroke-width="0.5" stroke-dasharray="5, 5" /><line x1="57.647064" y1="190.58823" x2="175.29413" y2="161.17647" stroke="black" stroke-width="0.5" stroke-dasharray="5, 5" /><path fill="none" d="M40 120 L140 20 M137.17157 28.485283 L140 20 L131.51471 22.828426" stroke="black" /><path fill="none" d="M40 120 L290 57.5 M283.209 63.320854 L290 57.5 L281.2687 55.559715" stroke="black" /><path fill="none" d="M40 120 L175.29413 161.17647 M166.47609 162.67386 L175.29413 161.17647 L168.80537 155.02048" stroke="red" /><circle cx="157.64706" cy="90.588234" r="2" fill="black" /><text x="140" y="20" fill="black">v</text><text x="290" y="57.5" fill="black">self</text><text x="165.64706" y="100.588234" fill="black">p</text><text x="175.29413" y="161.17647" fill="red">result</text><text x="52.647064" y="175.58823" fill="black">-v</text><text x="151.76471" y="182.05882" fill="black">+p</text></svg>
+			/// <!--REFLECT_2D--><svg width="400" height="200" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><line x1="140" y1="20" x2="175.29413" y2="161.17647" stroke="black" stroke-width="0.5" stroke-dasharray="5, 5" /><line x1="157.64706" y1="90.588234" x2="57.647064" y2="190.58823" stroke="black" stroke-width="0.5" stroke-dasharray="5, 5" /><line x1="57.647064" y1="190.58823" x2="175.29413" y2="161.17647" stroke="black" stroke-width="0.5" stroke-dasharray="5, 5" /><path fill="none" d="M40 120 L290 57.5 M283.209 63.320854 L290 57.5 L281.2687 55.559715" stroke="black" /><path fill="none" d="M40 120 L140 20 M137.17157 28.485283 L140 20 L131.51471 22.828426" stroke="black" /><path fill="none" d="M40 120 L175.29413 161.17647 M166.47609 162.67386 L175.29413 161.17647 L168.80537 155.02048" stroke="red" /><circle cx="157.64706" cy="90.588234" r="2" fill="black" /><text x="290" y="57.5" fill="black">v</text><text x="140" y="20" fill="black">self</text><text x="165.64706" y="100.588234" fill="black">p</text><text x="175.29413" y="161.17647" fill="red">result</text><text x="52.647064" y="175.58823" fill="black">-self</text><text x="151.76471" y="182.05882" fill="black">+p</text></svg>
 			///
 			/// <!--REFLECT_3D-->
 			///
 			/// ```
 			///# use cvmath::vec::{Vec2};
-			/// let this = Vec2 { x: 4.0, y: 4.0 };
-			/// let v = Vec2 { x: 1.0, y: 3.0 };
+			/// let this = Vec2 { x: 1.0, y: 3.0 };
+			/// let v = Vec2 { x: 4.0, y: 4.0 };
 			/// assert_eq!(Vec2(3.0, 1.0), this.reflect(v));
 			/// ```
 			pub fn reflect(self, v: $vec<T>) -> $vec<T> where T: Float {
 				let p = self.project(v);
-				p + p - v
+				p + p - self
 			}
 			$($ops)*
 			/// Calculates the dot product.
