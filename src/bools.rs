@@ -49,10 +49,10 @@ assert!(Bool2 { x: false, y: false }.none());
 
 */
 
-use ::std::ops;
+use std::ops;
 
-use ::vec::{Vec2, Vec3, Vec4};
-use ::num::{Float};
+use vec::{Vec2, Vec3, Vec4};
+use num::Float;
 
 pub type Bool2 = Vec2<bool>;
 pub type Bool3 = Vec3<bool>;

@@ -2,10 +2,10 @@
 Affine 3D transformation matrix.
 */
 
-use ::std::{ops};
+use std::ops;
 
-use ::num::{Scalar};
-use ::vec::{Vec3, Vec4};
+use num::Scalar;
+use vec::{Vec3, Vec4};
 
 use super::{Mat3, Transform3};
 

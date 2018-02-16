@@ -2,9 +2,9 @@
 3D Euler angles.
 */
 
-use ::angle::{Angle};
-use ::vec::{Vec3};
-use ::num::{Zero};
+use angle::Angle;
+use vec::Vec3;
+use num::Zero;
 
 pub type Euler<T> = Vec3<T>;
 
@@ -71,7 +71,7 @@ impl<A: Angle> Euler<A> {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use ::angle::{Deg};
+	use angle::Deg;
 	#[test]
 	fn mul_test() {
 		let qa = Euler { x: Deg(1.0), y: Deg(2.0), z: Deg(0.0) } * 2.0;

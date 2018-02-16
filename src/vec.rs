@@ -227,11 +227,11 @@ assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross(Vec3(3, -3, 1), Vec3(4, 9, 
 
 */
 
-use ::std::{fmt, mem, ops, slice};
+use std::{fmt, mem, ops, slice};
 
-use ::num::{Scalar, Zero, One, Float, AsCast, Extrema, SpatialOrd};
+use num::{Scalar, Zero, One, Float, AsCast, Extrema, SpatialOrd};
 
-use ::angle::{Rad};
+use angle::Rad;
 
 // /// A 1-dimensional vector.
 // #[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -1159,8 +1159,8 @@ vec!(Vec4 4 { x 0 T, y 1 T, z 2 T, w 3 T } {
 
 //----------------------------------------------------------------
 
-use ::std::str::FromStr;
-use ::std::error::Error;
+use std::str::FromStr;
+use std::error::Error;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ParseVecError<E> {

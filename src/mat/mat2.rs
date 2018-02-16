@@ -2,11 +2,11 @@
 2D transformation matrix.
 */
 
-use ::std::{ops};
+use std::ops;
 
-use ::num::{Scalar, Float};
-use ::vec::{Vec2};
-use ::angle::{Angle};
+use num::{Scalar, Float};
+use vec::Vec2;
+use angle::Angle;
 
 use super::{Affine2, Transform2};
 

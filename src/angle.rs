@@ -2,10 +2,10 @@
 Angles.
 */
 
-use ::std::{fmt, ops};
-use ::std::str::FromStr;
+use std::{fmt, ops};
+use std::str::FromStr;
 
-use ::num::{AsCast, Float};
+use num::{AsCast, Float};
 
 /// Angle units.
 pub trait Angle where Self:

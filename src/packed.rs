@@ -2,7 +2,7 @@
 Packs and unpacks unsigned integers.
 */
 
-use ::vec::{Vec2, Vec4};
+use vec::{Vec2, Vec4};
 
 //----------------------------------------------------------------
 // Packed integers

@@ -1,7 +1,7 @@
-use ::std::ops;
+use std::ops;
 
 use super::{Mat2, Affine2, Mat3, Affine3};
-use ::vec::{Vec2, Vec3};
+use vec::{Vec2, Vec3};
 
 pub trait Transform2<T>
 	: ops::Mul<Vec2<T>, Output = Vec2<T>>

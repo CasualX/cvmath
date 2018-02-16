@@ -2,11 +2,11 @@
 Line segment.
 */
 
-use ::std::ops::Range;
+use std::ops::Range;
 
-use ::point::{Point2, Point3};
+use point::{Point2, Point3};
 
-use ::num::{Scalar, Float};
+use num::{Scalar, Float};
 
 /// A line segment.
 pub trait Line<P> {

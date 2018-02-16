@@ -1,12 +1,13 @@
+
 /*!
 3D transformation matrix.
 */
 
-use ::std::{ops};
+use std::ops;
 
-use ::num::{Scalar, Float};
-use ::vec::{Vec3};
-use ::angle::{Angle};
+use num::{Scalar, Float};
+use vec::Vec3;
+use angle::Angle;
 
 use super::{Affine3, Transform3};
 

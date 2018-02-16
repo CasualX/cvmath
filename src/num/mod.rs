@@ -2,7 +2,7 @@
 Numeric traits.
 */
 
-use ::std::{fmt, cmp, ops};
+use std::{cmp, fmt, ops};
 
 pub trait Zero where Self: Sized + ops::Add<Output = Self> + ops::Mul<Output = Self> {
 	fn zero() -> Self;

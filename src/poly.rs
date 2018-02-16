@@ -1,9 +1,9 @@
 
-use ::std::{cmp, mem, ops};
-use ::std::marker::PhantomData;
+use std::{cmp, mem, ops};
+use std::marker::PhantomData;
 
-use ::point::{Point2, Point3};
-use ::line::{Line2, Line3};
+use point::{Point2, Point3};
+use line::{Line2, Line3};
 
 #[derive(Debug)]
 pub struct Polyline2<T>([Point2<T>]);

@@ -2,9 +2,9 @@
 Hacked together SVG writer.
 */
 
-use ::std::borrow::Borrow;
+use std::borrow::Borrow;
 
-use ::cvmath::prelude::Point2;
+use cvmath::prelude::Point2;
 type Line2<T> = ::std::ops::Range<Point2<T>>;
 
 //----------------------------------------------------------------
