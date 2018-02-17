@@ -137,3 +137,26 @@ macro_rules! line {
 
 line!(Line2 Point2);
 line!(Line3 Point3);
+
+/// Intercepts the line with `x = constant` returning the y.
+pub fn y_intercept<T>(start: Point2<T>, end: Point2<T>, x: T) -> Option<T> where T: Scalar {
+	let (x1, y1) = start.into();
+	let (x2, y2) = end.into();
+	if x1 != x2 {
+		Some(y1 + ((y2 - y1) * (x - x1)) / (x2 - x1))
+	}
+	else {
+		None
+	}
+}
+/// Intercepts the line with `y = constant` returning the x.
+pub fn x_intercept<T>(start: Point2<T>, end: Point2<T>, y: T) -> Option<T> where T: Scalar {
+	let (x1, y1) = start.into();
+	let (x2, y2) = end.into();
+	if y1 != y2 {
+		Some(x1 + ((y - y1) * (x2 - x1)) / (y2 - y1))
+	}
+	else {
+		None
+	}
+}
