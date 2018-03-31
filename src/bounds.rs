@@ -5,7 +5,7 @@ Rectangle and Cuboid bounding boxes.
 use std::{ops};
 
 use point::{Point2, Point3};
-use line::{Line2};
+use line2::{Line2};
 
 use num::{Scalar, Zero, One, Extrema, SpatialOrd};
 
