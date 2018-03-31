@@ -15,7 +15,6 @@ pub mod euler;
 pub mod point;
 pub mod bounds;
 pub mod line;
-pub mod poly;
 
 pub mod prelude {
 	pub use angle::{Rad, Deg, Angle};
@@ -27,5 +26,4 @@ pub mod prelude {
 	pub use point::{Point2, Point3};
 	pub use bounds::{Bounds, Rect, Cuboid};
 	pub use line::{Line, Line2, Line3};
-	pub use poly::{Polyline2, Polyline3, Polygon2, Polygon3};
 }

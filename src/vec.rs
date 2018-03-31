@@ -1111,6 +1111,24 @@ vec!(Vec2 2 { x 0 T, y 1 T } {
 	pub fn hsub(self) -> T {
 		self.x - self.y
 	}
+	/// Intercepts the vector with `x = constant` returning the y.
+	pub fn y_intercept(self, x: T) -> Option<T> {
+		if self.x != T::zero() {
+			Some((self.y * x) / self.x)
+		}
+		else {
+			None
+		}
+	}
+	/// Intercepts the vector with `y = constant` returning the x.
+	pub fn x_intercept(self, y: T) -> Option<T> {
+		if self.y != T::zero() {
+			Some((y * self.x) / self.y)
+		}
+		else {
+			None
+		}
+	}
 });
 vec!(Vec3 3 { x 0 T, y 1 T, z 2 T } {
 	/// Calculates the 3D cross product.
