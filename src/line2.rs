@@ -30,11 +30,11 @@ pub fn segment_dist<T>(segment: Line2<T>, pt: Point2<T>) -> T where T: Float {
 /// The result is some point if the two lines intersect, none if they are parallel.
 ///
 /// ```
-/// use cvmath::line2::line_x;
-/// use cvmath::point::Point2;
+/// # use cvmath::line2::line_x;
+/// # use cvmath::point::Point2;
 ///
 /// let line1 = Point2(1.0, 1.0)..Point2(2.0, 2.0);
-/// let line2 = Point2(0.0, 0.0)..Point2(1.0, -1.0);
+/// let line2 = Point2(-1.0, 1.0)..Point2(1.0, -1.0);
 ///
 /// let result = line_x(line1, line2);
 ///
@@ -57,6 +57,23 @@ pub fn line_x<T: Float>(line1: Line2<T>, line2: Line2<T>) -> Option<Point2<T>> {
 /// Intersect a line and line segment.
 ///
 /// The result is scalar with which to scale the segment to find the intersection point, none if the line and line segment are parallel.
+///
+/// To test if the line segment actually intersects the line, check if this result lies inside the [0; 1] range.
+/// To calculate the intersection point scale the segment by this function's result.
+///
+/// ```
+/// # use cvmath::line2::segment_x;
+/// # use cvmath::point::Point2;
+///
+/// let line = Point2(1.0, 1.0)..Point2(2.0, 2.0);
+/// let segment = Point2(-1.0, 1.0)..Point2(1.0, -1.0);
+///
+/// let result = segment_x(line, segment.clone());
+/// assert_eq!(result, Some(0.5));
+///
+/// let x = segment.start + (segment.end - segment.start) * result.unwrap();
+/// assert_eq!(x, Point2(0.0, 0.0));
+/// ```
 #[inline]
 pub fn segment_x<T: Float>(line: Line2<T>, segment: Line2<T>) -> Option<T> {
 	let p = line.start;

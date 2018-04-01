@@ -25,4 +25,5 @@ pub mod prelude {
 
 	pub use point::{Point2, Point3};
 	pub use bounds::{Bounds, Rect, Cuboid};
+	pub use line2::{self, Line2};
 }
