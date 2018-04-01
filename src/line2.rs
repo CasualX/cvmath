@@ -28,6 +28,18 @@ pub fn segment_dist<T>(segment: Line2<T>, pt: Point2<T>) -> T where T: Float {
 /// Intersect two lines.
 ///
 /// The result is some point if the two lines intersect, none if they are parallel.
+///
+/// ```
+/// use cvmath::line2::line_x;
+/// use cvmath::point::Point2;
+///
+/// let line1 = Point2(1.0, 1.0)..Point2(2.0, 2.0);
+/// let line2 = Point2(0.0, 0.0)..Point2(1.0, -1.0);
+///
+/// let result = line_x(line1, line2);
+///
+/// assert_eq!(result, Some(Point2(0.0, 0.0)));
+/// ```
 #[inline]
 pub fn line_x<T: Float>(line1: Line2<T>, line2: Line2<T>) -> Option<Point2<T>> {
 	let dline1 = line1.start - line1.end;
