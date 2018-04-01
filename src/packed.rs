@@ -11,7 +11,7 @@ impl Vec2<u32> {
 	/// Unpacks `u64` into `u32 u32`.
 	///
 	/// ```
-	///# use cvmath::vec::Vec2;
+	/// # use cvmath::vec::Vec2;
 	/// assert_eq!(
 	/// 	Vec2 { x: 0x01010101, y: 0xFEFEFEFE },
 	/// 	Vec2::unpack32(0xFEFEFEFE_01010101)
@@ -27,7 +27,7 @@ impl Vec2<u32> {
 	/// Packs into `u64`.
 	///
 	/// ```
-	///# use cvmath::vec::Vec2;
+	/// # use cvmath::vec::Vec2;
 	/// let this: Vec2<u32> = Vec2 { x: 0x01010101, y: 0xFEFEFEFE };
 	/// assert_eq!(0xFEFEFEFE_01010101, this.pack());
 	/// ```
@@ -40,7 +40,7 @@ impl Vec2<u16> {
 	/// Unpacks `u32` into `u16 u16`.
 	///
 	/// ```
-	///# use cvmath::vec::Vec2;
+	/// # use cvmath::vec::Vec2;
 	/// assert_eq!(
 	/// 	Vec2 { x: 0x0101, y: 0xFEFE },
 	/// 	Vec2::unpack16(0xFEFE_0101)
@@ -56,7 +56,7 @@ impl Vec2<u16> {
 	/// Packs into `u32`.
 	///
 	/// ```
-	///# use cvmath::vec::Vec2;
+	/// # use cvmath::vec::Vec2;
 	/// let this: Vec2<u16> = Vec2 { x: 0x0101, y: 0xFEFE };
 	/// assert_eq!(0xFEFE_0101, this.pack());
 	/// ```
@@ -69,7 +69,7 @@ impl Vec2<u8> {
 	/// Unpacks `u16` into `u8 u8`.
 	///
 	/// ```
-	///# use cvmath::vec::Vec2;
+	/// # use cvmath::vec::Vec2;
 	/// assert_eq!(
 	/// 	Vec2 { x: 0x01, y: 0xFE },
 	/// 	Vec2::unpack8(0xFE_01)
@@ -85,7 +85,7 @@ impl Vec2<u8> {
 	/// Packs into `u16`.
 	///
 	/// ```
-	///# use cvmath::vec::Vec2;
+	/// # use cvmath::vec::Vec2;
 	/// let this: Vec2<u8> = Vec2 { x: 0x01, y: 0xFE };
 	/// assert_eq!(0xFE_01, this.pack());
 	/// ```
@@ -98,7 +98,7 @@ impl Vec4<u16> {
 	/// Unpacks `u64` into `u16 u16 u16 u16`.
 	///
 	/// ```
-	///# use cvmath::vec::Vec4;
+	/// # use cvmath::vec::Vec4;
 	/// assert_eq!(
 	/// 	Vec4 { x: 0x0101, y: 0x5656, z: 0x9A9A, w: 0xFEFE },
 	/// 	Vec4::unpack16(0xFEFE_9A9A_5656_0101)
@@ -116,7 +116,7 @@ impl Vec4<u16> {
 	/// Packs into `u64`.
 	///
 	/// ```
-	///# use cvmath::vec::Vec4;
+	/// # use cvmath::vec::Vec4;
 	/// let this: Vec4<u16> = Vec4 { x: 0x0101, y: 0x5656, z: 0x9A9A, w: 0xFEFE };
 	/// assert_eq!(0xFEFE_9A9A_5656_0101, this.pack());
 	/// ```
@@ -129,7 +129,7 @@ impl Vec4<u8> {
 	/// Unpacks `u32` into `u8 u8 u8 u8`.
 	///
 	/// ```
-	///# use cvmath::vec::Vec4;
+	/// # use cvmath::vec::Vec4;
 	/// assert_eq!(
 	/// 	Vec4 { x: 0x01, y: 0x56, z: 0x9A, w: 0xFE },
 	/// 	Vec4::unpack8(0xFE_9A_56_01)
@@ -139,7 +139,7 @@ impl Vec4<u8> {
 	/// Unpacks an RGBA color value into `Vec4<f32>` where `x`: red, `y`: green, `z`: blue and `w`: alpha.
 	///
 	/// ```
-	///# use cvmath::vec::Vec4;
+	/// # use cvmath::vec::Vec4;
 	/// // 0xAABBGGRR in little endian results in RR GG BB AA bytes in memory.
 	/// let rgba = 0xFF_C0_80_40;
 	/// let color = Vec4::unpack8(rgba).cast::<f32>() / 255_f32;
@@ -157,7 +157,7 @@ impl Vec4<u8> {
 	/// Packs into `u32`.
 	///
 	/// ```
-	///# use cvmath::vec::Vec4;
+	/// # use cvmath::vec::Vec4;
 	/// let this: Vec4<u8> = Vec4 { x: 0x01, y: 0x56, z: 0x9A, w: 0xFE };
 	/// assert_eq!(0xFE_9A_56_01, this.pack());
 	/// ```
@@ -165,7 +165,7 @@ impl Vec4<u8> {
 	/// Packs `Vec4<f32>` color components into an RGBA color value.
 	///
 	/// ```
-	///# use cvmath::vec::Vec4;
+	/// # use cvmath::vec::Vec4;
 	/// let color = Vec4 { x: 64.0/255.0, y: 128.0/255.0, z: 192.0/255.0, w: 1.0 };
 	/// let rgba = (color * 255_f32).cast::<u8>().pack();
 	/// assert_eq!(0xFF_C0_80_40, rgba);

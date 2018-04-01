@@ -542,7 +542,7 @@ macro_rules! vec {
 			/// Squares the components.
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2, Vec3};
+			/// # use cvmath::vec::{Vec2, Vec3};
 			/// let this = Vec2 { x: -3, y: 4 };
 			/// assert_eq!(Vec2(9, 16), this.sqr());
 			///
@@ -555,7 +555,7 @@ macro_rules! vec {
 			/// Calculates the squared length of the vector.
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2, Vec3};
+			/// # use cvmath::vec::{Vec2, Vec3};
 			/// let this = Vec2 { x: -3, y: 4 };
 			/// assert_eq!(25, this.len_sqr());
 			///
@@ -568,7 +568,7 @@ macro_rules! vec {
 			/// Calculates the length of the vector.
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2, Vec3};
+			/// # use cvmath::vec::{Vec2, Vec3};
 			/// let this = Vec2 { x: -3.0, y: 4.0 };
 			/// assert_eq!(5.0, this.len());
 			///
@@ -583,7 +583,7 @@ macro_rules! vec {
 			/// <!--LEN_HAT--><svg width="400" height="120" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M40 100 L360.5 20 M353.70688 25.818361 L360.5 20 L351.76944 18.056509" stroke="black" /><path fill="none" d="M40 100 L360.5 100 M352.5 104 L360.5 100 L352.5 96" stroke="grey" stroke-width="0.5" /><path fill="none" d="M360.5 100 L360.5 20 M364.5 28 L360.5 20 L356.5 28" stroke="grey" stroke-width="0.5" /><circle cx="40" cy="100" r="2" /><text x="365.5" y="20">this</text><text x="200.25" y="115" fill="grey">x</text><text x="365.5" y="60" fill="grey">y</text></svg>
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2, Vec3};
+			/// # use cvmath::vec::{Vec2, Vec3};
 			/// let this = Vec2 { x: 3, y: 4 };
 			/// assert_eq!(7, this.len_hat());
 			///
@@ -596,7 +596,7 @@ macro_rules! vec {
 			/// Calculates the squared euclidean distance to another vector.
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2};
+			/// # use cvmath::vec::{Vec2};
 			/// let this = Vec2 { x: 1, y: 1 };
 			/// let to = Vec2 { x: 2, y: 2 };
 			/// assert_eq!(2, this.dist_sqr(to));
@@ -607,7 +607,7 @@ macro_rules! vec {
 			/// Calculates the euclidean distance to another vector.
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2};
+			/// # use cvmath::vec::{Vec2};
 			/// let this = Vec2 { x: 10.0, y: 10.0 };
 			/// let to = Vec2 { x: 13.0, y: 14.0 };
 			/// assert_eq!(5.0, this.dist(to));
@@ -620,7 +620,7 @@ macro_rules! vec {
 			/// <!--DIST_HAT--><svg width="400" height="120" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><line x1="40" y1="100" x2="360.5" y2="20" stroke="black" /><path fill="none" d="M40 100 L360.5 100 M352.5 104 L360.5 100 L352.5 96" stroke="grey" stroke-width="0.5" /><path fill="none" d="M360.5 100 L360.5 20 M364.5 28 L360.5 20 L356.5 28" stroke="grey" stroke-width="0.5" /><circle cx="40" cy="100" r="2" /><circle cx="360.5" cy="20" r="2" /><text x="20" y="90">this</text><text x="365.5" y="20">to</text><text x="200.25" y="115" fill="grey">x</text><text x="365.5" y="60" fill="grey">y</text></svg>
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2, Vec3};
+			/// # use cvmath::vec::{Vec2, Vec3};
 			/// let this = Vec2 { x: 1.0, y: 5.0 };
 			/// let to = Vec2 { x: 5.0, y: 2.0 };
 			/// assert_eq!(7.0, this.dist_hat(to));
@@ -637,7 +637,7 @@ macro_rules! vec {
 			/// After normalizing the vector has the length `1.0` except the null vector remains null.
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2, Vec3};
+			/// # use cvmath::vec::{Vec2, Vec3};
 			/// let this = Vec2 { x: 3.0, y: -4.0 };
 			/// assert_eq!(Vec2(0.6, -0.8), this.norm());
 			///
@@ -652,7 +652,7 @@ macro_rules! vec {
 			/// After normalizing the vector has the length `1.0` except the null vector remains null.
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2, Vec3};
+			/// # use cvmath::vec::{Vec2, Vec3};
 			/// let this = Vec2 { x: 3.0, y: -4.0 };
 			/// assert_eq!((Vec2(0.6, -0.8), 5.0), this.norm_len());
 			///
@@ -673,7 +673,7 @@ macro_rules! vec {
 			/// The null vector remains null.
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2, Vec3};
+			/// # use cvmath::vec::{Vec2, Vec3};
 			/// let this = Vec2 { x: -3.0, y: -4.0 };
 			/// assert_eq!(Vec2(-1.5, -2.0), this.resize(2.5));
 			///
@@ -692,7 +692,7 @@ macro_rules! vec {
 			/// <!--SCALAR_PROJECT--><svg width="400" height="200" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M40 160 L200 20 M196.6134 28.278343 L200 20 L191.34537 22.257729" stroke="black" /><path fill="none" d="M40 160 L360 120 M352.5579 124.96139 L360 120 L351.56564 117.02317" stroke="black" /><circle cx="40" cy="160" r="2" fill="black" /><line x1="214.76923" y1="138.15384" x2="200" y2="20" stroke="black" stroke-dasharray="5.0, 5.0" stroke-width="0.5" /><line x1="194.92368" y1="140.63454" x2="192.44298" y2="120.78898" stroke="black" stroke-width="0.5" /><line x1="192.44298" y1="120.78898" x2="212.28854" y2="118.30828" stroke="black" stroke-width="0.5" /><line x1="41.860523" y1="174.88417" x2="216.62975" y2="153.03801" stroke="black" stroke-width="1.5" /><line x1="41.395393" y1="171.16313" x2="42.325653" y2="178.60521" stroke="black" stroke-width="1.5" /><line x1="216.16461" y1="149.31697" x2="217.09488" y2="156.75905" stroke="black" stroke-width="1.5" /><text x="205" y="25" fill="black">self</text><text x="340" y="142" fill="black">v</text></svg>
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2, Vec3};
+			/// # use cvmath::vec::{Vec2, Vec3};
 			/// let this = Vec2 { x: 1.0, y: 2.0 };
 			/// let v = Vec2 { x: 3.0, y: 4.0 };
 			/// assert_eq!(2.2, this.scalar_project(v));
@@ -713,7 +713,7 @@ macro_rules! vec {
 			/// <!--PROJECT-->
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2, Vec3};
+			/// # use cvmath::vec::{Vec2, Vec3};
 			/// let this = Vec2 { x: -5.0, y: -2.5 };
 			/// let v = Vec2 { x: 3.0, y: 4.0 };
 			/// assert_eq!(Vec2(-3.0, -4.0), this.project(v));
@@ -734,7 +734,7 @@ macro_rules! vec {
 			/// <!--PROJECT_SAT-->
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2};
+			/// # use cvmath::vec::{Vec2};
 			/// let this = Vec2 { x: -5.0, y: -2.5 };
 			/// let v = Vec2 { x: 3.0, y: 4.0 };
 			/// assert_eq!(Vec2(0.0, 0.0), this.project_sat(v));
@@ -753,7 +753,7 @@ macro_rules! vec {
 			/// <!--REFLECT_3D-->
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2};
+			/// # use cvmath::vec::{Vec2};
 			/// let this = Vec2 { x: 1.0, y: 3.0 };
 			/// let v = Vec2 { x: 4.0, y: 4.0 };
 			/// assert_eq!(Vec2(3.0, 1.0), this.reflect(v));
@@ -768,7 +768,7 @@ macro_rules! vec {
 			/// <!--DOT-->
 			///
 			/// ```
-			///# use cvmath::vec::{Vec3};
+			/// # use cvmath::vec::{Vec3};
 			/// let lhs = Vec3 { x: 1, y: 2, z: 3 };
 			/// let rhs = Vec3 { x: 4, y: -5, z: 6 };
 			/// assert_eq!(12, Vec3::dot(lhs, rhs));
@@ -781,7 +781,7 @@ macro_rules! vec {
 			/// <!--COS_ANGLE-->
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2};
+			/// # use cvmath::vec::{Vec2};
 			/// let lhs = Vec2 { x: 1.0, y: 1.0 };
 			/// let rhs = Vec2 { x: 1.0, y: 0.0 };
 			/// let sqrt_2_div_2 = 1.0 / 2_f32.sqrt(); // √2 ÷ 2
@@ -797,8 +797,8 @@ macro_rules! vec {
 			/// <!--ANGLE-->
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2};
-			///# use cvmath::angle::{Deg};
+			/// # use cvmath::vec::{Vec2};
+			/// # use cvmath::angle::{Deg};
 			/// let lhs = Vec2 { x: 1.0, y: 1.0 };
 			/// let rhs = Vec2 { x: 1.0, y: 0.0 };
 			/// assert_eq!(Deg(45_f32), lhs.angle(rhs).to_deg());
@@ -809,7 +809,7 @@ macro_rules! vec {
 			/// Horizontal adds all components.
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2, Vec3};
+			/// # use cvmath::vec::{Vec2, Vec3};
 			/// let this = Vec2 { x: -2, y: 7 };
 			/// assert_eq!(5, this.hadd());
 			///
@@ -822,7 +822,7 @@ macro_rules! vec {
 			/// Component wise absolute value.
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2};
+			/// # use cvmath::vec::{Vec2};
 			/// let this = Vec2 { x: -3, y: 5 };
 			/// assert_eq!(Vec2(3, 5), this.abs());
 			/// ```
@@ -832,7 +832,7 @@ macro_rules! vec {
 			/// Component wise minimum value.
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2};
+			/// # use cvmath::vec::{Vec2};
 			/// let lhs = Vec2 { x: -3, y: 5 };
 			/// let rhs = Vec2 { x: 0, y: 2 };
 			/// assert_eq!(Vec2(-3, 2), lhs.min(rhs));
@@ -843,7 +843,7 @@ macro_rules! vec {
 			/// Component wise maximum value.
 			///
 			/// ```
-			///# use cvmath::vec::{Vec2};
+			/// # use cvmath::vec::{Vec2};
 			/// let lhs = Vec2 { x: -3, y: 5 };
 			/// let rhs = Vec2 { x: 0, y: 2 };
 			/// assert_eq!(Vec2(0, 5), lhs.max(rhs));
@@ -1049,8 +1049,8 @@ vec!(Vec2 2 { x 0 T, y 1 T } {
 	/// <!--POLAR_ANGLE-->
 	///
 	/// ```
-	///# use cvmath::vec::{Vec2};
-	///# use cvmath::angle::{Rad};
+	/// # use cvmath::vec::{Vec2};
+	/// # use cvmath::angle::{Rad};
 	/// let this = Vec2 { x: 1.0, y: 1.0 };
 	/// assert_eq!(Rad::eight(), this.polar_angle());
 	/// ```
@@ -1062,7 +1062,7 @@ vec!(Vec2 2 { x 0 T, y 1 T } {
 	/// The resulting vector is perpendicular to the given vector.
 	///
 	/// ```
-	///# use cvmath::vec::{Vec2};
+	/// # use cvmath::vec::{Vec2};
 	/// let this = Vec2 { x: 3.0, y: 4.0 };
 	/// assert_eq!(Vec2(4.0, -3.0), this.ccw());
 	/// ```
@@ -1074,7 +1074,7 @@ vec!(Vec2 2 { x 0 T, y 1 T } {
 	/// The resulting vector is perpendicular to the given vector.
 	///
 	/// ```
-	///# use cvmath::vec::{Vec2};
+	/// # use cvmath::vec::{Vec2};
 	/// let this = Vec2 { x: 3.0, y: 4.0 };
 	/// assert_eq!(Vec2(-4.0, 3.0), this.cw());
 	/// ```
@@ -1091,7 +1091,7 @@ vec!(Vec2 2 { x 0 T, y 1 T } {
 	/// <!--CROSS_2D-->
 	///
 	/// ```
-	///# use cvmath::vec::{Vec2};
+	/// # use cvmath::vec::{Vec2};
 	/// let lhs = Vec2 { x: -3, y: -4 };
 	/// let rhs = Vec2 { x: -1, y: 2 };
 	/// assert_eq!(-10, lhs.cross(rhs));
@@ -1104,7 +1104,7 @@ vec!(Vec2 2 { x 0 T, y 1 T } {
 	/// Horizontal subtracts the components.
 	///
 	/// ```
-	///# use cvmath::vec::{Vec2};
+	/// # use cvmath::vec::{Vec2};
 	/// let this = Vec2 { x: 3, y: 4 };
 	/// assert_eq!(-1, this.hsub());
 	/// ```
@@ -1138,7 +1138,7 @@ vec!(Vec3 3 { x 0 T, y 1 T, z 2 T } {
 	/// <!--CROSS_3D-->
 	///
 	/// ```
-	///# use cvmath::vec::{Vec3};
+	/// # use cvmath::vec::{Vec3};
 	/// let lhs = Vec3 { x: 3, y: -3, z: 1 };
 	/// let rhs = Vec3 { x: 4, y: 9, z: 1 };
 	/// assert_eq!(Vec3(-12, 1, 39), lhs.cross(rhs));
