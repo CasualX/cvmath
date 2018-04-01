@@ -6,7 +6,6 @@ Generates the SVG for the documentation and serves as a simple example.
 
 extern crate cvmath;
 use cvmath::prelude::*;
-type Line2<T> = ::std::ops::Range<Point2<T>>;
 
 mod svg;
 use self::svg::SvgWriter;

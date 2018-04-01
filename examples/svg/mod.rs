@@ -4,8 +4,7 @@ Hacked together SVG writer.
 
 use std::borrow::Borrow;
 
-use cvmath::prelude::Point2;
-type Line2<T> = ::std::ops::Range<Point2<T>>;
+use cvmath::prelude::{Line2, Point2};
 
 //----------------------------------------------------------------
 
@@ -47,11 +46,11 @@ impl SvgWriter {
 
 //----------------------------------------------------------------
 
-pub struct Attributes<'a, S: ?Sized + Borrow<str>> {
+pub struct Attributes<'a, S: Borrow<str>> {
 	svg: &'a mut String,
 	closing: S,
 }
-impl<'a, S: ?Sized + Borrow<str>> Attributes<'a, S> {
+impl<'a, S: Borrow<str>> Attributes<'a, S> {
 	pub fn fill(&mut self, paint: &str) -> &mut Self {
 		*self.svg += &format!(r#" fill="{}""#, paint); self
 	}
@@ -93,7 +92,7 @@ impl<'a, S: ?Sized + Borrow<str>> Attributes<'a, S> {
 		*self.svg += &format!(r#" font-size="{}""#, font_size); self
 	}
 }
-impl<'a, S: ?Sized + Borrow<str>> Drop for Attributes<'a, S> {
+impl<'a, S: Borrow<str>> Drop for Attributes<'a, S> {
 	fn drop(&mut self) {
 		*self.svg += self.closing.borrow();
 	}
