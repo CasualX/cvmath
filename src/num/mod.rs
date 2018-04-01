@@ -4,6 +4,8 @@ Numeric traits.
 
 use std::{cmp, fmt, ops};
 
+mod as_cast;
+
 pub trait Zero where Self: Sized + ops::Add<Output = Self> + ops::Mul<Output = Self> {
 	fn zero() -> Self;
 }
@@ -30,9 +32,7 @@ pub trait Abs {
 	fn abs(self) -> Self::Output;
 }
 
-pub trait AsCast<T> {
-	fn as_cast(self) -> T;
-}
+pub use self::as_cast::AsCast;
 
 pub trait Scalar where Self
 	: Copy + Default + Zero + One
@@ -100,18 +100,6 @@ macro_rules! float {
 			type Output = $ty;
 			fn abs(self) -> $ty { self.abs() }
 		}
-		impl AsCast<i32> for $ty {
-			fn as_cast(self) -> i32 { self as i32 }
-		}
-		impl AsCast<i64> for $ty {
-			fn as_cast(self) -> i64 { self as i64 }
-		}
-		impl AsCast<f32> for $ty {
-			fn as_cast(self) -> f32 { self as f32 }
-		}
-		impl AsCast<f64> for $ty {
-			fn as_cast(self) -> f64 { self as f64 }
-		}
 		impl Scalar for $ty {}
 		impl Float for $ty {
 			fn literal(f: f64) -> $ty { f as $ty }
@@ -169,18 +157,6 @@ macro_rules! int {
 			type Output = $ty;
 			fn abs(self) -> $ty { self.abs() }
 		}
-		impl AsCast<i32> for $ty {
-			fn as_cast(self) -> i32 { self as i32 }
-		}
-		impl AsCast<i64> for $ty {
-			fn as_cast(self) -> i64 { self as i64 }
-		}
-		impl AsCast<f32> for $ty {
-			fn as_cast(self) -> f32 { self as f32 }
-		}
-		impl AsCast<f64> for $ty {
-			fn as_cast(self) -> f64 { self as f64 }
-		}
 		impl Scalar for $ty {}
 		impl Int for $ty {}
 	}
@@ -190,10 +166,3 @@ int!(i32);
 int!(i64);
 float!(f32);
 float!(f64);
-
-impl AsCast<u8> for f32 {
-	fn as_cast(self) -> u8 { self as u8 }
-}
-impl AsCast<f32> for u8 {
-	fn as_cast(self) -> f32 { self as f32 }
-}
