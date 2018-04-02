@@ -7,6 +7,9 @@ pub trait AsCast<T> {
 	fn as_cast(self) -> T;
 }
 
+//----------------------------------------------------------------
+// Implementation
+
 macro_rules! impl_as_cast {
 	($ty:ty) => {
 

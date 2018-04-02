@@ -4,35 +4,24 @@ Numeric traits.
 
 use std::{cmp, fmt, ops};
 
+mod zero;
+mod one;
 mod as_cast;
+mod extrema;
+mod abs;
 
-pub trait Zero where Self: Sized + ops::Add<Output = Self> + ops::Mul<Output = Self> {
-	fn zero() -> Self;
-}
-pub trait One where Self: Sized + ops::Mul<Output = Self> {
-	fn one() -> Self;
-}
-pub trait Extrema<Rhs = Self>: Sized {
-	type Output: Extrema;
-	fn min(self, rhs: Rhs) -> Self::Output;
-	fn max(self, rhs: Rhs) -> Self::Output;
-	fn min_max(self, rhs: Rhs) -> (Self::Output, Self::Output);
-	fn clamp(self, min: Rhs, max: Rhs) -> Self::Output where Self::Output: Extrema<Rhs, Output = Self::Output> {
-		self.min(min).max(max)
-	}
-}
+pub use self::zero::Zero;
+pub use self::one::One;
+pub use self::as_cast::AsCast;
+pub use self::extrema::Extrema;
+pub use self::abs::Abs;
+
 pub trait SpatialOrd<Rhs = Self> {
 	fn spatial_lt(&self, rhs: &Rhs) -> bool;
 	fn spatial_le(&self, rhs: &Rhs) -> bool;
 	fn spatial_gt(&self, rhs: &Rhs) -> bool;
 	fn spatial_ge(&self, rhs: &Rhs) -> bool;
 }
-pub trait Abs {
-	type Output;
-	fn abs(self) -> Self::Output;
-}
-
-pub use self::as_cast::AsCast;
 
 pub trait Scalar where Self
 	: Copy + Default + Zero + One
@@ -66,39 +55,17 @@ pub trait Float where Self: Scalar {
 
 macro_rules! float {
 	($ty:ty) => {
-		impl Zero for $ty {
-			fn zero() -> $ty { 0.0 }
-		}
-		impl One for $ty {
-			fn one() -> $ty { 1.0 }
-		}
-		impl Extrema<$ty> for $ty {
-			type Output = $ty;
-			fn min(self, rhs: $ty) -> $ty { if self < rhs { self } else { rhs } }
-			fn max(self, rhs: $ty) -> $ty { if self > rhs { self } else { rhs } }
-			fn min_max(self, rhs: $ty) -> ($ty, $ty) { if self < rhs { (self, rhs) } else { (rhs, self) } }
-		}
 		impl SpatialOrd<$ty> for $ty {
 			fn spatial_lt(&self, rhs: &$ty) -> bool { *self < *rhs }
 			fn spatial_le(&self, rhs: &$ty) -> bool { *self <= *rhs }
 			fn spatial_gt(&self, rhs: &$ty) -> bool { *self > *rhs }
 			fn spatial_ge(&self, rhs: &$ty) -> bool { *self >= *rhs }
 		}
-		impl<'a> Extrema<&'a $ty> for &'a $ty {
-			type Output = &'a $ty;
-			fn min(self, rhs: &'a $ty) -> &'a $ty { if self < rhs { self } else { rhs } }
-			fn max(self, rhs: &'a $ty) -> &'a $ty { if self > rhs { self } else { rhs } }
-			fn min_max(self, rhs: &'a $ty) -> (&'a $ty, &'a $ty) { if self < rhs { (self, rhs) } else { (rhs, self) } }
-		}
 		impl<'a> SpatialOrd<&'a $ty> for &'a $ty {
 			fn spatial_lt(&self, rhs: &&'a $ty) -> bool { **self < **rhs }
 			fn spatial_le(&self, rhs: &&'a $ty) -> bool { **self <= **rhs }
 			fn spatial_gt(&self, rhs: &&'a $ty) -> bool { **self > **rhs }
 			fn spatial_ge(&self, rhs: &&'a $ty) -> bool { **self >= **rhs }
-		}
-		impl Abs for $ty {
-			type Output = $ty;
-			fn abs(self) -> $ty { self.abs() }
 		}
 		impl Scalar for $ty {}
 		impl Float for $ty {
@@ -123,39 +90,17 @@ macro_rules! float {
 
 macro_rules! int {
 	($ty:ty) => {
-		impl Zero for $ty {
-			fn zero() -> $ty { 0 }
-		}
-		impl One for $ty {
-			fn one() -> $ty { 1 }
-		}
-		impl Extrema<$ty> for $ty {
-			type Output = $ty;
-			fn min(self, rhs: $ty) -> $ty { cmp::min(self, rhs) }
-			fn max(self, rhs: $ty) -> $ty { cmp::max(self, rhs) }
-			fn min_max(self, rhs: $ty) -> ($ty, $ty) { (cmp::min(self, rhs), cmp::max(self, rhs)) }
-		}
 		impl SpatialOrd<$ty> for $ty {
 			fn spatial_lt(&self, rhs: &$ty) -> bool { *self < *rhs }
 			fn spatial_le(&self, rhs: &$ty) -> bool { *self <= *rhs }
 			fn spatial_gt(&self, rhs: &$ty) -> bool { *self > *rhs }
 			fn spatial_ge(&self, rhs: &$ty) -> bool { *self >= *rhs }
 		}
-		impl<'a> Extrema<&'a $ty> for &'a $ty {
-			type Output = &'a $ty;
-			fn min(self, rhs: &'a $ty) -> &'a $ty { cmp::min(self, rhs) }
-			fn max(self, rhs: &'a $ty) -> &'a $ty { cmp::max(self, rhs) }
-			fn min_max(self, rhs: &'a $ty) -> (&'a $ty, &'a $ty) { (cmp::min(self, rhs), cmp::max(self, rhs)) }
-		}
 		impl<'a> SpatialOrd<&'a $ty> for &'a $ty {
 			fn spatial_lt(&self, rhs: &&'a $ty) -> bool { **self < **rhs }
 			fn spatial_le(&self, rhs: &&'a $ty) -> bool { **self <= **rhs }
 			fn spatial_gt(&self, rhs: &&'a $ty) -> bool { **self > **rhs }
 			fn spatial_ge(&self, rhs: &&'a $ty) -> bool { **self >= **rhs }
-		}
-		impl Abs for $ty {
-			type Output = $ty;
-			fn abs(self) -> $ty { self.abs() }
 		}
 		impl Scalar for $ty {}
 		impl Int for $ty {}
