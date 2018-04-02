@@ -6,7 +6,7 @@ use std::{cmp, fmt, ops};
 
 mod zero;
 mod one;
-mod as_cast;
+mod cast;
 mod extrema;
 mod abs;
 mod spatial_ord;
@@ -14,7 +14,7 @@ mod float_ops;
 
 pub use self::zero::Zero;
 pub use self::one::One;
-pub use self::as_cast::AsCast;
+pub use self::cast::{CastFrom, CastTo};
 pub use self::extrema::Extrema;
 pub use self::abs::Abs;
 pub use self::spatial_ord::SpatialOrd;
@@ -34,10 +34,7 @@ pub trait Int where Self
 	: Scalar + cmp::Eq + cmp::Ord {}
 
 pub trait Float where Self
-	: Scalar + FloatOps
-{
-	fn literal(f: f64) -> Self;
-}
+	: Scalar + FloatOps + CastFrom<f64> {}
 
 //----------------------------------------------------------------
 // Implementation
@@ -55,9 +52,5 @@ impl Int for i16 {}
 impl Int for i32 {}
 impl Int for i64 {}
 
-impl Float for f32 {
-	fn literal(f: f64) -> f32 { f as f32 }
-}
-impl Float for f64 {
-	fn literal(f: f64) -> f64 { f }
-}
+impl Float for f32 {}
+impl Float for f64 {}

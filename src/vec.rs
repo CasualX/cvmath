@@ -78,7 +78,7 @@ assert_eq!(Vec3 { x: 1, y: 2, z: 3 }, Vec4(1, 2, 3, 4).xyz());
 
 ## Transformations
 
-`cast<U>(self)` where T: `AsCast<U>`: Casts to a vector of type `U` with the same dimensions.
+`cast<U>(self)` where T: `CastTo<U>`: Casts to a vector of type `U` with the same dimensions.
 
 `map<U, F>(self, F)` where F: `FnMut(T) -> U`: Maps a callable over the components.
 
@@ -229,7 +229,7 @@ assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross(Vec3(3, -3, 1), Vec3(4, 9, 
 
 use std::{fmt, mem, ops, slice};
 
-use num::{Scalar, Zero, One, Float, AsCast, Extrema, SpatialOrd};
+use num::{Scalar, Zero, One, Float, CastTo, Extrema, SpatialOrd};
 
 use angle::Rad;
 
@@ -439,8 +439,8 @@ macro_rules! vec {
 
 		impl<T> $vec<T> {
 			/// Casts to a vector of different type with the same dimensions.
-			pub fn cast<U>(self) -> $vec<U> where T: AsCast<U> {
-				$vec { $($field: self.$field.as_cast()),+ }
+			pub fn cast<U>(self) -> $vec<U> where T: CastTo<U> {
+				$vec { $($field: self.$field.cast_to()),+ }
 			}
 			/// Maps a callable over the components.
 			pub fn map<U, F>(self, mut f: F) -> $vec<U> where F: FnMut(T) -> U {

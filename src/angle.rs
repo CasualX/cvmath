@@ -5,7 +5,7 @@ Angles.
 use std::{fmt, ops};
 use std::str::FromStr;
 
-use num::{AsCast, Float};
+use num::{CastFrom, CastTo, Float};
 
 /// Angle units.
 pub trait Angle where Self:
@@ -196,8 +196,8 @@ macro_rules! angle {
 		// Conversions
 
 		impl<T> $ty<T> {
-			pub fn cast<U>(self) -> $ty<U> where T: AsCast<U> {
-				$ty(self.0.as_cast())
+			pub fn cast<U>(self) -> $ty<U> where T: CastTo<U> {
+				$ty(self.0.cast_to())
 			}
 		}
 
