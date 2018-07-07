@@ -89,3 +89,28 @@ pub fn segment_x<T: Float>(line: Line2<T>, segment: Line2<T>) -> Option<T> {
 	let u = (q - p).cross(r) / denom;
 	Some(u)
 }
+
+/// Calculates the y coordinate where the line intercepts the Y axis.
+///
+/// Returns none if the line is parallel with the Y axis.
+pub fn y_intercept<T: Float>(line: Line2<T>) -> Option<T> {
+	if line.start.x == line.end.x {
+		return None;
+	}
+	let dx = line.start.x - line.end.x;
+	let f = line.start.x / dx;
+	let y = line.start.y + (line.end.y - line.start.y) * f;
+	Some(y)
+}
+/// Calculates the x coordinate where the line intercepts the X axis.
+///
+/// Returns none if the line is parallel with the X axis.
+pub fn x_intercept<T: Float>(line: Line2<T>) -> Option<T> {
+	if line.start.y == line.end.y {
+		return None;
+	}
+	let dy = line.start.y - line.end.y;
+	let f = line.start.y / dy;
+	let x = line.start.x + (line.end.x - line.start.x) * f;
+	Some(x)
+}
