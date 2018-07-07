@@ -3,8 +3,6 @@
 pub trait CastFrom<T>: Sized {
 	/// Performs the `as` conversion.
 	fn cast_from(_: T) -> Self;
-	/// Legacy name.
-	fn literal(lit: T) -> Self { Self::cast_from(lit) }
 }
 /// Like the `Into` trait implemented for numeric `as` conversions.
 pub trait CastTo<T>: Sized {

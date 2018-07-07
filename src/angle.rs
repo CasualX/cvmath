@@ -22,17 +22,17 @@ pub trait Angle where Self:
 	/// Returns a full turn of `360°` or `2π rad`.
 	fn turn() -> Self;
 	/// Returns a half turn of `180°` or `π rad`.
-	fn half() -> Self { Self::turn() / Self::T::literal(2.0) }
+	fn half() -> Self { Self::turn() / Self::T::cast_from(2.0) }
 	/// Returns a third turn of `120°` or `2π/3 rad`.
-	fn third() -> Self { Self::turn() / Self::T::literal(3.0) }
+	fn third() -> Self { Self::turn() / Self::T::cast_from(3.0) }
 	/// Returns a quarter turn of `90°` or `π/2 rad`.
-	fn quarter() -> Self { Self::turn() / Self::T::literal(4.0) }
+	fn quarter() -> Self { Self::turn() / Self::T::cast_from(4.0) }
 	/// Returns a fifth turn of `72°` or `2π/5 rad`.
-	fn fifth() -> Self { Self::turn() / Self::T::literal(5.0) }
+	fn fifth() -> Self { Self::turn() / Self::T::cast_from(5.0) }
 	/// Returns a sixth turn of `60°` or `π/3 rad`.
-	fn sixth() -> Self { Self::turn() / Self::T::literal(6.0) }
+	fn sixth() -> Self { Self::turn() / Self::T::cast_from(6.0) }
 	/// Returns an eight turn of `45°` or `π/4 rad`.
-	fn eight() -> Self { Self::turn() / Self::T::literal(8.0) }
+	fn eight() -> Self { Self::turn() / Self::T::cast_from(8.0) }
 	/// Returns a turn of `0°` or `0π rad`.
 	fn zero() -> Self { Self::default() }
 	/// Normalizes the angle to range `[-180°, 180°]` or `[-π rad, π rad]`.
@@ -75,8 +75,8 @@ macro_rules! turn {
 }
 macro_rules! cvt {
 	(Deg<$T:ident> to Deg $e:expr) => ($e);
-	(Deg<$T:ident> to Rad $e:expr) => ($e * $T::literal(turn!(Rad) / turn!(Deg)));
-	(Rad<$T:ident> to Deg $e:expr) => ($e * $T::literal(turn!(Deg) / turn!(Rad)));
+	(Deg<$T:ident> to Rad $e:expr) => ($e * $T::cast_from(turn!(Rad) / turn!(Deg)));
+	(Rad<$T:ident> to Deg $e:expr) => ($e * $T::cast_from(turn!(Deg) / turn!(Rad)));
 	(Rad<$T:ident> to Rad $e:expr) => ($e);
 }
 
@@ -125,15 +125,15 @@ macro_rules! angle {
 	($ty:ident) => {
 		impl<T: Float> Angle for $ty<T> {
 			type T = T;
-			fn turn() -> $ty<T> { $ty(T::literal(turn!($ty))) }
-			fn half() -> $ty<T> { $ty(T::literal(turn!($ty) / 2.0)) }
-			fn third() -> $ty<T> { $ty(T::literal(turn!($ty) / 3.0)) }
-			fn quarter() -> $ty<T> { $ty(T::literal(turn!($ty) / 4.0)) }
-			fn fifth() -> $ty<T> { $ty(T::literal(turn!($ty) / 5.0)) }
-			fn sixth() -> $ty<T> { $ty(T::literal(turn!($ty) / 6.0)) }
-			fn eight() -> $ty<T> { $ty(T::literal(turn!($ty) / 8.0)) }
-			fn zero() -> $ty<T> { $ty(T::literal(0.0)) }
-			fn norm(self) -> $ty<T> { $ty(self.0.remainder(T::literal(turn!($ty)))) }
+			fn turn() -> $ty<T> { $ty(T::cast_from(turn!($ty))) }
+			fn half() -> $ty<T> { $ty(T::cast_from(turn!($ty) / 2.0)) }
+			fn third() -> $ty<T> { $ty(T::cast_from(turn!($ty) / 3.0)) }
+			fn quarter() -> $ty<T> { $ty(T::cast_from(turn!($ty) / 4.0)) }
+			fn fifth() -> $ty<T> { $ty(T::cast_from(turn!($ty) / 5.0)) }
+			fn sixth() -> $ty<T> { $ty(T::cast_from(turn!($ty) / 6.0)) }
+			fn eight() -> $ty<T> { $ty(T::cast_from(turn!($ty) / 8.0)) }
+			fn zero() -> $ty<T> { $ty(T::cast_from(0.0)) }
+			fn norm(self) -> $ty<T> { $ty(self.0.remainder(T::cast_from(turn!($ty)))) }
 			fn sin(self) -> T { cvt!($ty<T> to Rad self.0).sin() }
 			fn cos(self) -> T { cvt!($ty<T> to Rad self.0).cos() }
 			fn tan(self) -> T { cvt!($ty<T> to Rad self.0).tan() }
