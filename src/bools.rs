@@ -30,7 +30,7 @@ assert_eq!(Bool2 { x: true, y: false }, Vec2(1, 2).eq(Vec2(1, -2)));
 
 ## Comparison operators
 
-`any(self)`: Returns `true` if any of the components is `true`.
+`any(self)`: Returns `true` if any of the components are `true`.
 
 `all(self)`: Returns `true` if all the components are `true`.
 
@@ -108,7 +108,7 @@ macro_rules! bools {
 		// Comparison operators
 
 		impl $bools {
-			/// Returns `true` if any of the components is `true`.
+			/// Returns `true` if any of the components are `true`.
 			pub fn any(self) -> bool {
 				infix!(|| $(self.$field),+)
 			}
