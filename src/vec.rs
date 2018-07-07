@@ -38,10 +38,14 @@ assert!(Vec2(1, 9) > Vec2(1, -2));
 
 `with_x(self, x)`, `with_y(self, y)`, `with_z(self, z)`, `with_w(self, w)`: Note that these return new vectors with the respective component changed.
 
+`get(self, c)`: Gets a component generically.
+
+`shuffle(self, x, y, ..)`: Shuffles the components.
+
 ### Examples
 
 ```
-# use cvmath::prelude::{Vec2, Vec3};
+# use cvmath::prelude::{Vec2, Vec3, X, Y, Z};
 assert_eq!(Vec2 { x: 1, y: 2 }, Vec2(1, 2));
 
 assert_eq!(Vec3 { x: 42, y: 42, z: 42 }, Vec3::dup(42));
@@ -50,6 +54,10 @@ assert_eq!(Vec2 { x: 0.0, y: 1.0 }, Vec2::unit_y());
 assert_eq!(Vec3 { x: 1, y: 0, z: 0 }, Vec3::unit_x());
 
 assert_eq!(Vec3 { x: -12, y: 0, z: 12 }, Vec3::default().with_x(-12).with_z(12));
+
+assert_eq!(2, Vec2 { x: 13, y: 2}.get(Y));
+
+assert_eq!(Vec3 { x: 5, y: -2, z: 5 }, Vec3(-2, 12, 5).shuffle(Z, X, Z));
 ```
 
 ## Extending and truncating
@@ -267,6 +275,52 @@ pub struct Vec4<T> {
 	pub w: T,
 }
 
+/// The X component.
+pub struct X;
+/// The Y component.
+pub struct Y;
+/// The Z component.
+pub struct Z;
+/// The W component.
+pub struct W;
+
+/// Access the components of a vector generically.
+///
+/// Implementation helper for other functions.
+pub trait ComponentImpl<T, C> {
+	fn get(self) -> T;
+}
+
+impl<T> ComponentImpl<T, X> for Vec2<T> {
+	fn get(self) -> T { self.x }
+}
+impl<T> ComponentImpl<T, Y> for Vec2<T> {
+	fn get(self) -> T { self.y }
+}
+
+impl<T> ComponentImpl<T, X> for Vec3<T> {
+	fn get(self) -> T { self.x }
+}
+impl<T> ComponentImpl<T, Y> for Vec3<T> {
+	fn get(self) -> T { self.y }
+}
+impl<T> ComponentImpl<T, Z> for Vec3<T> {
+	fn get(self) -> T { self.z }
+}
+
+impl<T> ComponentImpl<T, X> for Vec4<T> {
+	fn get(self) -> T { self.x }
+}
+impl<T> ComponentImpl<T, Y> for Vec4<T> {
+	fn get(self) -> T { self.y }
+}
+impl<T> ComponentImpl<T, Z> for Vec4<T> {
+	fn get(self) -> T { self.z }
+}
+impl<T> ComponentImpl<T, W> for Vec4<T> {
+	fn get(self) -> T { self.w }
+}
+
 macro_rules! unit {
 	(Vec1) => {
 		/// Unit vector in the `x` direction.
@@ -400,7 +454,7 @@ macro_rules! parse_vec_elems {
 macro_rules! vec {
 	(
 		$vec:ident $N:tt
-		{ $($field:ident $I:tt $T:ident),+ }
+		{ $($field:ident $I:tt $T:ident $C:ident),+ }
 		{ $($ops:tt)* }
 	) => {
 
@@ -432,6 +486,20 @@ macro_rules! vec {
 		impl<T> $vec<T> {
 			with!($vec);
 			cvt!($vec);
+		}
+
+		impl<T: Copy> $vec<T> {
+			/// Gets a component generically.
+			pub fn get<C>(self, _: C) -> T where Self: ComponentImpl<T, C> {
+				<Self as ComponentImpl<T, C>>::get(self)
+			}
+			/// Shuffles the components.
+			#[allow(unused_variables)]
+			pub fn shuffle<$($C),+>(self, $($field: $C),+) -> $vec<T> where Self: $(ComponentImpl<$T, $C> +)+ {
+				$vec {
+					$($field: <Self as ComponentImpl<$T, $C>>::get(self),)+
+				}
+			}
 		}
 
 		//----------------------------------------------------------------
@@ -1041,8 +1109,8 @@ macro_rules! vec {
 	}
 }
 
-// vec!(Vec1 1 { x 0 T });
-vec!(Vec2 2 { x 0 T, y 1 T } {
+// vec!(Vec1 1 { x 0 T X });
+vec!(Vec2 2 { x 0 T X, y 1 T Y } {
 	/// Calculates the polar angle.
 	///
 	/// <!--POLAR_ANGLE-->
@@ -1129,7 +1197,7 @@ vec!(Vec2 2 { x 0 T, y 1 T } {
 		}
 	}
 });
-vec!(Vec3 3 { x 0 T, y 1 T, z 2 T } {
+vec!(Vec3 3 { x 0 T X, y 1 T Y, z 2 T Z } {
 	/// Calculates the 3D cross product.
 	///
 	/// Effectively calculates the vector perpendicular to both inputs with direction according to the [right-hand rule](https://en.wikipedia.org/wiki/Right-hand_rule).
@@ -1160,7 +1228,7 @@ vec!(Vec3 3 { x 0 T, y 1 T, z 2 T } {
 		else { self.xy() }
 	}
 });
-vec!(Vec4 4 { x 0 T, y 1 T, z 2 T, w 3 T } {
+vec!(Vec4 4 { x 0 T X, y 1 T Y, z 2 T Z, w 3 T W } {
 	/// Homogeneous divide.
 	pub fn hdiv(self) -> Vec3<T> {
 		if self.w != T::zero() {

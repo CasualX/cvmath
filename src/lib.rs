@@ -18,7 +18,7 @@ pub mod line2;
 
 pub mod prelude {
 	pub use angle::{Rad, Deg, Angle};
-	pub use vec::{Vec2, Vec3, Vec4};
+	pub use vec::{Vec2, Vec3, Vec4, X, Y, Z, W};
 	pub use bools::{Bool2, Bool3, Bool4};
 	pub use mat::{Mat2, Affine2, Mat3, Affine3};
 	pub use euler::{Euler};
