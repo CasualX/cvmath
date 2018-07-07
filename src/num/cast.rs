@@ -13,7 +13,7 @@ pub trait CastTo<T>: Sized {
 //----------------------------------------------------------------
 // Implementation
 
-impl<T> CastTo<T> for T where T: CastFrom<Self> {
+impl<U, T: CastFrom<U>> CastTo<T> for U {
 	fn cast_to(self) -> T {
 		T::cast_from(self)
 	}
