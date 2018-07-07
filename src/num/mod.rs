@@ -27,7 +27,7 @@ pub trait Scalar where Self
 	+ ops::Mul<Output = Self> + ops::Div<Output = Self>
 	+ ops::Neg<Output = Self> + ops::Rem<Output = Self>
 	+ ops::AddAssign + ops::SubAssign + ops::MulAssign + ops::DivAssign
-	+ Extrema<Output = Self> + Abs<Output = Self>
+	+ Extrema + Abs<Output = Self>
 	+ cmp::PartialEq + cmp::PartialOrd {}
 
 pub trait Int where Self

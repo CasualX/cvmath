@@ -896,14 +896,13 @@ macro_rules! vec {
 		// Operators
 
 		impl<T: Extrema> Extrema<$vec<T>> for $vec<T> {
-			type Output = $vec<T::Output>;
-			fn min(self, rhs: $vec<T>) -> $vec<T::Output> {
+			fn min(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::min(self.$field, rhs.$field)),+ }
 			}
-			fn max(self, rhs: $vec<T>) -> $vec<T::Output> {
+			fn max(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::max(self.$field, rhs.$field)),+ }
 			}
-			fn min_max(self, rhs: $vec<T>) -> ($vec<T::Output>, $vec<T::Output>) {
+			fn min_max(self, rhs: $vec<T>) -> ($vec<T>, $vec<T>) {
 				let temp = $vec { $($field: self.$field.min_max(rhs.$field)),+ };
 				($vec { $($field: temp.$field.0),+ }, $vec { $($field: temp.$field.1),+ })
 			}

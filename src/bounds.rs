@@ -29,6 +29,7 @@ impl<T> Bounds<T> {
 	pub fn new(mins: T, maxs: T) -> Bounds<T> {
 		Bounds { mins, maxs }
 	}
+	/// Bounds from the origin to the vector.
 	pub fn vec(vec: T) -> Bounds<T> where T: Default {
 		Bounds {
 			mins: T::default(),
@@ -48,7 +49,7 @@ impl<T> Bounds<T> {
 	pub fn point(point: T) -> Bounds<T> where T: Copy {
 		Bounds { mins: point, maxs: point }
 	}
-	/// Sorts the min and max values ensuring that `self.mins <= self.maxs`.
+	/// Normalizes the min and max values ensuring that `self.mins <= self.maxs`.
 	///
 	/// Because the constructors don't implicitly do this for you,
 	/// it is typical to have this call follow the construction of the bounds.
@@ -56,10 +57,10 @@ impl<T> Bounds<T> {
 	/// ```
 	/// use cvmath::prelude::{Bounds, Point2};
 	///
-	/// let bounds = Bounds::new(Point2(1, 0), Point2(-2, 3)).sort();
+	/// let bounds = Bounds::new(Point2(1, 0), Point2(-2, 3)).norm();
 	/// assert_eq!(Bounds(Point2(-2, 0), Point2(1, 3)), bounds);
 	/// ```
-	pub fn sort(self) -> Bounds<T::Output> where T: Extrema {
+	pub fn norm(self) -> Bounds<T> where T: Extrema {
 		let (mins, maxs) = self.mins.min_max(self.maxs);
 		Bounds { mins, maxs }
 	}
@@ -141,7 +142,7 @@ impl<T> Bounds<T> {
 	/// assert_eq!(result, bounds.union(other));
 	/// assert_eq!(result, other.union(bounds));
 	/// ```
-	pub fn union(self, rhs: Bounds<T>) -> Bounds<T::Output> where T: Extrema {
+	pub fn union(self, rhs: Bounds<T>) -> Bounds<T> where T: Extrema {
 		let mins = self.mins.min(rhs.mins);
 		let maxs = self.maxs.max(rhs.maxs);
 		Bounds { mins, maxs }
@@ -170,7 +171,7 @@ impl<T> Bounds<T> {
 	/// assert_eq!(None, bounds.intersect(negative));
 	/// assert_eq!(None, negative.intersect(bounds));
 	/// ```
-	pub fn intersect(self, rhs: Bounds<T>) -> Option<Bounds<T::Output>> where T: Extrema, T::Output: SpatialOrd {
+	pub fn intersect(self, rhs: Bounds<T>) -> Option<Bounds<T>> where T: Extrema + SpatialOrd {
 		let mins = self.mins.max(rhs.mins);
 		let maxs = self.maxs.min(rhs.maxs);
 		if mins.spatial_le(&maxs) {
@@ -203,7 +204,7 @@ impl<T> Bounds<T> {
 	/// Returns the overlapping area (not empty) between `rhs` and `self`.
 	///
 	/// <!--STRICTLY_INTERSECT-->
-	pub fn strictly_intersect(self, rhs: Bounds<T>) -> Option<Bounds<T::Output>> where T: Extrema, T::Output: SpatialOrd {
+	pub fn strictly_intersect(self, rhs: Bounds<T>) -> Option<Bounds<T>> where T: Extrema + SpatialOrd {
 		let mins = self.mins.max(rhs.mins);
 		let maxs = self.maxs.min(rhs.maxs);
 		if mins.spatial_lt(&maxs) {

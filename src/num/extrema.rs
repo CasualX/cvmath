@@ -2,11 +2,10 @@ use std::cmp;
 
 /// Calculate mins and maxs.
 pub trait Extrema<Rhs = Self>: Sized {
-	type Output: Extrema;
-	fn min(self, rhs: Rhs) -> Self::Output;
-	fn max(self, rhs: Rhs) -> Self::Output;
-	fn min_max(self, rhs: Rhs) -> (Self::Output, Self::Output);
-	fn clamp(self, min: Rhs, max: Rhs) -> Self::Output where Self::Output: Extrema<Rhs, Output = Self::Output> {
+	fn min(self, rhs: Rhs) -> Self;
+	fn max(self, rhs: Rhs) -> Self;
+	fn min_max(self, rhs: Rhs) -> (Self, Self);
+	fn clamp(self, min: Rhs, max: Rhs) -> Self {
 		self.min(min).max(max)
 	}
 }
@@ -18,7 +17,6 @@ macro_rules! impl_int {
 	($ty:ty) => {
 
 impl Extrema for $ty {
-	type Output = $ty;
 	fn min(self, rhs: $ty) -> $ty {
 		cmp::min(self, rhs)
 	}
@@ -31,7 +29,6 @@ impl Extrema for $ty {
 }
 
 impl<'a> Extrema for &'a $ty {
-	type Output = &'a $ty;
 	fn min(self, rhs: &'a $ty) -> &'a $ty {
 		cmp::min(self, rhs)
 	}
@@ -50,7 +47,6 @@ macro_rules! impl_float {
 	($ty:ty) => {
 
 impl Extrema for $ty {
-	type Output = $ty;
 	fn min(self, rhs: $ty) -> $ty {
 		if self < rhs { self } else { rhs }
 	}
@@ -63,7 +59,6 @@ impl Extrema for $ty {
 }
 
 impl<'a> Extrema<&'a $ty> for &'a $ty {
-	type Output = &'a $ty;
 	fn min(self, rhs: &'a $ty) -> &'a $ty {
 		if self < rhs { self } else { rhs }
 	}
