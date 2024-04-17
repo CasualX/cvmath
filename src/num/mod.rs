@@ -28,29 +28,72 @@ pub trait Scalar where Self
 	+ ops::Neg<Output = Self> + ops::Rem<Output = Self>
 	+ ops::AddAssign + ops::SubAssign + ops::MulAssign + ops::DivAssign
 	+ Extrema + Abs<Output = Self>
-	+ cmp::PartialEq + cmp::PartialOrd {}
+	+ cmp::PartialEq + cmp::PartialOrd
+{
+	fn mul_add(self, a: Self, b: Self) -> Self;
+}
 
-pub trait Int where Self
-	: Scalar + cmp::Eq + cmp::Ord {}
+pub trait Int where Self : Scalar + cmp::Eq + cmp::Ord {}
 
-pub trait Float where Self
-	: Scalar + FloatOps + CastFrom<f64> {}
+pub trait Float where Self : Scalar + FloatOps + CastFrom<f64> {
+	const INFINITY: Self;
+	const NEG_INFINITY: Self;
+	const EPSILON: Self;
+}
 
 //----------------------------------------------------------------
 // Implementation
 
-impl Scalar for i8 {}
-impl Scalar for i16 {}
-impl Scalar for i32 {}
-impl Scalar for i64 {}
+impl Scalar for i8 {
+	#[inline]
+	fn mul_add(self, a: i8, b: i8) -> i8 {
+		self.wrapping_mul(a).wrapping_add(b)
+	}
+}
+impl Scalar for i16 {
+	#[inline]
+	fn mul_add(self, a: i16, b: i16) -> i16 {
+		self.wrapping_mul(a).wrapping_add(b)
+	}
+}
+impl Scalar for i32 {
+	#[inline]
+	fn mul_add(self, a: i32, b: i32) -> i32 {
+		self.wrapping_mul(a).wrapping_add(b)
+	}
+}
+impl Scalar for i64 {
+	#[inline]
+	fn mul_add(self, a: i64, b: i64) -> i64 {
+		self.wrapping_mul(a).wrapping_add(b)
+	}
+}
 
-impl Scalar for f32 {}
-impl Scalar for f64 {}
+impl Scalar for f32 {
+	#[inline]
+	fn mul_add(self, a: f32, b: f32) -> f32 {
+		self.mul_add(a, b)
+	}
+}
+impl Scalar for f64 {
+	#[inline]
+	fn mul_add(self, a: f64, b: f64) -> f64 {
+		self.mul_add(a, b)
+	}
+}
 
 impl Int for i8 {}
 impl Int for i16 {}
 impl Int for i32 {}
 impl Int for i64 {}
 
-impl Float for f32 {}
-impl Float for f64 {}
+impl Float for f32 {
+	const INFINITY: f32 = f32::INFINITY;
+	const NEG_INFINITY: f32 = f32::NEG_INFINITY;
+	const EPSILON: f32 = f32::EPSILON;
+}
+impl Float for f64 {
+	const INFINITY: f64 = f64::INFINITY;
+	const NEG_INFINITY: f64 = f64::NEG_INFINITY;
+	const EPSILON: f64 = f64::EPSILON;
+}

@@ -1,11 +1,7 @@
 /*!
 Angles.
 */
-
-use std::{fmt, ops};
-use std::str::FromStr;
-
-use num::{CastFrom, CastTo, Float};
+use super::*;
 
 /// Angle units.
 pub trait Angle where Self:
@@ -36,7 +32,9 @@ pub trait Angle where Self:
 	/// Returns a turn of `0°` or `0π rad`.
 	fn zero() -> Self { Self::default() }
 	/// Normalizes the angle to range `[-180°, 180°]` or `[-π rad, π rad]`.
-	fn norm(self) -> Self;
+	fn normalize(self) -> Self;
+	/// Normalizes the angle to range `[0°, 360°]` or `[0 rad, 2π rad]`.
+	fn normalize_abs(self) -> Self;
 	/// Sine.
 	fn sin(self) -> Self::T;
 	/// Cosine.
@@ -59,15 +57,39 @@ pub trait Angle where Self:
 	fn to_rad(self) -> Rad<Self::T> { self.into() }
 }
 
-/// Angle in degrees.
+/// Angle (degrees).
 #[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
-#[repr(C)]
-pub struct Deg<T>(pub T);
+#[repr(transparent)]
+pub struct Deg<T> {
+	pub value: T,
+}
 
-/// Angle in radians.
+/// Angle (degrees) constructor.
+#[allow(non_snake_case)]
+#[inline]
+pub const fn Deg<T>(value: T) -> Deg<T> {
+	Deg { value }
+}
+
+#[cfg(feature = "dataview")]
+unsafe impl<T: dataview::Pod> dataview::Pod for Deg<T> {}
+
+/// Angle (radians).
 #[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
-#[repr(C)]
-pub struct Rad<T>(pub T);
+#[repr(transparent)]
+pub struct Rad<T> {
+	pub value: T,
+}
+
+/// Angle (radians) constructor.
+#[allow(non_snake_case)]
+#[inline]
+pub const fn Rad<T>(value: T) -> Rad<T> {
+	Rad { value }
+}
+
+#[cfg(feature = "dataview")]
+unsafe impl<T: dataview::Pod> dataview::Pod for Rad<T> {}
 
 macro_rules! turn {
 	(Deg) => (360.0);
@@ -84,7 +106,7 @@ macro_rules! fmt {
 	(Deg $fmt:path) => {
 		impl<T: $fmt> $fmt for Deg<T> {
 			fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-				self.0.fmt(f)?;
+				self.value.fmt(f)?;
 				f.write_str("°")
 			}
 		}
@@ -92,24 +114,8 @@ macro_rules! fmt {
 	(Rad $fmt:path) => {
 		impl<T: $fmt> $fmt for Rad<T> {
 			fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-				self.0.fmt(f)?;
+				self.value.fmt(f)?;
 				f.write_str(" rad")
-			}
-		}
-		#[cfg(feature = "format-rad-pi")]
-		impl<T: Float + $fmt> $fmt for Rad<T> {
-			fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-				let e = *self / Self::half();
-				<T as $fmt>::fmt(&e, f)?;
-				f.write_str("π rad")
-			}
-		}
-		#[cfg(feature = "format-rad-tau")]
-		impl<T: Float + $fmt> $fmt for Rad<T> {
-			fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-				let e = *self / Self::turn();
-				<T as $fmt>::fmt(&e, f)?;
-				f.write_str("τ rad")
 			}
 		}
 	};
@@ -125,27 +131,56 @@ macro_rules! angle {
 	($ty:ident) => {
 		impl<T: Float> Angle for $ty<T> {
 			type T = T;
+			#[inline]
 			fn turn() -> $ty<T> { $ty(T::cast_from(turn!($ty))) }
+			#[inline]
 			fn half() -> $ty<T> { $ty(T::cast_from(turn!($ty) / 2.0)) }
+			#[inline]
 			fn third() -> $ty<T> { $ty(T::cast_from(turn!($ty) / 3.0)) }
+			#[inline]
 			fn quarter() -> $ty<T> { $ty(T::cast_from(turn!($ty) / 4.0)) }
+			#[inline]
 			fn fifth() -> $ty<T> { $ty(T::cast_from(turn!($ty) / 5.0)) }
+			#[inline]
 			fn sixth() -> $ty<T> { $ty(T::cast_from(turn!($ty) / 6.0)) }
+			#[inline]
 			fn eight() -> $ty<T> { $ty(T::cast_from(turn!($ty) / 8.0)) }
+			#[inline]
 			fn zero() -> $ty<T> { $ty(T::cast_from(0.0)) }
-			fn norm(self) -> $ty<T> { $ty(self.0.remainder(T::cast_from(turn!($ty)))) }
-			fn sin(self) -> T { cvt!($ty<T> to Rad self.0).sin() }
-			fn cos(self) -> T { cvt!($ty<T> to Rad self.0).cos() }
-			fn tan(self) -> T { cvt!($ty<T> to Rad self.0).tan() }
-			fn sin_cos(self) -> (T, T) { cvt!($ty<T> to Rad self.0).sin_cos() }
+			#[inline]
+			fn normalize(self) -> $ty<T> {
+				let div = self.value / T::cast_from(turn!($ty));
+				$ty(self.value - div.round() * T::cast_from(turn!($ty)))
+			}
+			#[inline]
+			fn normalize_abs(self) -> $ty<T> {
+				let div = self.value / T::cast_from(turn!($ty));
+				$ty(self.value - div.floor() * T::cast_from(turn!($ty)))
+			}
+			#[inline]
+			fn sin(self) -> T { cvt!($ty<T> to Rad self.value).sin() }
+			#[inline]
+			fn cos(self) -> T { cvt!($ty<T> to Rad self.value).cos() }
+			#[inline]
+			fn tan(self) -> T { cvt!($ty<T> to Rad self.value).tan() }
+			#[inline]
+			fn sin_cos(self) -> (T, T) { cvt!($ty<T> to Rad self.value).sin_cos() }
+			#[inline]
 			fn asin(sin: T) -> $ty<T> { $ty(cvt!(Rad<T> to $ty sin.asin())) }
+			#[inline]
 			fn acos(cos: T) -> $ty<T> { $ty(cvt!(Rad<T> to $ty cos.acos())) }
+			#[inline]
 			fn atan(tan: T) -> $ty<T> { $ty(cvt!(Rad<T> to $ty tan.atan())) }
+			#[inline]
 			fn atan2(y: T, x: T) -> $ty<T> { $ty(cvt!(Rad<T> to $ty y.atan2(x))) }
-			fn from_deg(deg: Deg<T>) -> $ty<T> { $ty(cvt!(Deg<T> to $ty deg.0)) }
-			fn from_rad(rad: Rad<T>) -> $ty<T> { $ty(cvt!(Rad<T> to $ty rad.0)) }
-			fn to_deg(self) -> Deg<T> { Deg(cvt!($ty<T> to Deg self.0)) }
-			fn to_rad(self) -> Rad<T> { Rad(cvt!($ty<T> to Rad self.0)) }
+			#[inline]
+			fn from_deg(deg: Deg<T>) -> $ty<T> { $ty(cvt!(Deg<T> to $ty deg.value)) }
+			#[inline]
+			fn from_rad(rad: Rad<T>) -> $ty<T> { $ty(cvt!(Rad<T> to $ty rad.value)) }
+			#[inline]
+			fn to_deg(self) -> Deg<T> { Deg(cvt!($ty<T> to Deg self.value)) }
+			#[inline]
+			fn to_rad(self) -> Rad<T> { Rad(cvt!($ty<T> to Rad self.value)) }
 		}
 
 		//----------------------------------------------------------------
@@ -153,42 +188,66 @@ macro_rules! angle {
 
 		impl<T: Float> $ty<T> {
 			/// Returns a full turn of `360°` or `2π rad`.
+			#[inline]
 			pub fn turn() -> $ty<T> { Angle::turn() }
 			/// Returns a half turn of `180°` or `π rad`.
+			#[inline]
 			pub fn half() -> $ty<T> { Angle::half() }
 			/// Returns a third turn of `120°` or `2π/3 rad`.
+			#[inline]
 			pub fn third() -> $ty<T> { Angle::third() }
 			/// Returns a quarter turn of `90°` or `π/2 rad`.
+			#[inline]
 			pub fn quarter() -> $ty<T> { Angle::quarter() }
 			/// Returns a fifth turn of `72°` or `2π/5 rad`.
+			#[inline]
 			pub fn fifth() -> $ty<T> { Angle::fifth() }
 			/// Returns a sixth turn of `60°` or `π/3 rad`.
+			#[inline]
 			pub fn sixth() -> $ty<T> { Angle::sixth() }
 			/// Returns an eight turn of `45°` or `π/4 rad`.
+			#[inline]
 			pub fn eight() -> $ty<T> { Angle::eight() }
 			/// Returns a turn of `0°` or `0π rad`.
+			#[inline]
 			pub fn zero() -> $ty<T> { Angle::zero() }
 			/// Normalizes the angle to range `[-180°, 180°]` or `[-π rad, π rad]`.
-			pub fn norm(self) -> $ty<T> { Angle::norm(self) }
+			#[inline]
+			pub fn normalize(self) -> $ty<T> { Angle::normalize(self) }
+			/// Normalizes the angle to range `[0°, 360°]` or `[0 rad, 2π rad]`.
+			#[inline]
+			pub fn normalize_abs(self) -> $ty<T> { Angle::normalize_abs(self) }
 			/// Sine.
+			#[inline]
 			pub fn sin(self) -> T { Angle::sin(self) }
 			/// Cosine.
+			#[inline]
 			pub fn cos(self) -> T { Angle::cos(self) }
 			/// Tangent.
+			#[inline]
 			pub fn tan(self) -> T { Angle::tan(self) }
 			/// Calculates the sine and cosine efficiently.
+			#[inline]
 			pub fn sin_cos(self) -> (T, T) { Angle::sin_cos(self) }
+			#[inline]
 			pub fn asin(sin: T) -> $ty<T> { Angle::asin(sin) }
+			#[inline]
 			pub fn acos(cos: T) -> $ty<T> { Angle::acos(cos) }
+			#[inline]
 			pub fn atan(tan: T) -> $ty<T> { Angle::atan(tan) }
+			#[inline]
 			pub fn atan2(y: T, x: T) -> $ty<T> { Angle::atan2(y, x) }
 			/// Converts from degrees.
+			#[inline]
 			pub fn from_deg(deg: Deg<T>) -> $ty<T> { Angle::from_deg(deg) }
 			/// Converts from radians.
+			#[inline]
 			pub fn from_rad(rad: Rad<T>) -> $ty<T> { Angle::from_rad(rad) }
 			/// Converts to degrees.
+			#[inline]
 			pub fn to_deg(self) -> Deg<T> { Angle::to_deg(self) }
 			/// Converts to radians.
+			#[inline]
 			pub fn to_rad(self) -> Rad<T> { Angle::to_rad(self) }
 		}
 
@@ -196,19 +255,22 @@ macro_rules! angle {
 		// Conversions
 
 		impl<T> $ty<T> {
+			#[inline]
 			pub fn cast<U>(self) -> $ty<U> where T: CastTo<U> {
-				$ty(self.0.cast_to())
+				$ty(self.value.cast_to())
 			}
 		}
 
 		impl<T> AsRef<T> for $ty<T> {
+			#[inline]
 			fn as_ref(&self) -> &T {
-				&self.0
+				&self.value
 			}
 		}
 		impl<T> AsMut<T> for $ty<T> {
+			#[inline]
 			fn as_mut(&mut self) -> &mut T {
-				&mut self.0
+				&mut self.value
 			}
 		}
 
@@ -217,39 +279,58 @@ macro_rules! angle {
 
 		impl<T: ops::Add<Output = T>> ops::Add<$ty<T>> for $ty<T> {
 			type Output = $ty<T>;
+			#[inline]
 			fn add(self, rhs: $ty<T>) -> $ty<T> {
-				$ty(self.0 + rhs.0)
+				$ty(self.value + rhs.value)
 			}
 		}
 		impl<T: ops::Sub<Output = T>> ops::Sub<$ty<T>> for $ty<T> {
 			type Output = $ty<T>;
+			#[inline]
 			fn sub(self, rhs: $ty<T>) -> $ty<T> {
-				$ty(self.0 - rhs.0)
+				$ty(self.value - rhs.value)
 			}
 		}
 		impl<T: ops::Neg<Output = T>> ops::Neg for $ty<T> {
 			type Output = $ty<T>;
+			#[inline]
 			fn neg(self) -> $ty<T> {
-				$ty(-self.0)
+				$ty(-self.value)
 			}
 		}
 
 		impl<T: ops::Mul<Output = T>> ops::Mul<T> for $ty<T> {
 			type Output = $ty<T>;
+			#[inline]
 			fn mul(self, rhs: T) -> $ty<T> {
-				$ty(self.0 * rhs)
+				$ty(self.value * rhs)
 			}
 		}
 		impl<T: ops::Div<Output = T>> ops::Div<T> for $ty<T> {
 			type Output = $ty<T>;
+			#[inline]
 			fn div(self, rhs: T) -> $ty<T> {
-				$ty(self.0 / rhs)
+				$ty(self.value / rhs)
 			}
 		}
 		impl<T: ops::Div<Output = T>> ops::Div<$ty<T>> for $ty<T> {
 			type Output = T;
+			#[inline]
 			fn div(self, rhs: $ty<T>) -> T {
-				self.0 / rhs.0
+				self.value / rhs.value
+			}
+		}
+
+		impl<T: ops::AddAssign> ops::AddAssign for $ty<T> {
+			#[inline]
+			fn add_assign(&mut self, rhs: $ty<T>) {
+				self.value += rhs.value;
+			}
+		}
+		impl<T: ops::SubAssign> ops::SubAssign for $ty<T> {
+			#[inline]
+			fn sub_assign(&mut self, rhs: $ty<T>) {
+				self.value -= rhs.value;
 			}
 		}
 
@@ -265,10 +346,10 @@ macro_rules! angle {
 			type Err = T::Err;
 			fn from_str(s: &str) -> Result<$ty<T>, T::Err> {
 				if s.ends_with("°") {
-					s[..s.len() - "°".len()].trim_right().parse().map(|a| Deg(a).into())
+					s[..s.len() - "°".len()].trim_end().parse().map(|a| Deg(a).into())
 				}
 				else if s.ends_with("rad") {
-					s[..s.len() - "rad".len()].trim_right().parse().map(|a| Rad(a).into())
+					s[..s.len() - "rad".len()].trim_end().parse().map(|a| Rad(a).into())
 				}
 				else {
 					s.parse().map($ty)
@@ -282,13 +363,45 @@ angle!(Deg);
 angle!(Rad);
 
 impl<T: Float> From<Deg<T>> for Rad<T> {
+	#[inline]
 	fn from(deg: Deg<T>) -> Rad<T> {
 		deg.to_rad()
 	}
 }
 impl<T: Float> From<Rad<T>> for Deg<T> {
+	#[inline]
 	fn from(rad: Rad<T>) -> Deg<T> {
 		rad.to_deg()
+	}
+}
+
+//----------------------------------------------------------------
+
+#[cfg(feature = "serde")]
+impl<T: serde::Serialize> serde::Serialize for Deg<T> {
+	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+		self.value.serialize(serializer)
+	}
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Deg<T> {
+	fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Deg<T>, D::Error> {
+		T::deserialize(deserializer).map(Deg)
+	}
+}
+
+#[cfg(feature = "serde")]
+impl<T: serde::Serialize> serde::Serialize for Rad<T> {
+	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+		self.value.serialize(serializer)
+	}
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Rad<T> {
+	fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Rad<T>, D::Error> {
+		T::deserialize(deserializer).map(Rad)
 	}
 }
 
@@ -299,11 +412,21 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn norm() {
-		assert_eq!(Deg(179.0), Deg(-181.0).norm());
-		assert_eq!(Deg(0.125), Deg(360.125).norm());
-		assert_eq!(Deg(180.0), Deg(-180.0).norm());
-		assert_eq!(Deg(-180.0), Deg(180.0).norm());
+	fn normalize() {
+		assert_eq!(Deg(179.0), Deg(-181.0).normalize());
+		assert_eq!(Deg(-179.0), Deg(181.0).normalize());
+		assert_eq!(Deg(0.125), Deg(360.125).normalize());
+		assert_eq!(Deg(180.0), Deg(-180.0).normalize());
+		assert_eq!(Deg(-180.0), Deg(180.0).normalize());
+	}
+
+	#[test]
+	fn normalize_abs() {
+		assert_eq!(Deg(179.0), Deg(-181.0).normalize_abs());
+		assert_eq!(Deg(181.0), Deg(181.0).normalize_abs());
+		assert_eq!(Deg(1.0), Deg(361.0).normalize_abs());
+		assert_eq!(Deg(180.0), Deg(-180.0).normalize_abs());
+		assert_eq!(Deg(359.0), Deg(359.0).normalize_abs());
 	}
 
 	#[test]

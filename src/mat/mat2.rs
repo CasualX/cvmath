@@ -1,19 +1,12 @@
 /*!
-2D transformation matrix.
+Mat2 transformation matrix.
 */
 
-use std::ops;
-
-use num::{Scalar, Float};
-use vec::Vec2;
-use angle::Angle;
-
-use super::{Affine2, Transform2};
+use super::*;
 
 /// 2D transformation matrix.
 ///
-/// A 2x2 row-major matrix.
-#[cfg(feature = "row-major")]
+/// Each field _a_<sub>i</sub><sub>j</sub> represents the _i_-th row and _j_-th column of the matrix.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
 pub struct Mat2<T> {
@@ -21,22 +14,31 @@ pub struct Mat2<T> {
 	pub a21: T, pub a22: T,
 }
 
-/// 2D transformation matrix.
-///
-/// A 2x2 column-major matrix.
-#[cfg(feature = "column-major")]
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
-#[repr(C)]
-pub struct Mat2<T> {
-	pub a11: T, pub a21: T,
-	pub a12: T, pub a22: T,
+// pub struct Mat2<T> {
+// 	pub a11: T, pub a21: T,
+// 	pub a12: T, pub a22: T,
+// }
+
+/// Constructs a new matrix from components.
+#[allow(non_snake_case)]
+#[inline]
+pub const fn Mat2<T>(
+	a11: T, a12: T,
+	a21: T, a22: T,
+) -> Mat2<T> {
+	Mat2 { a11, a12, a21, a22 }
 }
+
+#[cfg(feature = "dataview")]
+unsafe impl<T: dataview::Pod> dataview::Pod for Mat2<T> {}
 
 //----------------------------------------------------------------
 // Constructors
 
 impl<T> Mat2<T> {
-	pub fn new(
+	/// Constructs a new matrix from components.
+	#[inline]
+	pub const fn new(
 		a11: T, a12: T,
 		a21: T, a22: T,
 	) -> Mat2<T> {
@@ -46,35 +48,37 @@ impl<T> Mat2<T> {
 		}
 	}
 }
-impl<T: Scalar> Mat2<T> {
+impl<T: Zero> Mat2<T> {
+	/// Zero matrix.
+	pub const ZERO: Mat2<T> = Mat2 {
+		a11: T::ZERO, a12: T::ZERO,
+		a21: T::ZERO, a22: T::ZERO,
+	};
+}
+impl<T: Zero + One> Mat2<T> {
 	/// Identity matrix.
-	pub fn identity() -> Mat2<T> {
-		Mat2 {
-			a11: T::one(), a12: T::zero(),
-			a21: T::zero(), a22: T::one(),
-		}
-	}
-	/// Null matrix.
-	pub fn null() -> Mat2<T> {
-		Mat2 {
-			a11: T::zero(), a12: T::zero(),
-			a21: T::zero(), a22: T::zero(),
-		}
-	}
+	pub const IDENTITY: Mat2<T> = Mat2 {
+		a11: T::ONE,  a12: T::ZERO,
+		a21: T::ZERO, a22: T::ONE,
+	};
+}
+impl<T: Scalar> Mat2<T> {
 	/// Scaling matrix.
 	///
 	/// Scales around the origin.
-	pub fn scale<V>(scale: V) -> Mat2<T> where V: Into<Vec2<T>> {
+	#[inline]
+	pub fn scale(scale: impl Into<Vec2<T>>) -> Mat2<T> {
 		let scale = scale.into();
 		Mat2 {
-			a11: scale.x,   a12: T::zero(),
-			a21: T::zero(), a22: scale.y,
+			a11: scale.x, a12: T::ZERO,
+			a21: T::ZERO, a22: scale.y,
 		}
 	}
 	/// Rotation matrix.
 	///
 	/// Rotates around the origin.
-	pub fn rotate<A>(angle: A) -> Mat2<T> where T: Float, A: Angle<T = T> {
+	#[inline]
+	pub fn rotate(angle: impl Angle<T = T>) -> Mat2<T> {
 		let (cy, cx) = angle.sin_cos();
 		Mat2 {
 			a11: cx, a12: -cy,
@@ -82,53 +86,54 @@ impl<T: Scalar> Mat2<T> {
 		}
 	}
 	/// Skewing matrix.
-	pub fn skew<V>(skew: V) -> Mat2<T> where V: Into<Vec2<T>> {
+	#[inline]
+	pub fn skew(skew: impl Into<Vec2<T>>) -> Mat2<T> {
 		let skew = skew.into();
 		Mat2 {
-			a11: T::one(), a12: skew.x,
-			a21: skew.y,   a22: T::one(),
+			a11: T::ONE, a12: skew.x,
+			a21: skew.y, a22: T::ONE,
 		}
 	}
 	/// Reflection matrix.
 	///
-	/// Reflects around the line defined by the line going through the origin and `line`.
-	///
-	/// If `line` is the zero vector, the matrix will be a point reflection around the origin.
-	pub fn reflect<V>(axis: V) -> Mat2<T> where T: Float, V: Into<Vec2<T>> {
-		let l = axis.into();
-		let ls = l.dot(l);
-		if ls > T::zero() {
-			let (lx, ly) = l.into();
-			let ls = T::one() / ls;
+	/// Reflects around the given axis.
+	/// If axis is the zero vector, returns a point reflection around the origin.
+	#[inline]
+	pub fn reflect(axis: impl Into<Vec2<T>>) -> Mat2<T> {
+		let axis = axis.into();
+		let ls = axis.dot(axis);
+		if ls > T::ZERO {
+			let Vec2 { x, y } = axis;
+			let ls = T::ONE / ls;
 			Mat2 {
-				a11: ls * (lx * lx - ly * ly), a12: ls * (lx * ly + lx * ly),
-				a21: ls * (lx * ly + lx * ly), a22: ls * (ly * ly - lx * lx),
+				a11: ls * (x * x - y * y), a12: ls * (x * y + x * y),
+				a21: ls * (x * y + x * y), a22: ls * (y * y - x * x),
 			}
 		}
 		else {
 			// Do something like point reflection instead of NaN
-			Mat2::scale(-T::one())
+			Mat2::scale(-T::ONE)
 		}
 	}
 	/// Projection matrix.
 	///
-	/// Projects onto the line defined by the line going through the origin and `line`.
-	///
-	/// If `line` is the zero vector, the matrix is the null matrix.
-	pub fn project<V>(axis: V) -> Mat2<T> where T: Float, V: Into<Vec2<T>> {
-		let u = axis.into();
-		let us = u.dot(u);
-		if us > T::zero() {
-			let (ux, uy) = u.into();
-			let us = T::one() / us;
+	/// Projects onto the given axis.
+	/// If axis is the zero vector, returns the zero matrix.
+	#[inline]
+	pub fn project(axis: impl Into<Vec2<T>>) -> Mat2<T> {
+		let axis = axis.into();
+		let ls = axis.dot(axis);
+		if ls > T::ZERO {
+			let Vec2 { x, y } = axis;
+			let ls = T::ONE / ls;
 			Mat2 {
-				a11: us * ux * ux, a12: us * ux * uy,
-				a21: us * ux * uy, a22: us * uy * uy,
+				a11: ls * x * x, a12: ls * x * y,
+				a21: ls * x * y, a22: ls * y * y,
 			}
 		}
 		else {
 			// Do something like absorb all
-			Mat2::null()
+			Mat2::ZERO
 		}
 	}
 }
@@ -137,28 +142,54 @@ impl<T: Scalar> Mat2<T> {
 // Conversions
 
 impl<T> Mat2<T> {
-	/// Imports as row major.
-	pub fn from_row_major(mat: [[T; 2]; 2]) -> Mat2<T> where T: Copy {
-		Mat2 {
-			a11: mat[0][0], a12: mat[0][1],
-			a21: mat[1][0], a22: mat[1][1],
+	/// Converts to a Transform2 matrix.
+	#[inline]
+	pub fn affine(self) -> Transform2<T> where T: Zero {
+		Transform2 {
+			a11: self.a11, a12: self.a12, a13: T::ZERO,
+			a21: self.a21, a22: self.a22, a23: T::ZERO,
 		}
 	}
-	/// Imports as column major.
-	pub fn from_column_major(mat: [[T; 2]; 2]) -> Mat2<T> where T: Copy {
-		Mat2 {
-			a11: mat[0][0], a12: mat[1][0],
-			a21: mat[0][1], a22: mat[1][1],
+	/// Adds a translation to the matrix.
+	#[inline]
+	pub fn translate(self, trans: impl Into<Vec2<T>>) -> Transform2<T> {
+		let trans = trans.into();
+		Transform2 {
+			a11: self.a11, a12: self.a12, a13: trans.x,
+			a21: self.a21, a22: self.a22, a23: trans.y,
 		}
 	}
-	/// Exports as row major.
+}
+
+impl<T> Mat2<T> {
+	/// Imports the matrix from a row-major layout.
+	#[inline]
+	pub fn from_row_major(mat: [[T; 2]; 2]) -> Mat2<T> {
+		let [[a11, a12], [a21, a22]] = mat;
+		Mat2 {
+			a11, a12,
+			a21, a22,
+		}
+	}
+	/// Imports the matrix from a column-major layout.
+	#[inline]
+	pub fn from_column_major(mat: [[T; 2]; 2]) -> Mat2<T> {
+		let [[a11, a21], [a12, a22]] = mat;
+		Mat2 {
+			a11, a12,
+			a21, a22,
+		}
+	}
+	/// Exports the matrix as a row-major array.
+	#[inline]
 	pub fn into_row_major(self) -> [[T; 2]; 2] {
 		[
 			[self.a11, self.a12],
 			[self.a21, self.a22],
 		]
 	}
-	/// Exports as column major.
+	/// Exports the matrix as a column-major array.
+	#[inline]
 	pub fn into_column_major(self) -> [[T; 2]; 2] {
 		[
 			[self.a11, self.a21],
@@ -171,29 +202,24 @@ impl<T> Mat2<T> {
 // Decomposition
 
 impl<T> Mat2<T> {
-	/// Compose the matrix from unit vectors.
-	///
-	/// Any vector can be [decomposed](https://en.wikipedia.org/wiki/Vector_decomposition) by multiplying each unit vector with its respective component and then summing the result.
-	///
-	/// In 2D space this means `Vec2::unit_x() * x + Vec2::unit_y() * y`.
-	///
-	/// A linear transformation then can be defined by these unit vectors. The result is a transformation which remaps the unit vectors to their new location.
-	///
-	/// These unit vectors are simply the columns of the transformation matrix and as such can be trivially decomposed.
-	pub fn compose<V>(x: Vec2<T>, y: Vec2<T>) -> Mat2<T> {
+	/// Composes the matrix from basis vectors.
+	#[inline]
+	pub fn compose(x: Vec2<T>, y: Vec2<T>) -> Mat2<T> {
 		Mat2 {
 			a11: x.x, a12: y.x,
 			a21: x.y, a22: y.y,
 		}
 	}
-	/// Gets the transformed X unit vector.
+	/// Gets the transformed X basis vector.
+	#[inline]
 	pub fn x(self) -> Vec2<T> {
 		Vec2 {
 			x: self.a11,
 			y: self.a21,
 		}
 	}
-	/// Gets the transformed Y unit vector.
+	/// Gets the transformed Y basis vector.
+	#[inline]
 	pub fn y(self) -> Vec2<T> {
 		Vec2 {
 			x: self.a12,
@@ -206,27 +232,33 @@ impl<T> Mat2<T> {
 // Operations
 
 impl<T: Scalar> Mat2<T> {
-	/// Calculates the determinant.
-	pub fn det(&self) -> T {
+	/// Computes the determinant.
+	#[inline]
+	pub fn determinant(self) -> T {
 		self.a11 * self.a22 - self.a21 * self.a12
 	}
-	/// Calculates the inverse matrix.
-	pub fn inverse(&self) -> Mat2<T> where T: Float {
-		let det = self.det();
-		if det != T::zero() {
-			self.adjugate() * (T::one() / det)
+	/// Computes the inverse matrix.
+	#[inline]
+	pub fn inverse(self) -> Mat2<T> {
+		let det = self.determinant();
+		if det != T::ZERO {
+			self.adjugate() * (T::ONE / det)
 		}
-		else { *self }
+		else {
+			self
+		}
 	}
-	/// Calculates the transposed matrix.
-	pub fn transpose(&self) -> Mat2<T> {
+	/// Returns the transposed matrix.
+	#[inline]
+	pub fn transpose(self) -> Mat2<T> {
 		Mat2 {
 			a11: self.a22, a12: self.a21,
 			a21: self.a12, a22: self.a11,
 		}
 	}
-	/// Calculates the adjugate matrix.
-	pub fn adjugate(&self) -> Mat2<T> {
+	/// Computes the adjugate matrix.
+	#[inline]
+	pub fn adjugate(self) -> Mat2<T> {
 		Mat2 {
 			a11:  self.a22, a12: -self.a12,
 			a21: -self.a21, a22:  self.a11,
@@ -239,6 +271,7 @@ impl<T: Scalar> Mat2<T> {
 
 impl<T: Copy + ops::Mul<Output = T>> ops::Mul<T> for Mat2<T> {
 	type Output = Mat2<T>;
+	#[inline]
 	fn mul(self, rhs: T) -> Mat2<T> {
 		Mat2 {
 			a11: self.a11 * rhs,
@@ -249,6 +282,7 @@ impl<T: Copy + ops::Mul<Output = T>> ops::Mul<T> for Mat2<T> {
 	}
 }
 impl<T: Copy + ops::MulAssign> ops::MulAssign<T> for Mat2<T> {
+	#[inline]
 	fn mul_assign(&mut self, rhs: T) {
 		self.a11 *= rhs;
 		self.a12 *= rhs;
@@ -259,6 +293,7 @@ impl<T: Copy + ops::MulAssign> ops::MulAssign<T> for Mat2<T> {
 
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec2<T>> for Mat2<T> {
 	type Output = Vec2<T>;
+	#[inline]
 	fn mul(self, rhs: Vec2<T>) -> Vec2<T> {
 		Vec2 {
 			x: rhs.x * self.a11 + rhs.y * self.a12,
@@ -269,6 +304,7 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec2<T>> fo
 
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat2<T>> for Mat2<T> {
 	type Output = Mat2<T>;
+	#[inline]
 	fn mul(self, rhs: Mat2<T>) -> Mat2<T> {
 		Mat2 {
 			a11: self.a11 * rhs.a11 + self.a12 * rhs.a21,
@@ -278,10 +314,11 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat2<T>> fo
 		}
 	}
 }
-impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine2<T>> for Mat2<T> {
-	type Output = Affine2<T>;
-	fn mul(self, rhs: Affine2<T>) -> Affine2<T> {
-		Affine2 {
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Transform2<T>> for Mat2<T> {
+	type Output = Transform2<T>;
+	#[inline]
+	fn mul(self, rhs: Transform2<T>) -> Transform2<T> {
+		Transform2 {
 			a11: self.a11 * rhs.a11 + self.a12 * rhs.a21,
 			a12: self.a11 * rhs.a12 + self.a12 * rhs.a22,
 			a13: self.a11 * rhs.a13 + self.a12 * rhs.a23,
@@ -293,9 +330,8 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine2<T>>
 	}
 }
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Mat2<T>> for Mat2<T> {
+	#[inline]
 	fn mul_assign(&mut self, rhs: Mat2<T>) {
 		*self = *self * rhs;
 	}
 }
-
-impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> Transform2<T> for Mat2<T> {}

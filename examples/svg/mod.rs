@@ -4,7 +4,7 @@ Hacked together SVG writer.
 
 use std::borrow::Borrow;
 
-use cvmath::prelude::{Line2, Point2};
+use cvmath::Point2;
 
 //----------------------------------------------------------------
 
@@ -18,16 +18,16 @@ impl SvgWriter {
 		self.0 += &format!(r#"<circle cx="{}" cy="{}" r="{}""#, center.x, center.y, radius);
 		Attributes { svg: &mut self.0, closing: " />" }
 	}
-	pub fn line(&mut self, line: Line2<f32>) -> Attributes<&'static str> {
-		self.0 += &format!(r#"<line x1="{}" y1="{}" x2="{}" y2="{}""#, line.start.x, line.start.y, line.end.x, line.end.y);
+	pub fn line(&mut self, start: Point2<f32>, end: Point2<f32>) -> Attributes<&'static str> {
+		self.0 += &format!(r#"<line x1="{}" y1="{}" x2="{}" y2="{}""#, start.x, start.y, end.x, end.y);
 		Attributes { svg: &mut self.0, closing: " />" }
 	}
-	pub fn arrow(&mut self, line: Line2<f32>, arrowsize: f32) -> Attributes<&'static str> {
-		let unit = (line.end - line.start).resize(arrowsize);
-		let p1 = line.end - unit + unit.cw() * 0.5;
-		let p2 = line.end - unit + unit.ccw() * 0.5;
+	pub fn arrow(&mut self, start: Point2<f32>, end: Point2<f32>, arrowsize: f32) -> Attributes<&'static str> {
+		let unit = (end - start).resize(arrowsize);
+		let p1 = end - unit + unit.cw() * 0.5;
+		let p2 = end - unit + unit.ccw() * 0.5;
 		self.0 += &format!(r#"<path fill="none" d="M{} {} L{} {} M{} {} L{} {} L{} {}""#,
-			line.start.x, line.start.y, line.end.x, line.end.y, p1.x, p1.y, line.end.x, line.end.y, p2.x, p2.y);
+			start.x, start.y, end.x, end.y, p1.x, p1.y, end.x, end.y, p2.x, p2.y);
 		Attributes { svg: &mut self.0, closing: " />" }
 	}
 	pub fn arc(&mut self, start: Point2<f32>, end: Point2<f32>, radius: f32) -> Attributes<&'static str> {

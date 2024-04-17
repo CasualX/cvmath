@@ -1,8 +1,5 @@
-extern crate cvmath;
-use cvmath::prelude as cgmath;
-
-type Point2 = cgmath::Point2<f64>;
-type Line2 = cgmath::Line2<f64>;
+type Point2 = cvmath::Point2<f64>;
+type Line2 = cvmath::Line2<f64>;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 enum Cut {

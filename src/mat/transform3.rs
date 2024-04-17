@@ -1,72 +1,141 @@
 /*!
-Affine 3D transformation matrix.
+3D affine transformation matrix.
 */
 
-use std::ops;
+use super::*;
 
-use num::Scalar;
-use vec::{Vec3, Vec4};
-
-use super::{Mat3, Transform3};
-
-/// Affine 3D transformation matrix.
+/// 3D affine transformation matrix.
 ///
-/// A 3x4 row-major matrix.
-#[cfg(feature = "row-major")]
+/// Each field _a_<sub>i</sub><sub>j</sub> represents the _i_-th row and _j_-th column of the matrix.
+///
+/// The third row is implied to be `[0, 0, 0, 1]` and is omitted.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
-pub struct Affine3<T> {
+pub struct Transform3<T> {
 	pub a11: T, pub a12: T, pub a13: T, pub a14: T,
 	pub a21: T, pub a22: T, pub a23: T, pub a24: T,
 	pub a31: T, pub a32: T, pub a33: T, pub a34: T,
 }
 
-/// Affine 3D transformation matrix.
-///
-/// A 3x4 column-major matrix.
-#[cfg(feature = "column-major")]
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
-#[repr(C)]
-pub struct Affine3<T> {
-	pub a11: T, pub a21: T, pub a31: T,
-	pub a12: T, pub a22: T, pub a32: T,
-	pub a13: T, pub a23: T, pub a33: T,
-	pub a14: T, pub a24: T, pub a34: T,
+// pub struct Transform3<T> {
+// 	pub a11: T, pub a21: T, pub a31: T,
+// 	pub a12: T, pub a22: T, pub a32: T,
+// 	pub a13: T, pub a23: T, pub a33: T,
+// 	pub a14: T, pub a24: T, pub a34: T,
+// }
+
+/// Constructs a new matrix from components.
+#[allow(non_snake_case)]
+#[inline]
+pub const fn Transform3<T>(
+	a11: T, a12: T, a13: T, a14: T,
+	a21: T, a22: T, a23: T, a24: T,
+	a31: T, a32: T, a33: T, a34: T,
+) -> Transform3<T> {
+	Transform3 { a11, a12, a13, a14, a21, a22, a23, a24, a31, a32, a33, a34 }
 }
+
+#[cfg(feature = "dataview")]
+unsafe impl<T: dataview::Pod> dataview::Pod for Transform3<T> {}
 
 //----------------------------------------------------------------
 // Constructors
 
-impl<T> Affine3<T> {
-	pub fn new(a11: T, a12: T, a13: T, a14: T,
-	           a21: T, a22: T, a23: T, a24: T,
-	           a31: T, a32: T, a33: T, a34: T) -> Affine3<T> {
-		Affine3 {
+impl<T> Transform3<T> {
+	/// Constructs a new matrix from components.
+	#[inline]
+	pub const fn new(
+		a11: T, a12: T, a13: T, a14: T,
+		a21: T, a22: T, a23: T, a24: T,
+		a31: T, a32: T, a33: T, a34: T,
+	) -> Transform3<T> {
+		Transform3 {
 			a11, a12, a13, a14,
 			a21, a22, a23, a24,
 			a31, a32, a33, a34,
 		}
 	}
 }
+impl<T: Zero> Transform3<T> {
+	/// Zero matrix.
+	pub const ZERO: Transform3<T> = Transform3 {
+		a11: T::ZERO, a12: T::ZERO, a13: T::ZERO, a14: T::ZERO,
+		a21: T::ZERO, a22: T::ZERO, a23: T::ZERO, a24: T::ZERO,
+		a31: T::ZERO, a32: T::ZERO, a33: T::ZERO, a34: T::ZERO,
+	};
+}
+impl<T: Zero + One> Transform3<T> {
+	/// Identity matrix.
+	pub const IDENTITY: Transform3<T> = Transform3 {
+		a11: T::ONE,  a12: T::ZERO, a13: T::ZERO, a14: T::ZERO,
+		a21: T::ZERO, a22: T::ONE,  a23: T::ZERO, a24: T::ZERO,
+		a31: T::ZERO, a32: T::ZERO, a33: T::ONE,  a34: T::ZERO,
+	};
+}
+impl<T: Scalar> Transform3<T> {
+	/// Translation matrix.
+	#[inline]
+	pub fn translate(trans: impl Into<Vec3<T>>) -> Transform3<T> {
+		let trans = trans.into();
+		Transform3 {
+			a11: T::ONE,  a12: T::ZERO, a13: T::ZERO, a14: trans.x,
+			a21: T::ZERO, a22: T::ONE,  a23: T::ZERO, a24: trans.y,
+			a31: T::ZERO, a32: T::ZERO, a33: T::ONE,  a34: trans.z,
+		}
+	}
+	/// Scaling matrix.
+	///
+	/// Scales around the origin.
+	#[inline]
+	pub fn scale(scale: impl Into<Vec3<T>>) -> Transform3<T> {
+		let scale = scale.into();
+		Transform3 {
+			a11: scale.x, a12: T::ZERO, a13: T::ZERO, a14: T::ZERO,
+			a21: T::ZERO, a22: scale.y, a23: T::ZERO, a24: T::ZERO,
+			a31: T::ZERO, a32: T::ZERO, a33: scale.z, a34: T::ZERO,
+		}
+	}
+	/// Rotation matrix around an axis.
+	#[inline]
+	pub fn rotate(angle: impl Angle<T = T>, axis: Vec3<T>) -> Transform3<T> where T: Float {
+		Mat3::rotate(angle, axis).affine()
+	}
+}
 
 //----------------------------------------------------------------
 // Conversions
 
-impl<T> Affine3<T> {
-	pub fn from_row_major(mat: [[T; 4]; 3]) -> Affine3<T> where T: Copy {
-		Affine3 {
-			a11: mat[0][0], a12: mat[0][1], a13: mat[0][2], a14: mat[0][3],
-			a21: mat[1][0], a22: mat[1][1], a23: mat[1][2], a24: mat[1][3],
-			a31: mat[2][0], a32: mat[2][1], a33: mat[2][2], a34: mat[2][3],
+impl<T: Zero + One> Transform3<T> {
+	/// Converts to a 4x4 matrix.
+	#[inline]
+	pub fn mat4(self) -> Mat4<T> {
+		self.into()
+	}
+}
+
+impl<T> Transform3<T> {
+	/// Imports the matrix from a row-major layout.
+	#[inline]
+	pub fn from_row_major(mat: [[T; 4]; 3]) -> Transform3<T> {
+		let [[a11, a12, a13, a14], [a21, a22, a23, a24], [a31, a32, a33, a34]] = mat;
+		Transform3 {
+			a11, a12, a13, a14,
+			a21, a22, a23, a24,
+			a31, a32, a33, a34,
 		}
 	}
-	pub fn from_column_major(mat: [[T; 3]; 4]) -> Affine3<T> where T: Copy {
-		Affine3 {
-			a11: mat[0][0], a12: mat[1][0], a13: mat[2][0], a14: mat[3][0],
-			a21: mat[0][1], a22: mat[1][1], a23: mat[2][1], a24: mat[3][1],
-			a31: mat[0][2], a32: mat[1][2], a33: mat[2][2], a34: mat[3][2],
+	/// Imports the matrix from a column-major layout.
+	#[inline]
+	pub fn from_column_major(mat: [[T; 3]; 4]) -> Transform3<T> {
+		let [[a11, a21, a31], [a12, a22, a32], [a13, a23, a33], [a14, a24, a34]] = mat;
+		Transform3 {
+			a11, a12, a13, a14,
+			a21, a22, a23, a24,
+			a31, a32, a33, a34,
 		}
 	}
+	/// Exports the matrix as a row-major array.
+	#[inline]
 	pub fn into_row_major(self) -> [[T; 4]; 3] {
 		[
 			[self.a11, self.a12, self.a13, self.a14],
@@ -74,6 +143,8 @@ impl<T> Affine3<T> {
 			[self.a31, self.a32, self.a33, self.a34],
 		]
 	}
+	/// Exports the matrix as a column-major array.
+	#[inline]
 	pub fn into_column_major(self) -> [[T; 3]; 4] {
 		[
 			[self.a11, self.a21, self.a31],
@@ -87,15 +158,18 @@ impl<T> Affine3<T> {
 //----------------------------------------------------------------
 // Decomposition
 
-impl<T> Affine3<T> {
-	pub fn compose<V>(x: Vec3<T>, y: Vec3<T>, z: Vec3<T>, t: Vec3<T>) -> Affine3<T> {
-		Affine3 {
+impl<T> Transform3<T> {
+	/// Composes the matrix from basis vectors.
+	#[inline]
+	pub fn compose(x: Vec3<T>, y: Vec3<T>, z: Vec3<T>, t: Vec3<T>) -> Transform3<T> {
+		Transform3 {
 			a11: x.x, a12: y.x, a13: z.x, a14: t.x,
 			a21: x.y, a22: y.y, a23: z.y, a24: t.y,
 			a31: x.z, a32: y.z, a33: z.z, a34: t.z,
 		}
 	}
-	/// Gets the transformed X unit vector.
+	/// Gets the transformed X basis vector.
+	#[inline]
 	pub fn x(self) -> Vec3<T> {
 		Vec3 {
 			x: self.a11,
@@ -103,7 +177,8 @@ impl<T> Affine3<T> {
 			z: self.a31,
 		}
 	}
-	/// Gets the transformed Y unit vector.
+	/// Gets the transformed Y basis vector.
+	#[inline]
 	pub fn y(self) -> Vec3<T> {
 		Vec3 {
 			x: self.a12,
@@ -111,7 +186,8 @@ impl<T> Affine3<T> {
 			z: self.a32,
 		}
 	}
-	/// Gets the transformed Z unit vector.
+	/// Gets the transformed Z basis vector.
+	#[inline]
 	pub fn z(self) -> Vec3<T> {
 		Vec3 {
 			x: self.a13,
@@ -120,6 +196,7 @@ impl<T> Affine3<T> {
 		}
 	}
 	/// Gets the translation vector.
+	#[inline]
 	pub fn t(self) -> Vec3<T> {
 		Vec3 {
 			x: self.a14,
@@ -127,22 +204,35 @@ impl<T> Affine3<T> {
 			z: self.a34,
 		}
 	}
+	/// Gets the rotation matrix.
+	#[inline]
+	pub fn mat3(self) -> Mat3<T> {
+		Mat3 {
+			a11: self.a11, a12: self.a12, a13: self.a13,
+			a21: self.a21, a22: self.a22, a23: self.a23,
+			a31: self.a31, a32: self.a32, a33: self.a33,
+		}
+	}
 }
 
 //----------------------------------------------------------------
 // Operations
 
-impl<T: Scalar> Affine3<T> {
-	pub fn det(&self) -> T {
+impl<T: Scalar> Transform3<T> {
+	/// Computes the determinant.
+	#[inline]
+	pub fn determinant(self) -> T {
 		self.a11 * (self.a22 * self.a33 - self.a23 * self.a32) +
 		self.a12 * (self.a23 * self.a31 - self.a21 * self.a33) +
 		self.a13 * (self.a21 * self.a32 - self.a22 * self.a31)
 	}
-	pub fn inverse(&self) -> Affine3<T> {
-		let det = self.det();
-		if det != T::zero() {
-			let inv_det = T::one() / det;
-			Affine3 {
+	/// Computes the inverse matrix.
+	#[inline]
+	pub fn inverse(self) -> Transform3<T> {
+		let det = self.determinant();
+		if det != T::ZERO {
+			let inv_det = T::ONE / det;
+			Transform3 {
 				a11: (self.a22 * self.a33 - self.a23 * self.a32) * inv_det,
 				a12: (self.a13 * self.a32 - self.a12 * self.a33) * inv_det,
 				a13: (self.a12 * self.a23 - self.a13 * self.a22) * inv_det,
@@ -163,15 +253,18 @@ impl<T: Scalar> Affine3<T> {
 					self.a14 * (self.a22 * self.a31 - self.a21 * self.a32)) * inv_det,
 			}
 		}
-		else { *self }
+		else {
+			self
+		}
 	}
 }
 
 //----------------------------------------------------------------
 // Operators
 
-impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec3<T>> for Affine3<T> {
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec3<T>> for Transform3<T> {
 	type Output = Vec3<T>;
+	#[inline]
 	fn mul(self, rhs: Vec3<T>) -> Vec3<T> {
 		Vec3 {
 			x: rhs.x * self.a11 + rhs.y * self.a12 + rhs.z * self.a13 + self.a14,
@@ -181,8 +274,9 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec3<T>> fo
 	}
 }
 
-impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec4<T>> for Affine3<T> {
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec4<T>> for Transform3<T> {
 	type Output = Vec3<T>;
+	#[inline]
 	fn mul(self, rhs: Vec4<T>) -> Vec3<T> {
 		Vec3 {
 			x: rhs.x * self.a11 + rhs.y * self.a12 + rhs.z * self.a13 + rhs.w * self.a14,
@@ -192,10 +286,11 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec4<T>> fo
 	}
 }
 
-impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine3<T>> for Affine3<T> {
-	type Output = Affine3<T>;
-	fn mul(self, rhs: Affine3<T>) -> Affine3<T> {
-		Affine3 {
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Transform3<T>> for Transform3<T> {
+	type Output = Transform3<T>;
+	#[inline]
+	fn mul(self, rhs: Transform3<T>) -> Transform3<T> {
+		Transform3 {
 			a11: self.a11 * rhs.a11 + self.a12 * rhs.a21 + self.a13 * rhs.a31,
 			a12: self.a11 * rhs.a12 + self.a12 * rhs.a22 + self.a13 * rhs.a32,
 			a13: self.a11 * rhs.a13 + self.a12 * rhs.a23 + self.a13 * rhs.a33,
@@ -213,10 +308,11 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Affine3<T>>
 		}
 	}
 }
-impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat3<T>> for Affine3<T> {
-	type Output = Affine3<T>;
-	fn mul(self, rhs: Mat3<T>) -> Affine3<T> {
-		Affine3 {
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat3<T>> for Transform3<T> {
+	type Output = Transform3<T>;
+	#[inline]
+	fn mul(self, rhs: Mat3<T>) -> Transform3<T> {
+		Transform3 {
 			a11: self.a11 * rhs.a11 + self.a12 * rhs.a21 + self.a13 * rhs.a31,
 			a12: self.a11 * rhs.a12 + self.a12 * rhs.a22 + self.a13 * rhs.a32,
 			a13: self.a11 * rhs.a13 + self.a12 * rhs.a23 + self.a13 * rhs.a33,
@@ -234,15 +330,15 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Mat3<T>> fo
 		}
 	}
 }
-impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Mat3<T>> for Affine3<T> {
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Mat3<T>> for Transform3<T> {
+	#[inline]
 	fn mul_assign(&mut self, rhs: Mat3<T>) {
 		*self = *self * rhs;
 	}
 }
-impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Affine3<T>> for Affine3<T> {
-	fn mul_assign(&mut self, rhs: Affine3<T>) {
+impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Transform3<T>> for Transform3<T> {
+	#[inline]
+	fn mul_assign(&mut self, rhs: Transform3<T>) {
 		*self = *self * rhs;
 	}
 }
-
-impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> Transform3<T> for Affine3<T> {}

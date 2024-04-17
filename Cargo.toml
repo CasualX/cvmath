@@ -1,7 +1,8 @@
 [package]
 name = "cvmath"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["Casper <CasualX@users.noreply.github.com>"]
+edition = "2021"
 
 description = "Computer Vector Graphics Math Library"
 
@@ -15,16 +16,11 @@ keywords = ["cg", "cgmath", "matrix"]
 
 license = "MIT"
 
+[dependencies]
+dataview = { version = "1.0", optional = true }
+serde = { version = "1.0", features = ["derive"], optional = true }
+
 [features]
-default = ["row-major"]
+default = []
 
-# Use row-major or column-major matrices.
-row-major = []
-column-major = []
-
-# Invert pitch in euler angles.
-invert-pitch = []
-
-# Pretty print radians
-format-rad-pi = []
-format-rad-tau = []
+qangle = []

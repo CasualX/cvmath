@@ -14,6 +14,7 @@ pub trait CastTo<T>: Sized {
 // Implementation
 
 impl<U, T: CastFrom<U>> CastTo<T> for U {
+	#[inline]
 	fn cast_to(self) -> T {
 		T::cast_from(self)
 	}
@@ -21,20 +22,18 @@ impl<U, T: CastFrom<U>> CastTo<T> for U {
 
 macro_rules! impl_as_cast {
 	($ty:ty) => {
+		impl CastFrom<u8> for $ty { #[inline] fn cast_from(from: u8) -> $ty { from as $ty } }
+		impl CastFrom<u16> for $ty { #[inline] fn cast_from(from: u16) -> $ty { from as $ty } }
+		impl CastFrom<u32> for $ty { #[inline] fn cast_from(from: u32) -> $ty { from as $ty } }
+		impl CastFrom<u64> for $ty { #[inline] fn cast_from(from: u64) -> $ty { from as $ty } }
 
-impl CastFrom<u8> for $ty { fn cast_from(from: u8) -> $ty { from as $ty } }
-impl CastFrom<u16> for $ty { fn cast_from(from: u16) -> $ty { from as $ty } }
-impl CastFrom<u32> for $ty { fn cast_from(from: u32) -> $ty { from as $ty } }
-impl CastFrom<u64> for $ty { fn cast_from(from: u64) -> $ty { from as $ty } }
+		impl CastFrom<i8> for $ty { #[inline] fn cast_from(from: i8) -> $ty { from as $ty } }
+		impl CastFrom<i16> for $ty { #[inline] fn cast_from(from: i16) -> $ty { from as $ty } }
+		impl CastFrom<i32> for $ty { #[inline] fn cast_from(from: i32) -> $ty { from as $ty } }
+		impl CastFrom<i64> for $ty { #[inline] fn cast_from(from: i64) -> $ty { from as $ty } }
 
-impl CastFrom<i8> for $ty { fn cast_from(from: i8) -> $ty { from as $ty } }
-impl CastFrom<i16> for $ty { fn cast_from(from: i16) -> $ty { from as $ty } }
-impl CastFrom<i32> for $ty { fn cast_from(from: i32) -> $ty { from as $ty } }
-impl CastFrom<i64> for $ty { fn cast_from(from: i64) -> $ty { from as $ty } }
-
-impl CastFrom<f32> for $ty { fn cast_from(from: f32) -> $ty { from as $ty } }
-impl CastFrom<f64> for $ty { fn cast_from(from: f64) -> $ty { from as $ty } }
-
+		impl CastFrom<f32> for $ty { #[inline] fn cast_from(from: f32) -> $ty { from as $ty } }
+		impl CastFrom<f64> for $ty { #[inline] fn cast_from(from: f64) -> $ty { from as $ty } }
 	};
 }
 

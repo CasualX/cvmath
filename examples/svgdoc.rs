@@ -4,8 +4,7 @@ Generates the SVG for the documentation and serves as a simple example.
 
 #![allow(dead_code)]
 
-extern crate cvmath;
-use cvmath::prelude::*;
+use cvmath::*;
 
 mod svg;
 use self::svg::SvgWriter;
@@ -16,11 +15,11 @@ const ARROW_SIZE: f32 = 8.0;
 
 fn main() {
 	write_svg("src/vec.rs:LEN_HAT", &len_hat());
-	write_svg("src/vec.rs:DIST_HAT", &dist_hat());
+	write_svg("src/vec.rs:DISTANCE_HAT", &distance_hat());
 	write_svg("src/vec.rs:LERP", &lerp());
 	write_svg("src/vec.rs:SLERP", &slerp());
 	write_svg("src/vec.rs:NLERP", &nlerp());
-	write_svg("src/vec.rs:SCALAR_PROJECT", &scalar_project());
+	write_svg("src/vec.rs:PROJECT_SCALAR", &project_scalar());
 	write_svg("src/vec.rs:REFLECT_2D", &reflect_2d());
 }
 
@@ -57,35 +56,35 @@ fn len_hat() -> String {
 	let vhat = Point2(this.x, origin.y);
 
 	let mut svg = SvgWriter::new(400, 120);
-	svg.arrow(origin..this, ARROW_SIZE).stroke("black");
-	svg.arrow(origin..vhat, ARROW_SIZE).stroke("grey").stroke_width(0.5);
-	svg.arrow(vhat..this, ARROW_SIZE).stroke("grey").stroke_width(0.5);
+	svg.arrow(origin, this, ARROW_SIZE).stroke("black");
+	svg.arrow(origin, vhat, ARROW_SIZE).stroke("grey").stroke_width(0.5);
+	svg.arrow(vhat, this, ARROW_SIZE).stroke("grey").stroke_width(0.5);
 	svg.circle(origin, 2.0);
-	svg.text(this + Point2(5.0, 0.0), "this");
-	svg.text((origin + vhat) * 0.5 + Point2(0.0, 15.0), "x").fill("grey");
-	svg.text((vhat + this) * 0.5 + Point2(5.0, 0.0), "y").fill("grey");
+	svg.text(this + (5.0, 0.0), "this");
+	svg.text((origin + vhat) * 0.5 + (0.0, 15.0), "x").fill("grey");
+	svg.text((vhat + this) * 0.5 + (5.0, 0.0), "y").fill("grey");
 	svg.close()
 }
 
 //----------------------------------------------------------------
-// Drawing for dist_hat
+// Drawing for distance_hat
 
-fn dist_hat() -> String {
+fn distance_hat() -> String {
 	let this = Point2(40.0, 100.0);
 	let to = Point2(360.5, 20.0);
 
 	let vhat = Point2(to.x, this.y);
 
 	let mut svg = SvgWriter::new(400, 120);
-	svg.line(this..to).stroke("black");
-	svg.arrow(this..vhat, ARROW_SIZE).stroke("grey").stroke_width(0.5);
-	svg.arrow(vhat..to, ARROW_SIZE).stroke("grey").stroke_width(0.5);
+	svg.line(this, to).stroke("black");
+	svg.arrow(this, vhat, ARROW_SIZE).stroke("grey").stroke_width(0.5);
+	svg.arrow(vhat, to, ARROW_SIZE).stroke("grey").stroke_width(0.5);
 	svg.circle(this, 2.0);
 	svg.circle(to, 2.0);
-	svg.text(this + Point2(-20.0, -10.0), "this");
-	svg.text(to + Point2(5.0, 0.0), "to");
-	svg.text((this + vhat) * 0.5 + Point2(0.0, 15.0), "x").fill("grey");
-	svg.text((vhat + to) * 0.5 + Point2(5.0, 0.0), "y").fill("grey");
+	svg.text(this + (-20.0, -10.0), "this");
+	svg.text(to + (5.0, 0.0), "to");
+	svg.text((this + vhat) * 0.5 + (0.0, 15.0), "x").fill("grey");
+	svg.text((vhat + to) * 0.5 + (5.0, 0.0), "y").fill("grey");
 	svg.close()
 }
 
@@ -103,17 +102,17 @@ fn lerp() -> String {
 	let vblue = v1.lerp(v2, tblue);
 
 	let mut svg = SvgWriter::new(400, 120);
-	svg.line(v1..vgreen).stroke("green");
-	svg.line(vgreen..vblue).stroke("blue");
-	svg.line(vblue..v2).stroke("black");
+	svg.line(v1, vgreen).stroke("green");
+	svg.line(vgreen, vblue).stroke("blue");
+	svg.line(vblue, v2).stroke("black");
 	svg.circle(v1, 2.0).fill("black");
 	svg.circle(v2, 2.0).fill("black");
 	svg.circle(vgreen, 2.0).fill("green");
 	svg.circle(vblue, 2.0).fill("blue");
-	svg.text(v1 - Point2(20.0, 10.0), "self").fill("black");
-	svg.text(v2 - Point2(15.0, -20.0), "rhs").fill("black");
-	svg.text(vgreen - Point2(20.0, -20.0), "t = 0.2").fill("green");
-	svg.text(vblue - Point2(20.0, -20.0), "t = 0.5").fill("blue");
+	svg.text(v1 - (20.0, 10.0), "self").fill("black");
+	svg.text(v2 - (15.0, -20.0), "rhs").fill("black");
+	svg.text(vgreen - (20.0, -20.0), "t = 0.2").fill("green");
+	svg.text(vblue - (20.0, -20.0), "t = 0.5").fill("blue");
 	svg.close()
 }
 
@@ -127,7 +126,7 @@ fn slerp_nlerp<F: Fn(Point2<f32>, Point2<f32>, f32) -> Point2<f32>>(f: F, name: 
 	// Calculate circle center given two points and a radius
 	let radius = 120.0;
 	let vhalf = (v1 + v2) * 0.5;
-	let vdist = v1.dist(v2);
+	let vdist = v1.distance(v2);
 	let vbase = (v2 - v1).cw().resize((radius * radius - vdist * vdist * 0.25f32).sqrt());
 	let center = vhalf + vbase; // vhalf - vbase for the other solution
 
@@ -145,27 +144,27 @@ fn slerp_nlerp<F: Fn(Point2<f32>, Point2<f32>, f32) -> Point2<f32>>(f: F, name: 
 
 	// Render time
 	let mut svg = SvgWriter::new(400, 140);
-	svg.arrow(center..v1, ARROW_SIZE).stroke("black").stroke_width(0.5);
-	svg.arrow(center..v2, ARROW_SIZE).stroke("black").stroke_width(0.5);
-	svg.arrow(center..p1, ARROW_SIZE).stroke("green").stroke_width(0.25);
-	svg.arrow(center..p2, ARROW_SIZE).stroke("green").stroke_width(0.25);
-	svg.arrow(center..slerp, ARROW_SIZE).stroke("green");
+	svg.arrow(center, v1, ARROW_SIZE).stroke("black").stroke_width(0.5);
+	svg.arrow(center, v2, ARROW_SIZE).stroke("black").stroke_width(0.5);
+	svg.arrow(center, p1, ARROW_SIZE).stroke("green").stroke_width(0.25);
+	svg.arrow(center, p2, ARROW_SIZE).stroke("green").stroke_width(0.25);
+	svg.arrow(center, slerp, ARROW_SIZE).stroke("green");
 	svg.arc(cstart, v1, radius).stroke("black").stroke_width(0.5);
 	svg.arc(v1, slerp, radius).stroke("green");
 	svg.arc(slerp, v2, radius).stroke("black");
 	svg.arc(v2, cend, radius).stroke("black").stroke_width(0.5);
-	svg.line(v1..lerp).stroke("blue").stroke_width(0.5);
+	svg.line(v1, lerp).stroke("blue").stroke_width(0.5);
 	svg.circle(v1, 2.0).fill("black");
 	svg.circle(v2, 2.0).fill("black");
 	svg.circle(lerp, 2.0).fill("blue");
 	svg.circle(slerp, 2.0).fill("green");
-	svg.text(p1 - Point2(45.0, 5.0), "t = 0.25").fill("green").font_size(10.0);
-	svg.text(p2 - Point2(20.0, 5.0), "t = 0.50").fill("green").font_size(10.0);
-	svg.text(slerp - Point2(0.0, 5.0), "t = 0.75").fill("green").font_size(10.0);
-	svg.text(lerp - Point2(20.0, -20.0), "lerp").fill("blue");
-	svg.text(slerp - Point2(60.0, -10.0), name).fill("green");
-	svg.text(v1 - Point2(50.0, 0.0), "self").fill("black");
-	svg.text(v2 - Point2(-10.0, 0.0), "rhs").fill("black");
+	svg.text(p1 - (45.0, 5.0), "t = 0.25").fill("green").font_size(10.0);
+	svg.text(p2 - (20.0, 5.0), "t = 0.50").fill("green").font_size(10.0);
+	svg.text(slerp - (0.0, 5.0), "t = 0.75").fill("green").font_size(10.0);
+	svg.text(lerp - (20.0, -20.0), "lerp").fill("blue");
+	svg.text(slerp - (60.0, -10.0), name).fill("green");
+	svg.text(v1 - (50.0, 0.0), "self").fill("black");
+	svg.text(v2 - (-10.0, 0.0), "rhs").fill("black");
 	svg.close()
 }
 
@@ -177,9 +176,9 @@ fn nlerp() -> String {
 }
 
 //----------------------------------------------------------------
-// Drawing for scalar_project
+// Drawing for project_scalar
 
-fn scalar_project() -> String {
+fn project_scalar() -> String {
 	let v = Point2(360.0, 120.0);
 	let this = Point2(200.0, 20.0);
 	let origin = Point2(40.0, 160.0);
@@ -203,15 +202,15 @@ fn scalar_project() -> String {
 
 	// Render time
 	let mut svg = SvgWriter::new(400, 200);
-	svg.arrow(origin..this, ARROW_SIZE).stroke("black");
-	svg.arrow(origin..v, ARROW_SIZE).stroke("black");
+	svg.arrow(origin, this, ARROW_SIZE).stroke("black");
+	svg.arrow(origin, v, ARROW_SIZE).stroke("black");
 	svg.circle(origin, 2.0).fill("black");
-	svg.line(p..this).stroke("black").stroke_dasharray(&[5.0, 5.0]).stroke_width(0.5);
-	svg.line(pra1..pra2).stroke("black").stroke_width(0.5);
-	svg.line(pra2..pra3).stroke("black").stroke_width(0.5);
-	svg.line(sl1..sl2).stroke("black").stroke_width(1.5);
-	svg.line(sll1..sll2).stroke("black").stroke_width(1.5);
-	svg.line(slr1..slr2).stroke("black").stroke_width(1.5);
+	svg.line(p, this).stroke("black").stroke_dasharray(&[5.0, 5.0]).stroke_width(0.5);
+	svg.line(pra1, pra2).stroke("black").stroke_width(0.5);
+	svg.line(pra2, pra3).stroke("black").stroke_width(0.5);
+	svg.line(sl1, sl2).stroke("red").stroke_width(1.5);
+	svg.line(sll1, sll2).stroke("red").stroke_width(1.5);
+	svg.line(slr1, slr2).stroke("red").stroke_width(1.5);
 	svg.text(this + Vec2(5.0, 5.0), "self").fill("black");
 	svg.text(v + Vec2(-20.0, 22.0), "v").fill("black");
 	svg.close()
@@ -227,10 +226,10 @@ fn reflect_2d() -> String {
 	let p = this.project(v);
 	let pv = p - this;
 	let result = p + pv;
-	let origin = Vec2::origin();
+	let origin = Vec2::ZERO;
 
 	// Visualize data
-	let transform = Affine2::translate((40.0f32, 120.0f32)) * Mat2::scale((25.0, -25.0));
+	let transform = Transform2::translate((40.0f32, 120.0f32)) * Mat2::scale((25.0, -25.0));
 	let this = transform * this;
 	let v = transform * v;
 	let p = transform * p;
@@ -239,12 +238,12 @@ fn reflect_2d() -> String {
 	let origin = transform * origin;
 
 	let mut svg = SvgWriter::new(400, 200);
-	svg.line(this..result).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
-	svg.line(p..pv).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
-	svg.line(pv..result).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
-	svg.arrow(origin..v, ARROW_SIZE).stroke("black");
-	svg.arrow(origin..this, ARROW_SIZE).stroke("black");
-	svg.arrow(origin..result, ARROW_SIZE).stroke("red");
+	svg.line(this, result).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
+	svg.line(p, pv).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
+	svg.line(pv, result).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
+	svg.arrow(origin, v, ARROW_SIZE).stroke("black");
+	svg.arrow(origin, this, ARROW_SIZE).stroke("black");
+	svg.arrow(origin, result, ARROW_SIZE).stroke("red");
 	svg.circle(p, 2.0).fill("black");
 	svg.text(v, "v").fill("black");
 	svg.text(this, "self").fill("black");

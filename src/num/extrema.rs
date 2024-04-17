@@ -5,6 +5,8 @@ pub trait Extrema<Rhs = Self>: Sized {
 	fn min(self, rhs: Rhs) -> Self;
 	fn max(self, rhs: Rhs) -> Self;
 	fn min_max(self, rhs: Rhs) -> (Self, Self);
+
+	#[inline]
 	fn clamp(self, min: Rhs, max: Rhs) -> Self {
 		self.min(min).max(max)
 	}
@@ -15,61 +17,69 @@ pub trait Extrema<Rhs = Self>: Sized {
 
 macro_rules! impl_int {
 	($ty:ty) => {
+		impl Extrema for $ty {
+			#[inline]
+			fn min(self, rhs: $ty) -> $ty {
+				cmp::min(self, rhs)
+			}
+			#[inline]
+			fn max(self, rhs: $ty) -> $ty {
+				cmp::max(self, rhs)
+			}
+			#[inline]
+			fn min_max(self, rhs: $ty) -> ($ty, $ty) {
+				(cmp::min(self, rhs), cmp::max(self, rhs))
+			}
+		}
 
-impl Extrema for $ty {
-	fn min(self, rhs: $ty) -> $ty {
-		cmp::min(self, rhs)
-	}
-	fn max(self, rhs: $ty) -> $ty {
-		cmp::max(self, rhs)
-	}
-	fn min_max(self, rhs: $ty) -> ($ty, $ty) {
-		(cmp::min(self, rhs), cmp::max(self, rhs))
-	}
-}
-
-impl<'a> Extrema for &'a $ty {
-	fn min(self, rhs: &'a $ty) -> &'a $ty {
-		cmp::min(self, rhs)
-	}
-	fn max(self, rhs: &'a $ty) -> &'a $ty {
-		cmp::max(self, rhs)
-	}
-	fn min_max(self, rhs: &'a $ty) -> (&'a $ty, &'a $ty) {
-		(cmp::min(self, rhs), cmp::max(self, rhs))
-	}
-}
-
+		impl<'a> Extrema for &'a $ty {
+			#[inline]
+			fn min(self, rhs: &'a $ty) -> &'a $ty {
+				cmp::min(self, rhs)
+			}
+			#[inline]
+			fn max(self, rhs: &'a $ty) -> &'a $ty {
+				cmp::max(self, rhs)
+			}
+			#[inline]
+			fn min_max(self, rhs: &'a $ty) -> (&'a $ty, &'a $ty) {
+				(cmp::min(self, rhs), cmp::max(self, rhs))
+			}
+		}
 	};
 }
 
 macro_rules! impl_float {
 	($ty:ty) => {
+		impl Extrema for $ty {
+			#[inline]
+			fn min(self, rhs: $ty) -> $ty {
+				<$ty>::min(self, rhs)
+			}
+			#[inline]
+			fn max(self, rhs: $ty) -> $ty {
+				<$ty>::max(self, rhs)
+			}
+			#[inline]
+			fn min_max(self, rhs: $ty) -> ($ty, $ty) {
+				if self < rhs { (self, rhs) } else { (rhs, self) }
+			}
+		}
 
-impl Extrema for $ty {
-	fn min(self, rhs: $ty) -> $ty {
-		if self < rhs { self } else { rhs }
-	}
-	fn max(self, rhs: $ty) -> $ty {
-		if self > rhs { self } else { rhs }
-	}
-	fn min_max(self, rhs: $ty) -> ($ty, $ty) {
-		if self < rhs { (self, rhs) } else { (rhs, self) }
-	}
-}
-
-impl<'a> Extrema<&'a $ty> for &'a $ty {
-	fn min(self, rhs: &'a $ty) -> &'a $ty {
-		if self < rhs { self } else { rhs }
-	}
-	fn max(self, rhs: &'a $ty) -> &'a $ty {
-		if self > rhs { self } else { rhs }
-	}
-	fn min_max(self, rhs: &'a $ty) -> (&'a $ty, &'a $ty) {
-		if self < rhs { (self, rhs) } else { (rhs, self) }
-	}
-}
-
+		impl<'a> Extrema<&'a $ty> for &'a $ty {
+			#[inline]
+			fn min(self, rhs: &'a $ty) -> &'a $ty {
+				if self < rhs { self } else { rhs }
+			}
+			#[inline]
+			fn max(self, rhs: &'a $ty) -> &'a $ty {
+				if self > rhs { self } else { rhs }
+			}
+			#[inline]
+			fn min_max(self, rhs: &'a $ty) -> (&'a $ty, &'a $ty) {
+				if self < rhs { (self, rhs) } else { (rhs, self) }
+			}
+		}
 	}
 }
 

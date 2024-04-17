@@ -18,7 +18,8 @@ An overview of their implementations:
 ### Examples
 
 ```
-# use cvmath::prelude::{Vec2, Vec3};
+use cvmath::{Vec2, Vec3};
+
 assert_eq!("(2,3,4)", format!("{}", Vec3(2, 3, 4)));
 assert_eq!("(2.300,2.142)", format!("{:.3}", Vec2(2.3, 2.14159278)));
 assert_eq!("(16,25)", format!("{:?}", Vec2(16, 25)));
@@ -34,7 +35,7 @@ assert!(Vec2(1, 9) > Vec2(1, -2));
 
 `dup(u)` where T: `Copy`: Constructs a new vector by splatting to its components.
 
-`unit_x()`, `unit_y()`, `unit_z()`, `unit_w()` where T: `Zero` + `One`: Constructs a unit vector along the given axis (given that axis exists for the vector).
+`X`, `Y`, `Z`, `W` where T: `Zero` + `One`: Constructs a unit vector along the given axis (given that axis exists for the vector).
 
 `with_x(self, x)`, `with_y(self, y)`, `with_z(self, z)`, `with_w(self, w)`: Note that these return new vectors with the respective component changed.
 
@@ -45,13 +46,14 @@ assert!(Vec2(1, 9) > Vec2(1, -2));
 ### Examples
 
 ```
-# use cvmath::prelude::{Vec2, Vec3, X, Y, Z};
+use cvmath::{Vec2, Vec3, X, Y, Z};
+
 assert_eq!(Vec2 { x: 1, y: 2 }, Vec2(1, 2));
 
 assert_eq!(Vec3 { x: 42, y: 42, z: 42 }, Vec3::dup(42));
 
-assert_eq!(Vec2 { x: 0.0, y: 1.0 }, Vec2::unit_y());
-assert_eq!(Vec3 { x: 1, y: 0, z: 0 }, Vec3::unit_x());
+assert_eq!(Vec2 { x: 0.0, y: 1.0 }, Vec2::Y);
+assert_eq!(Vec3 { x: 1, y: 0, z: 0 }, Vec3::X);
 
 assert_eq!(Vec3 { x: -12, y: 0, z: 12 }, Vec3::default().with_x(-12).with_z(12));
 
@@ -73,7 +75,8 @@ assert_eq!(Vec3 { x: 5, y: -2, z: 5 }, Vec3(-2, 12, 5).shuffle(Z, X, Z));
 ### Examples
 
 ```
-# use cvmath::prelude::{Vec2, Vec3, Vec4};
+use cvmath::{Vec2, Vec3, Vec4};
+
 assert_eq!(Vec3 { x: 3, y: 4, z: 5 }, Vec2(3, 4).vec3(5));
 
 assert_eq!(Vec4 { x: -1, y: -2, z: -3, w: -4 }, Vec3(-1, -2, -3).vec4(-4));
@@ -99,7 +102,8 @@ assert_eq!(Vec3 { x: 1, y: 2, z: 3 }, Vec4(1, 2, 3, 4).xyz());
 ### Examples
 
 ```
-# use cvmath::prelude::{Vec2, Vec3};
+use cvmath::{Vec2, Vec3};
+
 assert_eq!(Vec2 { x: 2, y: 4 }, Vec2(2.2, 4.9).cast());
 
 assert_eq!(Vec2 { x: 2, y: 4 }, Vec2(1, 2).map(|c| c * 2));
@@ -122,7 +126,8 @@ assert_eq!(-10, vec.fold(0, |acc, c| acc - c));
 ### Examples
 
 ```
-# use cvmath::prelude::{Vec2};
+use cvmath::Vec2;
+
 assert_eq!(Vec2::<i32>::from((2, 3)), Vec2::from([2, 3]));
 ```
 
@@ -134,15 +139,15 @@ assert_eq!(Vec2::<i32>::from((2, 3)), Vec2::from([2, 3]));
 
 `len(self)` where T: `Float`: Calculates the length of the vector.
 
-`dist_sqr(self, to)`: Calculates the squared euclidean distance to another vector.
+`distance_sqr(self, to)`: Calculates the squared euclidean distance to another vector.
 
-`dist(self, to)` where T: `Float`: Calculates the euclidean distance to another vector.
+`distance(self, to)` where T: `Float`: Calculates the euclidean distance to another vector.
 
-`norm(self)` where T: `Float`: Normalizes the vector. The vector with length zero stays zero.
+`normalize(self)` where T: `Float`: Normalizes the vector. The vector with length zero stays zero.
 
 `resize(self, len)` where T: `Float`: Scales the vector such that its length equals the given value. The vector with length zero remains zero.
 
-`scalar_project(self, v)` where T: `Float`: Scalar projection of `self` onto `v`.
+`project_scalar(self, v)` where T: `Float`: Scalar projection of `self` onto `v`.
 
 `project(self, v)` where T: `Float`: Projection of `self` onto `v`.
 
@@ -183,28 +188,29 @@ Exclusive to `Vec3`:
 ### Examples
 
 ```
-# use cvmath::prelude::{Vec2, Vec3};
+use cvmath::{Vec2, Vec3};
+
 assert_eq!(Vec2 { x: 9, y: 16 }, Vec2(3, 4).sqr());
 
 assert_eq!(25, Vec2(3, 4).len_sqr());
 assert_eq!(5.0, Vec2(3.0, 4.0).len());
 
-assert_eq!(2, Vec2::dist_sqr(Vec2(1, 1), Vec2(2, 2)));
-assert_eq!(5.0, Vec2::dist(Vec2(10.0, 10.0), Vec2(13.0, 14.0)));
+assert_eq!(2, Vec2::distance_sqr(Vec2(1, 1), Vec2(2, 2)));
+assert_eq!(5.0, Vec2::distance(Vec2(10.0, 10.0), Vec2(13.0, 14.0)));
 
-assert_eq!(Vec2 { x: 0.6, y: 0.8 }, Vec2(3.0, 4.0).norm());
-assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2(0.0, 0.0).norm());
+assert_eq!(Vec2 { x: 0.6, y: 0.8 }, Vec2(3.0, 4.0).normalize());
+assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2(0.0, 0.0).normalize());
 
 assert_eq!(Vec2 { x: 1.5, y: 2.0 }, Vec2(3.0, 4.0).resize(2.5));
 assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2(0.0, 0.0).resize(2.0));
 
-assert_eq!(2.0, Vec2(2.0, 1.0).scalar_project(Vec2(3.0, 4.0)));
+assert_eq!(2.0, Vec2(2.0, 1.0).project_scalar(Vec2(3.0, 4.0)));
 assert_eq!(2.0, Vec2(2.0, 1.0).project(Vec2(3.0, 4.0)).len());
 assert_eq!(Vec2(-3.0, -4.0), Vec2(-5.0, -2.5).project(Vec2(3.0, 4.0)));
 assert_eq!(Vec2(0.0, 0.0), Vec2(-5.0, -2.5).project_sat(Vec2(3.0, 4.0)));
 
-assert_eq!(2.2, Vec2(1.0, 2.0).scalar_project(Vec2(3.0, 4.0)));
-assert_eq!(2.0, Vec3(1.0, 4.0, 0.0).scalar_project(Vec3(4.0, 2.0, 4.0)));
+assert_eq!(2.2, Vec2(1.0, 2.0).project_scalar(Vec2(3.0, 4.0)));
+assert_eq!(2.0, Vec3(1.0, 4.0, 0.0).project_scalar(Vec3(4.0, 2.0, 4.0)));
 
 assert_eq!(12, Vec3(3, 4, 5).hadd());
 assert_eq!(-1, Vec2(3, 4).hsub());
@@ -235,11 +241,7 @@ assert_eq!(Vec3 { x: -12, y: 1, z: 39 }, Vec3::cross(Vec3(3, -3, 1), Vec3(4, 9, 
 
 */
 
-use std::{fmt, mem, ops, slice};
-
-use num::{Scalar, Zero, One, Float, CastTo, Extrema, SpatialOrd};
-
-use angle::Rad;
+use super::*;
 
 // /// A 1-dimensional vector.
 // #[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -248,7 +250,7 @@ use angle::Rad;
 // 	pub x: T,
 // }
 
-/// A 2-dimensional vector.
+/// Vec2 vector.
 #[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(C)]
 pub struct Vec2<T> {
@@ -256,7 +258,7 @@ pub struct Vec2<T> {
 	pub y: T,
 }
 
-/// A 3-dimensional vector.
+/// Vec3 vector.
 #[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(C)]
 pub struct Vec3<T> {
@@ -265,7 +267,7 @@ pub struct Vec3<T> {
 	pub z: T,
 }
 
-/// A 4-dimensional vector.
+/// Vec4 vector.
 #[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(C)]
 pub struct Vec4<T> {
@@ -275,13 +277,13 @@ pub struct Vec4<T> {
 	pub w: T,
 }
 
-/// The X component.
+/// X component.
 pub struct X;
-/// The Y component.
+/// Y component.
 pub struct Y;
-/// The Z component.
+/// Z component.
 pub struct Z;
-/// The W component.
+/// W component.
 pub struct W;
 
 /// Access the components of a vector generically.
@@ -292,93 +294,112 @@ pub trait ComponentImpl<T, C> {
 }
 
 impl<T> ComponentImpl<T, X> for Vec2<T> {
+	#[inline]
 	fn get(self) -> T { self.x }
 }
 impl<T> ComponentImpl<T, Y> for Vec2<T> {
+	#[inline]
 	fn get(self) -> T { self.y }
 }
 
 impl<T> ComponentImpl<T, X> for Vec3<T> {
+	#[inline]
 	fn get(self) -> T { self.x }
 }
 impl<T> ComponentImpl<T, Y> for Vec3<T> {
+	#[inline]
 	fn get(self) -> T { self.y }
 }
 impl<T> ComponentImpl<T, Z> for Vec3<T> {
+	#[inline]
 	fn get(self) -> T { self.z }
 }
 
 impl<T> ComponentImpl<T, X> for Vec4<T> {
+	#[inline]
 	fn get(self) -> T { self.x }
 }
 impl<T> ComponentImpl<T, Y> for Vec4<T> {
+	#[inline]
 	fn get(self) -> T { self.y }
 }
 impl<T> ComponentImpl<T, Z> for Vec4<T> {
+	#[inline]
 	fn get(self) -> T { self.z }
 }
 impl<T> ComponentImpl<T, W> for Vec4<T> {
+	#[inline]
 	fn get(self) -> T { self.w }
 }
 
 macro_rules! unit {
 	(Vec1) => {
 		/// Unit vector in the `x` direction.
-		pub fn unit_x() -> Vec1<T> where T: Zero + One { Vec1 { x: T::one() } }
+		pub const X: Vec1<T> = Vec1 { x: T::ONE };
 	};
 	(Vec2) => {
 		/// Unit vector in the `x` direction.
-		pub fn unit_x() -> Vec2<T> where T: Zero + One { Vec2 { x: T::one(), y: T::zero() } }
+		pub const X: Vec2<T> = Vec2 { x: T::ONE, y: T::ZERO };
 		/// Unit vector in the `y` direction.
-		pub fn unit_y() -> Vec2<T> where T: Zero + One { Vec2 { x: T::zero(), y: T::one() } }
+		pub const Y: Vec2<T> = Vec2 { x: T::ZERO, y: T::ONE };
 	};
 	(Vec3) => {
 		/// Unit vector in the `x` direction.
-		pub fn unit_x() -> Vec3<T> where T: Zero + One { Vec3 { x: T::one(), y: T::zero(), z: T::zero() } }
+		pub const X: Vec3<T> = Vec3 { x: T::ONE, y: T::ZERO, z: T::ZERO };
 		/// Unit vector in the `y` direction.
-		pub fn unit_y() -> Vec3<T> where T: Zero + One { Vec3 { x: T::zero(), y: T::one(), z: T::zero() } }
+		pub const Y: Vec3<T> = Vec3 { x: T::ZERO, y: T::ONE, z: T::ZERO };
 		/// Unit vector in the `z` direction.
-		pub fn unit_z() -> Vec3<T> where T: Zero + One { Vec3 { x: T::zero(), y: T::zero(), z: T::one() } }
+		pub const Z: Vec3<T> = Vec3 { x: T::ZERO, y: T::ZERO, z: T::ONE };
 	};
 	(Vec4) => {
 		/// Unit vector in the `x` direction.
-		pub fn unit_x() -> Vec4<T> where T: Zero + One { Vec4 { x: T::one(), y: T::zero(), z: T::zero(), w: T::zero() } }
+		pub const X: Vec4<T> = Vec4 { x: T::ONE, y: T::ZERO, z: T::ZERO, w: T::ZERO };
 		/// Unit vector in the `y` direction.
-		pub fn unit_y() -> Vec4<T> where T: Zero + One { Vec4 { x: T::zero(), y: T::one(), z: T::zero(), w: T::zero() } }
+		pub const Y: Vec4<T> = Vec4 { x: T::ZERO, y: T::ONE, z: T::ZERO, w: T::ZERO };
 		/// Unit vector in the `z` direction.
-		pub fn unit_z() -> Vec4<T> where T: Zero + One { Vec4 { x: T::zero(), y: T::zero(), z: T::one(), w: T::zero() } }
+		pub const Z: Vec4<T> = Vec4 { x: T::ZERO, y: T::ZERO, z: T::ONE, w: T::ZERO };
 		/// Unit vector in the `w` direction.
-		pub fn unit_w() -> Vec4<T> where T: Zero + One { Vec4 { x: T::zero(), y: T::zero(), z: T::zero(), w: T::one() } }
+		pub const W: Vec4<T> = Vec4 { x: T::ZERO, y: T::ZERO, z: T::ZERO, w: T::ONE };
 	};
 }
 
 macro_rules! with {
 	(Vec1) => {
 		/// Sets the `x` component.
-		pub fn with_x(self, x: T) { Vec1 { x } }
+		#[inline]
+		pub fn with_x(self, x: T) -> Vec1<T> { Vec1 { x } }
 	};
 	(Vec2) => {
 		/// Sets the `x` component.
+		#[inline]
 		pub fn with_x(self, x: T) -> Vec2<T> { Vec2 { x, y: self.y } }
 		/// Sets the `y` component.
+		#[inline]
 		pub fn with_y(self, y: T) -> Vec2<T> { Vec2 { x: self.x, y } }
 	};
 	(Vec3) => {
 		/// Sets the `x` component.
+		#[inline]
 		pub fn with_x(self, x: T) -> Vec3<T> { Vec3 { x, y: self.y, z: self.z } }
 		/// Sets the `y` component.
+		#[inline]
 		pub fn with_y(self, y: T) -> Vec3<T> { Vec3 { x: self.x, y, z: self.z } }
 		/// Sets the `z` component.
+		#[inline]
 		pub fn with_z(self, z: T) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z } }
 	};
 	(Vec4) => {
 		/// Sets the `x` component.
+		#[inline]
 		pub fn with_x(self, x: T) -> Vec4<T> { Vec4 { x, y: self.y, z: self.z, w: self.w } }
 		/// Sets the `y` component.
+		#[inline]
 		pub fn with_y(self, y: T) -> Vec4<T> { Vec4 { x: self.x, y, z: self.z, w: self.w } }
 		/// Sets the `z` component.
+		#[inline]
 		pub fn with_z(self, z: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z, w: self.w } }
 		/// Sets the `w` component.
+		#[inline]
 		pub fn with_w(self, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: self.z, w } }
 	};
 }
@@ -386,24 +407,31 @@ macro_rules! with {
 macro_rules! cvt {
 	(Vec1) => {
 		/// Extends the 1D vector with a `y` component.
+		#[inline]
 		pub fn vec2(self, y: T) -> Vec2<T> { Vec2 { x: self.x, y } }
 	};
 	(Vec2) => {
 		/// Extends the 2D vector with a `z` component.
+		#[inline]
 		pub fn vec3(self, z: T) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z } }
 		/// Extends the 2D vector with a `z` and `w` component.
+		#[inline]
 		pub fn vec4(self, z: T, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z, w } }
 	};
 	(Vec3) => {
 		/// Extends the 3D vector with a `w` component.
+		#[inline]
 		pub fn vec4(self, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: self.z, w } }
 		/// Drops the `z` component.
+		#[inline]
 		pub fn xy(self) -> Vec2<T> { Vec2 { x: self.x, y: self.y } }
 	};
 	(Vec4) => {
 		/// Drops the `z` and `w` coordinates.
+		#[inline]
 		pub fn xy(self) -> Vec2<T> { Vec2 { x: self.x, y: self.y } }
 		/// Drops the `w` component.
+		#[inline]
 		pub fn xyz(self) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z: self.z } }
 	};
 }
@@ -454,32 +482,59 @@ macro_rules! parse_vec_elems {
 macro_rules! vec {
 	(
 		$vec:ident $N:tt
-		{ $($field:ident $I:tt $T:ident $C:ident),+ }
+		{ $($field:ident $I:tt $T:ident $U:ident $C:ident),+ }
 		{ $($ops:tt)* }
 	) => {
+
+		#[cfg(feature = "dataview")]
+		unsafe impl<T> dataview::Pod for $vec<T> where T: dataview::Pod {}
 
 		//----------------------------------------------------------------
 		// Constructors
 
 		impl<T> $vec<T> {
 			/// Constructs a new vector from components.
-			pub fn new($($field: T),+) -> $vec<T> {
+			#[inline]
+			pub const fn new($($field: T),+) -> $vec<T> {
 				$vec { $($field),+ }
 			}
 			/// Constructs a new vector by broadcasting to all its components.
-			pub fn dup(u: T) -> $vec<T> where T: Copy {
+			#[inline]
+			pub const fn dup(u: T) -> $vec<T> where T: Copy {
 				$vec { $($field: u),+ }
 			}
+		}
+
+		impl<T: Zero> $vec<T> {
 			/// Returns the origin for the vector space.
-			pub fn origin() -> $vec<T> where T: Zero {
-				$vec { $($field: T::zero()),+ }
+			#[inline]
+			pub const fn zero() -> $vec<T> {
+				$vec { $($field: T::ZERO),+ }
 			}
+			#[doc = stringify!($vec)]
+			#[doc = " of all zero."]
+			pub const ZERO: $vec<T> = $vec { $($field: T::ZERO),+ };
+		}
+		impl<T: One> $vec<T> {
+			#[doc = stringify!($vec)]
+			#[doc = " of all one."]
+			pub const ONE: $vec<T> = $vec { $($field: T::ONE),+ };
+		}
+		impl<T: Zero> Zero for $vec<T> {
+			const ZERO: $vec<T> = $vec::ZERO;
+		}
+		impl<T: One> One for $vec<T> {
+			const ONE: $vec<T> = $vec::ONE;
+		}
+		impl<T: Zero + One> $vec<T> {
 			unit!($vec);
 		}
 
-		/// Constructs a new vector from components.
+		#[doc = stringify!($vec)]
+		#[doc = " constructor."]
 		#[allow(non_snake_case)]
-		pub fn $vec<T>($($field: T),+) -> $vec<T> {
+		#[inline]
+		pub const fn $vec<T>($($field: T),+) -> $vec<T> {
 			$vec { $($field),+ }
 		}
 
@@ -490,10 +545,12 @@ macro_rules! vec {
 
 		impl<T: Copy> $vec<T> {
 			/// Gets a component generically.
+			#[inline]
 			pub fn get<C>(self, _: C) -> T where Self: ComponentImpl<T, C> {
 				<Self as ComponentImpl<T, C>>::get(self)
 			}
 			/// Shuffles the components.
+			#[inline]
 			#[allow(unused_variables)]
 			pub fn shuffle<$($C),+>(self, $($field: $C),+) -> $vec<T> where Self: $(ComponentImpl<$T, $C> +)+ {
 				$vec {
@@ -507,23 +564,28 @@ macro_rules! vec {
 
 		impl<T> $vec<T> {
 			/// Casts to a vector of different type with the same dimensions.
+			#[inline]
 			pub fn cast<U>(self) -> $vec<U> where T: CastTo<U> {
 				$vec { $($field: self.$field.cast_to()),+ }
 			}
 			/// Maps a callable over the components.
+			#[inline]
 			pub fn map<U, F>(self, mut f: F) -> $vec<U> where F: FnMut(T) -> U {
 				$vec { $($field: f(self.$field)),+ }
 			}
 			/// Zips two vectors together.
+			#[inline]
 			pub fn zip<U, F>(self, rhs: $vec<T>, mut f: F) -> $vec<U> where F: FnMut(T, T) -> U {
 				$vec { $($field: f(self.$field, rhs.$field)),+ }
 			}
 			/// Reduces the vector.
+			#[inline]
 			pub fn reduce<F>(self, f: F) -> T where F: Fn(T, T) -> T {
 				// These will end up nested without temporaries which won't work with `FnMut`...
 				fold!(f, $(self.$field),+)
 			}
 			/// Folds the vector.
+			#[inline]
 			pub fn fold<A, F>(self, acc: A, f: F) -> A where F: Fn(A, T) -> A {
 				// These will end up nested without temporaries which won't work with `FnMut`...
 				fold!(f, acc, $(self.$field),+)
@@ -534,29 +596,34 @@ macro_rules! vec {
 		// Conversions
 
 		impl<T: Scalar> From<T> for $vec<T> {
+			#[inline]
 			fn from(val: T) -> $vec<T> {
 				$vec { $($field: val),+ }
 			}
 		}
 
 		impl<T> From<($($T,)+)> for $vec<T> {
+			#[inline]
 			fn from(val: ($($T,)+)) -> $vec<T> {
 				$vec { $($field: val.$I),+ }
 			}
 		}
 		impl<T> Into<($($T,)+)> for $vec<T> {
+			#[inline]
 			fn into(self) -> ($($T,)+) {
 				($(self.$field,)+)
 			}
 		}
 
-		impl<T: Copy> From<[T; $N]> for $vec<T> {
+		impl<T> From<[T; $N]> for $vec<T> {
+			#[inline]
 			fn from(val: [T; $N]) -> $vec<T> {
-				// Can't move out of array...
-				$vec { $($field: val[$I]),+ }
+				let [$($field),+] = val;
+				$vec { $($field),+ }
 			}
 		}
 		impl<T> Into<[T; $N]> for $vec<T> {
+			#[inline]
 			fn into(self) -> [T; $N] {
 				[$(self.$field),+]
 			}
@@ -565,40 +632,44 @@ macro_rules! vec {
 		//----------------------------------------------------------------
 		// As references
 
-		impl<T> AsRef<($($T,)+)> for $vec<T> {
-			fn as_ref(&self) -> &($($T,)+) {
-				unsafe { mem::transmute(self) }
-			}
-		}
 		impl<T> AsRef<[T; $N]> for $vec<T> {
+			#[inline]
 			fn as_ref(&self) -> &[T; $N] {
 				unsafe { mem::transmute(self) }
 			}
 		}
 		impl<T> AsRef<[T]> for $vec<T> {
+			#[inline]
 			fn as_ref(&self) -> &[T] {
 				<Self as AsRef<[T; $N]>>::as_ref(self)
 			}
 		}
 		impl<T> $vec<T> {
+			#[inline]
 			pub fn as_bytes(&self) -> &[u8] {
 				unsafe { slice::from_raw_parts(self as *const _ as *const u8, mem::size_of_val(self)) }
 			}
 		}
 
-		impl<T> AsMut<($($T,)+)> for $vec<T> {
-			fn as_mut(&mut self) -> &mut ($($T,)+) {
-				unsafe { mem::transmute(self) }
-			}
-		}
 		impl<T> AsMut<[T; $N]> for $vec<T> {
+			#[inline]
 			fn as_mut(&mut self) -> &mut [T; $N] {
 				unsafe { mem::transmute(self) }
 			}
 		}
 		impl<T> AsMut<[T]> for $vec<T> {
+			#[inline]
 			fn as_mut(&mut self) -> &mut [T] {
 				<Self as AsMut<[T; $N]>>::as_mut(self)
+			}
+		}
+
+		impl<T> ops::Index<usize> for $vec<T> {
+			type Output = T;
+			#[inline]
+			fn index(&self, i: usize) -> &T {
+				let array: &[T; $N] = self.as_ref();
+				&array[i]
 			}
 		}
 
@@ -610,39 +681,45 @@ macro_rules! vec {
 			/// Squares the components.
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2, Vec3};
+			/// use cvmath::{Vec2, Vec3};
+			///
 			/// let this = Vec2 { x: -3, y: 4 };
 			/// assert_eq!(Vec2(9, 16), this.sqr());
 			///
 			/// let this = Vec3 { x: 2, y: 3, z: -6 };
 			/// assert_eq!(Vec3(4, 9, 36), this.sqr());
 			/// ```
+			#[inline]
 			pub fn sqr(self) -> $vec<T> {
 				$vec { $($field: self.$field * self.$field),+ }
 			}
 			/// Calculates the squared length of the vector.
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2, Vec3};
+			/// use cvmath::{Vec2, Vec3};
+			///
 			/// let this = Vec2 { x: -3, y: 4 };
 			/// assert_eq!(25, this.len_sqr());
 			///
 			/// let this = Vec3 { x: 2, y: -3, z: 6 };
 			/// assert_eq!(49, this.len_sqr());
 			/// ```
+			#[inline]
 			pub fn len_sqr(self) -> T {
 				infix!(+ $(self.$field * self.$field),+)
 			}
 			/// Calculates the length of the vector.
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2, Vec3};
+			/// use cvmath::{Vec2, Vec3};
+			///
 			/// let this = Vec2 { x: -3.0, y: 4.0 };
 			/// assert_eq!(5.0, this.len());
 			///
 			/// let this = Vec3 { x: -2.0, y: 3.0, z: -6.0 };
 			/// assert_eq!(7.0, this.len());
 			/// ```
+			#[inline]
 			pub fn len(self) -> T where T: Float {
 				self.len_sqr().sqrt()
 			}
@@ -651,85 +728,97 @@ macro_rules! vec {
 			/// <!--LEN_HAT--><svg width="400" height="120" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M40 100 L360.5 20 M353.70688 25.818361 L360.5 20 L351.76944 18.056509" stroke="black" /><path fill="none" d="M40 100 L360.5 100 M352.5 104 L360.5 100 L352.5 96" stroke="grey" stroke-width="0.5" /><path fill="none" d="M360.5 100 L360.5 20 M364.5 28 L360.5 20 L356.5 28" stroke="grey" stroke-width="0.5" /><circle cx="40" cy="100" r="2" /><text x="365.5" y="20">this</text><text x="200.25" y="115" fill="grey">x</text><text x="365.5" y="60" fill="grey">y</text></svg>
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2, Vec3};
+			/// use cvmath::{Vec2, Vec3};
+			///
 			/// let this = Vec2 { x: 3, y: 4 };
 			/// assert_eq!(7, this.len_hat());
 			///
 			/// let this = Vec3 { x: 2, y: -3, z: -6 };
 			/// assert_eq!(11, this.len_hat());
 			/// ```
+			#[inline]
 			pub fn len_hat(self) -> T {
 				infix!(+ $(self.$field.abs()),+)
 			}
 			/// Calculates the squared euclidean distance to another vector.
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2};
+			/// use cvmath::Vec2;
+			///
 			/// let this = Vec2 { x: 1, y: 1 };
 			/// let to = Vec2 { x: 2, y: 2 };
-			/// assert_eq!(2, this.dist_sqr(to));
+			/// assert_eq!(2, this.distance_sqr(to));
 			/// ```
-			pub fn dist_sqr(self, to: $vec<T>) -> T {
+			#[inline]
+			pub fn distance_sqr(self, to: $vec<T>) -> T {
 				infix!(+ $((to.$field - self.$field) * (to.$field - self.$field)),+)
 			}
 			/// Calculates the euclidean distance to another vector.
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2};
+			/// use cvmath::Vec2;
+			///
 			/// let this = Vec2 { x: 10.0, y: 10.0 };
 			/// let to = Vec2 { x: 13.0, y: 14.0 };
-			/// assert_eq!(5.0, this.dist(to));
+			/// assert_eq!(5.0, this.distance(to));
 			/// ```
-			pub fn dist(self, to: $vec<T>) -> T where T: Float {
-				self.dist_sqr(to).sqrt()
+			#[inline]
+			pub fn distance(self, to: $vec<T>) -> T where T: Float {
+				self.distance_sqr(to).sqrt()
 			}
 			/// Calculates the manhattan distance to another vector.
 			///
-			/// <!--DIST_HAT--><svg width="400" height="120" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><line x1="40" y1="100" x2="360.5" y2="20" stroke="black" /><path fill="none" d="M40 100 L360.5 100 M352.5 104 L360.5 100 L352.5 96" stroke="grey" stroke-width="0.5" /><path fill="none" d="M360.5 100 L360.5 20 M364.5 28 L360.5 20 L356.5 28" stroke="grey" stroke-width="0.5" /><circle cx="40" cy="100" r="2" /><circle cx="360.5" cy="20" r="2" /><text x="20" y="90">this</text><text x="365.5" y="20">to</text><text x="200.25" y="115" fill="grey">x</text><text x="365.5" y="60" fill="grey">y</text></svg>
+			/// <!--DISTANCE_HAT--><svg width="400" height="120" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><line x1="40" y1="100" x2="360.5" y2="20" stroke="black" /><path fill="none" d="M40 100 L360.5 100 M352.5 104 L360.5 100 L352.5 96" stroke="grey" stroke-width="0.5" /><path fill="none" d="M360.5 100 L360.5 20 M364.5 28 L360.5 20 L356.5 28" stroke="grey" stroke-width="0.5" /><circle cx="40" cy="100" r="2" /><circle cx="360.5" cy="20" r="2" /><text x="20" y="90">this</text><text x="365.5" y="20">to</text><text x="200.25" y="115" fill="grey">x</text><text x="365.5" y="60" fill="grey">y</text></svg>
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2, Vec3};
+			/// use cvmath::{Vec2, Vec3};
+			///
 			/// let this = Vec2 { x: 1.0, y: 5.0 };
 			/// let to = Vec2 { x: 5.0, y: 2.0 };
-			/// assert_eq!(7.0, this.dist_hat(to));
+			/// assert_eq!(7.0, this.distance_hat(to));
 			///
 			/// let this = Vec3 { x: 1.0, y: 5.0, z: -1.0 };
 			/// let to = Vec3 { x: 2.0, y: 3.0, z: 1.0 };
-			/// assert_eq!(5.0, this.dist_hat(to));
+			/// assert_eq!(5.0, this.distance_hat(to));
 			/// ```
-			pub fn dist_hat(self, to: $vec<T>) -> T {
+			#[inline]
+			pub fn distance_hat(self, to: $vec<T>) -> T {
 				infix!(+ $((to.$field - self.$field).abs()),+)
 			}
 			/// Normalizes the vector.
 			///
-			/// After normalizing the vector has the length `1.0` except the null vector remains null.
+			/// After normalizing the vector has the length `1.0` except the zero vector remains zero.
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2, Vec3};
+			/// use cvmath::{Vec2, Vec3};
+			///
 			/// let this = Vec2 { x: 3.0, y: -4.0 };
-			/// assert_eq!(Vec2(0.6, -0.8), this.norm());
+			/// assert_eq!(Vec2(0.6, -0.8), this.normalize());
 			///
 			/// let this = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
-			/// assert_eq!(this, this.norm());
+			/// assert_eq!(this, this.normalize());
 			/// ```
-			pub fn norm(self) -> $vec<T> where T: Float {
-				self.norm_len().0
+			#[inline]
+			pub fn normalize(self) -> $vec<T> where T: Float {
+				self.normalize_len().0
 			}
 			/// Calculates the normalized vector and its length.
 			///
-			/// After normalizing the vector has the length `1.0` except the null vector remains null.
+			/// After normalizing the vector has the length `1.0` except the zero vector remains zero.
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2, Vec3};
+			/// use cvmath::{Vec2, Vec3};
+			///
 			/// let this = Vec2 { x: 3.0, y: -4.0 };
-			/// assert_eq!((Vec2(0.6, -0.8), 5.0), this.norm_len());
+			/// assert_eq!((Vec2(0.6, -0.8), 5.0), this.normalize_len());
 			///
 			/// let this = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
-			/// assert_eq!((this, 0.0), this.norm_len());
+			/// assert_eq!((this, 0.0), this.normalize_len());
 			/// ```
-			pub fn norm_len(self) -> ($vec<T>, T) where T: Float {
+			#[inline]
+			pub fn normalize_len(self) -> ($vec<T>, T) where T: Float {
 				let self_len = self.len();
-				if self_len > T::zero() {
+				if self_len > T::ZERO {
 					(self / self_len, self_len)
 				}
 				else {
@@ -738,40 +827,44 @@ macro_rules! vec {
 			}
 			/// Resizes the vector to the given length.
 			///
-			/// The null vector remains null.
+			/// The zero vector remains zero.
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2, Vec3};
+			/// use cvmath::{Vec2, Vec3};
+			///
 			/// let this = Vec2 { x: -3.0, y: -4.0 };
 			/// assert_eq!(Vec2(-1.5, -2.0), this.resize(2.5));
 			///
 			/// let this = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
 			/// assert_eq!(Vec3(0.0, 0.0, 0.0), this.resize(2.0));
 			/// ```
+			#[inline]
 			pub fn resize(self, len: T) -> $vec<T> where T: Float {
 				let self_len = self.len();
-				if self_len > T::zero() {
+				if self_len > T::ZERO {
 					self * (len / self_len)
 				}
 				else { self }
 			}
 			/// Calculates the length of `self` projected onto `v`.
 			///
-			/// <!--SCALAR_PROJECT--><svg width="400" height="200" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M40 160 L200 20 M196.6134 28.278343 L200 20 L191.34537 22.257729" stroke="black" /><path fill="none" d="M40 160 L360 120 M352.5579 124.96139 L360 120 L351.56564 117.02317" stroke="black" /><circle cx="40" cy="160" r="2" fill="black" /><line x1="214.76923" y1="138.15384" x2="200" y2="20" stroke="black" stroke-dasharray="5.0, 5.0" stroke-width="0.5" /><line x1="194.92368" y1="140.63454" x2="192.44298" y2="120.78898" stroke="black" stroke-width="0.5" /><line x1="192.44298" y1="120.78898" x2="212.28854" y2="118.30828" stroke="black" stroke-width="0.5" /><line x1="41.860523" y1="174.88417" x2="216.62975" y2="153.03801" stroke="black" stroke-width="1.5" /><line x1="41.395393" y1="171.16313" x2="42.325653" y2="178.60521" stroke="black" stroke-width="1.5" /><line x1="216.16461" y1="149.31697" x2="217.09488" y2="156.75905" stroke="black" stroke-width="1.5" /><text x="205" y="25" fill="black">self</text><text x="340" y="142" fill="black">v</text></svg>
+			/// <!--PROJECT_SCALAR--><svg width="400" height="200" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M40 160 L200 20 M196.6134 28.278343 L200 20 L191.34537 22.257729" stroke="black" /><path fill="none" d="M40 160 L360 120 M352.5579 124.96139 L360 120 L351.56564 117.02317" stroke="black" /><circle cx="40" cy="160" r="2" fill="black" /><line x1="214.76923" y1="138.15384" x2="200" y2="20" stroke="black" stroke-dasharray="5.0, 5.0" stroke-width="0.5" /><line x1="194.92368" y1="140.63454" x2="192.44298" y2="120.78898" stroke="black" stroke-width="0.5" /><line x1="192.44298" y1="120.78898" x2="212.28854" y2="118.30828" stroke="black" stroke-width="0.5" /><line x1="41.860523" y1="174.88417" x2="216.62975" y2="153.03801" stroke="red" stroke-width="1.5" /><line x1="41.395393" y1="171.16313" x2="42.325653" y2="178.60521" stroke="red" stroke-width="1.5" /><line x1="216.16461" y1="149.31697" x2="217.09488" y2="156.75905" stroke="red" stroke-width="1.5" /><text x="205" y="25" fill="black">self</text><text x="340" y="142" fill="black">v</text></svg>
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2, Vec3};
+			/// use cvmath::{Vec2, Vec3};
+			///
 			/// let this = Vec2 { x: 1.0, y: 2.0 };
 			/// let v = Vec2 { x: 3.0, y: 4.0 };
-			/// assert_eq!(2.2, this.scalar_project(v));
+			/// assert_eq!(2.2, this.project_scalar(v));
 			///
 			/// let this = Vec3 { x: 1.0, y: 4.0, z: 0.0 };
 			/// let v = Vec3 { x: 4.0, y: 2.0, z: 4.0 };
-			/// assert_eq!(2.0, this.scalar_project(v));
+			/// assert_eq!(2.0, this.project_scalar(v));
 			/// ```
-			pub fn scalar_project(self, v: $vec<T>) -> T where T: Float {
+			#[inline]
+			pub fn project_scalar(self, v: $vec<T>) -> T where T: Float {
 				let len = v.len();
-				if len > T::zero() {
+				if len > T::ZERO {
 					v.dot(self) / len
 				}
 				else { len }
@@ -781,7 +874,8 @@ macro_rules! vec {
 			/// <!--PROJECT-->
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2, Vec3};
+			/// use cvmath::{Vec2, Vec3};
+			///
 			/// let this = Vec2 { x: -5.0, y: -2.5 };
 			/// let v = Vec2 { x: 3.0, y: 4.0 };
 			/// assert_eq!(Vec2(-3.0, -4.0), this.project(v));
@@ -790,9 +884,10 @@ macro_rules! vec {
 			/// let v = Vec3 { x: 3.0, y: 4.0, z: 0.0 };
 			/// assert_eq!(Vec3(-3.0, -4.0, 0.0), this.project(v));
 			/// ```
+			#[inline]
 			pub fn project(self, v: $vec<T>) -> $vec<T> where T: Float {
 				let len_sqr = v.len_sqr();
-				if len_sqr > T::zero() {
+				if len_sqr > T::ZERO {
 					v * (v.dot(self) / len_sqr)
 				}
 				else { v }
@@ -802,15 +897,17 @@ macro_rules! vec {
 			/// <!--PROJECT_SAT-->
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2};
+			/// use cvmath::Vec2;
+			///
 			/// let this = Vec2 { x: -5.0, y: -2.5 };
 			/// let v = Vec2 { x: 3.0, y: 4.0 };
 			/// assert_eq!(Vec2(0.0, 0.0), this.project_sat(v));
 			/// ```
+			#[inline]
 			pub fn project_sat(self, v: $vec<T>) -> $vec<T> {
 				let len_sqr = v.len_sqr();
-				if len_sqr > T::zero() {
-					v * (v.dot(self) / len_sqr).min(T::one()).max(T::zero())
+				if len_sqr > T::ZERO {
+					v * (v.dot(self) / len_sqr).min(T::ONE).max(T::ZERO)
 				}
 				else { v }
 			}
@@ -821,11 +918,13 @@ macro_rules! vec {
 			/// <!--REFLECT_3D-->
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2};
+			/// use cvmath::Vec2;
+			///
 			/// let this = Vec2 { x: 1.0, y: 3.0 };
 			/// let v = Vec2 { x: 4.0, y: 4.0 };
 			/// assert_eq!(Vec2(3.0, 1.0), this.reflect(v));
 			/// ```
+			#[inline]
 			pub fn reflect(self, v: $vec<T>) -> $vec<T> where T: Float {
 				let p = self.project(v);
 				p + p - self
@@ -836,11 +935,13 @@ macro_rules! vec {
 			/// <!--DOT-->
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec3};
+			/// use cvmath::Vec3;
+			///
 			/// let lhs = Vec3 { x: 1, y: 2, z: 3 };
 			/// let rhs = Vec3 { x: 4, y: -5, z: 6 };
 			/// assert_eq!(12, Vec3::dot(lhs, rhs));
 			/// ```
+			#[inline]
 			pub fn dot(self, rhs: $vec<T>) -> T {
 				infix!(+ $(self.$field * rhs.$field),+)
 			}
@@ -849,12 +950,14 @@ macro_rules! vec {
 			/// <!--COS_ANGLE-->
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2};
+			/// use cvmath::Vec2;
+			///
 			/// let lhs = Vec2 { x: 1.0, y: 1.0 };
 			/// let rhs = Vec2 { x: 1.0, y: 0.0 };
 			/// let sqrt_2_div_2 = 1.0 / 2_f32.sqrt(); // √2 ÷ 2
 			/// assert_eq!(sqrt_2_div_2, lhs.cos_angle(rhs));
 			/// ```
+			#[inline]
 			pub fn cos_angle(self, rhs: $vec<T>) -> T where T: Float {
 				// |self| * |rhs| <=> √(self ∙ self * rhs ∙ rhs)
 				let d = (self.dot(self) * rhs.dot(rhs)).sqrt();
@@ -865,67 +968,90 @@ macro_rules! vec {
 			/// <!--ANGLE-->
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2};
-			/// # use cvmath::angle::{Deg};
+			/// use cvmath::{Deg, Vec2};
+			///
 			/// let lhs = Vec2 { x: 1.0, y: 1.0 };
 			/// let rhs = Vec2 { x: 1.0, y: 0.0 };
 			/// assert_eq!(Deg(45_f32), lhs.angle(rhs).to_deg());
 			/// ```
+			#[inline]
 			pub fn angle(self, rhs: $vec<T>) -> Rad<T> where T: Float {
 				Rad::acos(self.cos_angle(rhs))
 			}
 			/// Horizontal adds all components.
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2, Vec3};
+			/// use cvmath::{Vec2, Vec3};
+			///
 			/// let this = Vec2 { x: -2, y: 7 };
 			/// assert_eq!(5, this.hadd());
 			///
 			/// let this = Vec3 { x: 3, y: 4, z: 5 };
 			/// assert_eq!(12, this.hadd());
 			/// ```
+			#[inline]
 			pub fn hadd(self) -> T {
 				infix!(+ $(self.$field),+)
 			}
 			/// Component wise absolute value.
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2};
+			/// use cvmath::Vec2;
+			///
 			/// let this = Vec2 { x: -3, y: 5 };
 			/// assert_eq!(Vec2(3, 5), this.abs());
 			/// ```
+			#[inline]
 			pub fn abs(self) -> $vec<T> {
 				$vec { $($field: self.$field.abs()),+ }
 			}
 			/// Component wise minimum value.
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2};
+			/// use cvmath::Vec2;
+			///
 			/// let lhs = Vec2 { x: -3, y: 5 };
 			/// let rhs = Vec2 { x: 0, y: 2 };
 			/// assert_eq!(Vec2(-3, 2), lhs.min(rhs));
 			/// ```
+			#[inline]
 			pub fn min(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::min(self.$field, rhs.$field)),+ }
+			}
+			/// Minimum component value.
+			#[inline]
+			pub fn min_element(self) -> T {
+				self.reduce(T::min)
 			}
 			/// Component wise maximum value.
 			///
 			/// ```
-			/// # use cvmath::vec::{Vec2};
+			/// use cvmath::Vec2;
+			///
 			/// let lhs = Vec2 { x: -3, y: 5 };
 			/// let rhs = Vec2 { x: 0, y: 2 };
 			/// assert_eq!(Vec2(0, 5), lhs.max(rhs));
 			/// ```
+			#[inline]
 			pub fn max(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::max(self.$field, rhs.$field)),+ }
 			}
+			/// Maximum component value.
+			#[inline]
+			pub fn max_element(self) -> T {
+				self.reduce(T::max)
+			}
 			/// Adds the scaled vector.
+			///
+			/// Equivalent to `self + (vec * scale)` with less rounding errors.
+			#[inline]
 			pub fn mul_add(self, vec: $vec<T>, scale: T) -> $vec<T> {
-				$vec { $($field: self.$field + vec.$field * scale),+ }
+				$vec { $($field: T::mul_add(vec.$field, scale, self.$field)),+ }
 			}
 			/// Linear interpolation between the vectors.
 			///
 			/// <!--LERP--><svg width="400" height="120" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><line x1="40" y1="100" x2="104" y2="84" stroke="green" /><line x1="104" y1="84" x2="200" y2="60" stroke="blue" /><line x1="200" y1="60" x2="360" y2="20" stroke="black" /><circle cx="40" cy="100" r="2" fill="black" /><circle cx="360" cy="20" r="2" fill="black" /><circle cx="104" cy="84" r="2" fill="green" /><circle cx="200" cy="60" r="2" fill="blue" /><text x="20" y="90" fill="black">self</text><text x="345" y="40" fill="black">rhs</text><text x="84" y="104" fill="green">t = 0.2</text><text x="180" y="80" fill="blue">t = 0.5</text></svg>
+			#[inline]
 			pub fn lerp(self, rhs: $vec<T>, t: T) -> $vec<T> {
 				self + (rhs - self) * t
 			}
@@ -937,26 +1063,75 @@ macro_rules! vec {
 			/// If constant velocity isn't required, see the less expensive [nlerp](#method.nlerp).
 			///
 			/// <!--SLERP--><svg width="400" height="140" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M200 136.33249 L100 70 M108.87775 71.08883 L100 70 L104.45558 77.7555" stroke="black" stroke-width="0.5" /><path fill="none" d="M200 136.33249 L300 70 M295.54443 77.7555 L300 70 L291.12225 71.08883" stroke="black" stroke-width="0.5" /><path fill="none" d="M200 136.33249 L143.25452 30.597214 M150.56206 35.754715 L143.25452 30.597214 L143.51305 39.53775" stroke="green" stroke-width="0.25" /><path fill="none" d="M200 136.33249 L200 16.332481 M204 24.332481 L200 16.332481 L196 24.332481" stroke="green" stroke-width="0.25" /><path fill="none" d="M200 136.33249 L256.74548 30.597221 M256.48697 39.537758 L256.74548 30.597221 L249.43794 35.754723" stroke="green" /><path fill="none" d="M88.950035 90.85828 A120 120 0 0 1 100 70" stroke="black" stroke-width="0.5" /><path fill="none" d="M100 70 A120 120 0 0 1 256.74548 30.597221" stroke="green" /><path fill="none" d="M256.74548 30.597221 A120 120 0 0 1 300 70" stroke="black" /><path fill="none" d="M300 70 A120 120 0 0 1 311.05 90.85829" stroke="black" stroke-width="0.5" /><line x1="100" y1="70" x2="250" y2="70" stroke="blue" stroke-width="0.5" /><circle cx="100" cy="70" r="2" fill="black" /><circle cx="300" cy="70" r="2" fill="black" /><circle cx="250" cy="70" r="2" fill="blue" /><circle cx="256.74548" cy="30.597221" r="2" fill="green" /><text x="98.25452" y="25.597214" fill="green" font-size="10">t = 0.25</text><text x="180" y="11.332481" fill="green" font-size="10">t = 0.50</text><text x="256.74548" y="25.597221" fill="green" font-size="10">t = 0.75</text><text x="230" y="90" fill="blue">lerp</text><text x="196.74548" y="40.59722" fill="green">slerp</text><text x="50" y="70" fill="black">self</text><text x="310" y="70" fill="black">rhs</text></svg>
+			#[inline]
 			pub fn slerp(self, rhs: $vec<T>, t: T) -> $vec<T> where T: Float {
-				let (v0, len0) = self.norm_len();
-				let (v1, len1) = rhs.norm_len();
+				let (v0, len0) = self.normalize_len();
+				let (v1, len1) = rhs.normalize_len();
 				let len = len0 + (len1 - len0) * t;
 
 				let dot = v0.dot(v1);
 				let theta = Rad::acos(dot) * t;
 				let (sin, cos) = theta.sin_cos();
 
-				let v2 = (v1 - v0 * dot).norm();
+				let v2 = (v1 - v0 * dot).normalize();
 				(v0 * cos + v2 * sin) * len
 			}
 			/// Cheap spherical interpolation between the vectors without constant velocity.
 			///
 			/// <!--NLERP--><svg width="400" height="140" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M200 136.33249 L100 70 M108.87775 71.08883 L100 70 L104.45558 77.7555" stroke="black" stroke-width="0.5" /><path fill="none" d="M200 136.33249 L300 70 M295.54443 77.7555 L300 70 L291.12225 71.08883" stroke="black" stroke-width="0.5" /><path fill="none" d="M200 136.33249 L127.768486 40.50657 M135.77812 44.487244 L127.768486 40.50657 L129.38972 49.30268" stroke="green" stroke-width="0.25" /><path fill="none" d="M200 136.33249 L200 16.332497 M204 24.332497 L200 16.332497 L196 24.332497" stroke="green" stroke-width="0.25" /><path fill="none" d="M200 136.33249 L272.2315 40.50657 M270.61026 49.30268 L272.2315 40.50657 L264.2219 44.487244" stroke="green" /><path fill="none" d="M94.97722 78.27897 A120 120 0 0 1 100 70" stroke="black" stroke-width="0.5" /><path fill="none" d="M100 70 A120 120 0 0 1 272.2315 40.50657" stroke="green" /><path fill="none" d="M272.2315 40.50657 A120 120 0 0 1 300 70" stroke="black" /><path fill="none" d="M300 70 A120 120 0 0 1 305.02277 78.27897" stroke="black" stroke-width="0.5" /><line x1="100" y1="70" x2="250" y2="70" stroke="blue" stroke-width="0.5" /><circle cx="100" cy="70" r="2" fill="black" /><circle cx="300" cy="70" r="2" fill="black" /><circle cx="250" cy="70" r="2" fill="blue" /><circle cx="272.2315" cy="40.50657" r="2" fill="green" /><text x="82.768486" y="35.50657" fill="green" font-size="10">t = 0.25</text><text x="180" y="11.332497" fill="green" font-size="10">t = 0.50</text><text x="272.2315" y="35.50657" fill="green" font-size="10">t = 0.75</text><text x="230" y="90" fill="blue">lerp</text><text x="212.2315" y="50.50657" fill="green">nlerp</text><text x="50" y="70" fill="black">self</text><text x="310" y="70" fill="black">rhs</text></svg>
+			#[inline]
 			pub fn nlerp(self, rhs: $vec<T>, t: T) -> $vec<T> where T: Float {
 				let self_len = self.len();
 				let rhs_len = rhs.len();
 				let len = self_len + (rhs_len - self_len) * t;
 				self.lerp(rhs, t).resize(len)
+			}
+			/// Exponential decay smoothing.
+			///
+			/// Also known as lerp smoothing.
+			/// Useful decay values range from approx 1.0 to 25.0, slow to fast.
+			///
+			/// ```
+			/// use cvmath::Vec2;
+			///
+			/// struct Entity {
+			/// 	pos: Vec2<f32>,
+			/// 	target: Vec2<f32>,
+			/// }
+			/// impl Entity {
+			/// 	fn update(&mut self, dt: f32) {
+			/// 		// Smoothly move towards the target.
+			/// 		self.pos = self.pos.exp_decay(self.target, 5.0, dt);
+			/// 	}
+			/// }
+			/// ```
+			#[inline]
+			pub fn exp_decay(self, rhs: $vec<T>, decay: T, dt: T) -> $vec<T> where T: Float {
+				rhs + (self - rhs) * (-decay * dt).exp()
+			}
+		}
+
+		// Float ops
+		impl<T: Float> $vec<T> {
+			/// Component wise floor.
+			#[inline]
+			pub fn floor(self) -> $vec<T> {
+				$vec { $($field: self.$field.floor()),+ }
+			}
+			/// Component wise ceil.
+			#[inline]
+			pub fn ceil(self) -> $vec<T> {
+				$vec { $($field: self.$field.ceil()),+ }
+			}
+			/// Component wise round.
+			#[inline]
+			pub fn round(self) -> $vec<T> {
+				$vec { $($field: self.$field.round()),+ }
+			}
+			/// Component wise fract.
+			#[inline]
+			pub fn fract(self) -> $vec<T> {
+				$vec { $($field: self.$field.fract()),+ }
 			}
 		}
 
@@ -964,84 +1139,126 @@ macro_rules! vec {
 		// Operators
 
 		impl<T: Extrema> Extrema<$vec<T>> for $vec<T> {
+			#[inline]
 			fn min(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::min(self.$field, rhs.$field)),+ }
 			}
+			#[inline]
 			fn max(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::max(self.$field, rhs.$field)),+ }
 			}
+			#[inline]
 			fn min_max(self, rhs: $vec<T>) -> ($vec<T>, $vec<T>) {
 				let temp = $vec { $($field: self.$field.min_max(rhs.$field)),+ };
 				($vec { $($field: temp.$field.0),+ }, $vec { $($field: temp.$field.1),+ })
 			}
 		}
 		impl<T: PartialOrd> SpatialOrd<$vec<T>> for $vec<T> {
-			fn spatial_lt(&self, rhs: &$vec<T>) -> bool { $(self.$field < rhs.$field &&)+ true }
-			fn spatial_le(&self, rhs: &$vec<T>) -> bool { $(self.$field <= rhs.$field &&)+ true }
-			fn spatial_gt(&self, rhs: &$vec<T>) -> bool { $(self.$field > rhs.$field &&)+ true }
-			fn spatial_ge(&self, rhs: &$vec<T>) -> bool { $(self.$field >= rhs.$field &&)+ true }
+			#[inline] fn spatial_lt(&self, rhs: &$vec<T>) -> bool { $(self.$field < rhs.$field &&)+ true }
+			#[inline] fn spatial_le(&self, rhs: &$vec<T>) -> bool { $(self.$field <= rhs.$field &&)+ true }
+			#[inline] fn spatial_gt(&self, rhs: &$vec<T>) -> bool { $(self.$field > rhs.$field &&)+ true }
+			#[inline] fn spatial_ge(&self, rhs: &$vec<T>) -> bool { $(self.$field >= rhs.$field &&)+ true }
 		}
 
 		// Vector addition, subtraction and negation
 		impl<U, T: ops::Add<U>> ops::Add<$vec<U>> for $vec<T> {
 			type Output = $vec<T::Output>;
+			#[inline]
 			fn add(self, rhs: $vec<U>) -> $vec<T::Output> {
 				$vec { $($field: self.$field + rhs.$field),+ }
 			}
 		}
 		impl<U, T: ops::Sub<U>> ops::Sub<$vec<U>> for $vec<T> {
 			type Output = $vec<T::Output>;
+			#[inline]
 			fn sub(self, rhs: $vec<U>) -> $vec<T::Output> {
 				$vec { $($field: self.$field - rhs.$field),+ }
 			}
 		}
 		impl<T: ops::Neg> ops::Neg for $vec<T> {
 			type Output = $vec<T::Output>;
+			#[inline]
 			fn neg(self) -> $vec<T::Output> {
 				$vec { $($field: -self.$field),+ }
 			}
 		}
 		impl<U, T: ops::AddAssign<U>> ops::AddAssign<$vec<U>> for $vec<T> {
+			#[inline]
 			fn add_assign(&mut self, rhs: $vec<U>) {
 				$(self.$field += rhs.$field;)+
 			}
 		}
 		impl<U, T: ops::SubAssign<U>> ops::SubAssign<$vec<U>> for $vec<T> {
+			#[inline]
 			fn sub_assign(&mut self, rhs: $vec<U>) {
 				$(self.$field -= rhs.$field;)+
+			}
+		}
+
+		// Vector addition, subtraction and negation (tuple)
+		impl<U, T: ops::Add<U>> ops::Add<($($U,)+)> for $vec<T> {
+			type Output = $vec<T::Output>;
+			#[inline]
+			fn add(self, rhs: ($($U,)+)) -> $vec<T::Output> {
+				$vec { $($field: self.$field + rhs.$I),+ }
+			}
+		}
+		impl<U, T: ops::Sub<U>> ops::Sub<($($U,)+)> for $vec<T> {
+			type Output = $vec<T::Output>;
+			#[inline]
+			fn sub(self, rhs: ($($U,)+)) -> $vec<T::Output> {
+				$vec { $($field: self.$field - rhs.$I),+ }
+			}
+		}
+		impl<U, T: ops::AddAssign<U>> ops::AddAssign<($($U,)+)> for $vec<T> {
+			#[inline]
+			fn add_assign(&mut self, rhs: ($($U,)+)) {
+				$(self.$field += rhs.$I;)+
+			}
+		}
+		impl<U, T: ops::SubAssign<U>> ops::SubAssign<($($U,)+)> for $vec<T> {
+			#[inline]
+			fn sub_assign(&mut self, rhs: ($($U,)+)) {
+				$(self.$field -= rhs.$I;)+
 			}
 		}
 
 		// Scalar multiplication, division and remainder
 		impl<U: Scalar, T: ops::Mul<U>> ops::Mul<U> for $vec<T> {
 			type Output = $vec<T::Output>;
+			#[inline]
 			fn mul(self, rhs: U) -> $vec<T::Output> {
 				$vec { $($field: self.$field * rhs),+ }
 			}
 		}
 		impl<U: Scalar, T: ops::Div<U>> ops::Div<U> for $vec<T> {
 			type Output = $vec<T::Output>;
+			#[inline]
 			fn div(self, rhs: U) -> $vec<T::Output> {
 				$vec { $($field: self.$field / rhs),+ }
 			}
 		}
 		impl<U: Scalar, T: ops::Rem<U>> ops::Rem<U> for $vec<T> {
 			type Output = $vec<T::Output>;
+			#[inline]
 			fn rem(self, rhs: U) -> $vec<T::Output> {
 				$vec { $($field: self.$field % rhs),+ }
 			}
 		}
 		impl<U: Scalar, T: ops::MulAssign<U>> ops::MulAssign<U> for $vec<T> {
+			#[inline]
 			fn mul_assign(&mut self, rhs: U) {
 				$(self.$field *= rhs;)+
 			}
 		}
 		impl<U: Scalar, T: ops::DivAssign<U>> ops::DivAssign<U> for $vec<T> {
+			#[inline]
 			fn div_assign(&mut self, rhs: U) {
 				$(self.$field /= rhs;)+
 			}
 		}
 		impl<U: Scalar, T: ops::RemAssign<U>> ops::RemAssign<U> for $vec<T> {
+			#[inline]
 			fn rem_assign(&mut self, rhs: U) {
 				$(self.$field %= rhs;)+
 			}
@@ -1050,35 +1267,82 @@ macro_rules! vec {
 		// Vector multiplication, division and remainder
 		impl<U, T: ops::Mul<U>> ops::Mul<$vec<U>> for $vec<T> {
 			type Output = $vec<T::Output>;
+			#[inline]
 			fn mul(self, rhs: $vec<U>) -> $vec<T::Output> {
 				$vec { $($field: self.$field * rhs.$field),+ }
 			}
 		}
 		impl<U, T: ops::Div<U>> ops::Div<$vec<U>> for $vec<T> {
 			type Output = $vec<T::Output>;
+			#[inline]
 			fn div(self, rhs: $vec<U>) -> $vec<T::Output> {
 				$vec { $($field: self.$field / rhs.$field),+ }
 			}
 		}
 		impl<U, T: ops::Rem<U>> ops::Rem<$vec<U>> for $vec<T> {
 			type Output = $vec<T::Output>;
+			#[inline]
 			fn rem(self, rhs: $vec<U>) -> $vec<T::Output> {
 				$vec { $($field: self.$field % rhs.$field),+ }
 			}
 		}
 		impl<U, T: ops::MulAssign<U>> ops::MulAssign<$vec<U>> for $vec<T> {
+			#[inline]
 			fn mul_assign(&mut self, rhs: $vec<U>) {
 				$(self.$field *= rhs.$field;)+
 			}
 		}
 		impl<U, T: ops::DivAssign<U>> ops::DivAssign<$vec<U>> for $vec<T> {
+			#[inline]
 			fn div_assign(&mut self, rhs: $vec<U>) {
 				$(self.$field /= rhs.$field;)+
 			}
 		}
 		impl<U, T: ops::RemAssign<U>> ops::RemAssign<$vec<U>> for $vec<T> {
+			#[inline]
 			fn rem_assign(&mut self, rhs: $vec<U>) {
 				$(self.$field %= rhs.$field;)+
+			}
+		}
+
+		// Vector multiplication, division and remainder (tuple)
+		impl<U, T: ops::Mul<U>> ops::Mul<($($U,)+)> for $vec<T> {
+			type Output = $vec<T::Output>;
+			#[inline]
+			fn mul(self, rhs: ($($U,)+)) -> $vec<T::Output> {
+				$vec { $($field: self.$field * rhs.$I),+ }
+			}
+		}
+		impl<U, T: ops::Div<U>> ops::Div<($($U,)+)> for $vec<T> {
+			type Output = $vec<T::Output>;
+			#[inline]
+			fn div(self, rhs: ($($U,)+)) -> $vec<T::Output> {
+				$vec { $($field: self.$field / rhs.$I),+ }
+			}
+		}
+		impl<U, T: ops::Rem<U>> ops::Rem<($($U,)+)> for $vec<T> {
+			type Output = $vec<T::Output>;
+			#[inline]
+			fn rem(self, rhs: ($($U,)+)) -> $vec<T::Output> {
+				$vec { $($field: self.$field % rhs.$I),+ }
+			}
+		}
+		impl<U, T: ops::MulAssign<U>> ops::MulAssign<($($U,)+)> for $vec<T> {
+			#[inline]
+			fn mul_assign(&mut self, rhs: ($($U,)+)) {
+				$(self.$field *= rhs.$I;)+
+			}
+		}
+		impl<U, T: ops::DivAssign<U>> ops::DivAssign<($($U,)+)> for $vec<T> {
+			#[inline]
+			fn div_assign(&mut self, rhs: ($($U,)+)) {
+				$(self.$field /= rhs.$I;)+
+			}
+		}
+		impl<U, T: ops::RemAssign<U>> ops::RemAssign<($($U,)+)> for $vec<T> {
+			#[inline]
+			fn rem_assign(&mut self, rhs: ($($U,)+)) {
+				$(self.$field %= rhs.$I;)+
 			}
 		}
 
@@ -1109,18 +1373,19 @@ macro_rules! vec {
 	}
 }
 
-// vec!(Vec1 1 { x 0 T X });
-vec!(Vec2 2 { x 0 T X, y 1 T Y } {
+// vec!(Vec1 1 { x 0 T U X });
+vec!(Vec2 2 { x 0 T U X, y 1 T U Y } {
 	/// Calculates the polar angle.
 	///
 	/// <!--POLAR_ANGLE-->
 	///
 	/// ```
-	/// # use cvmath::vec::{Vec2};
-	/// # use cvmath::angle::{Rad};
+	/// use cvmath::{Rad, Vec2};
+	///
 	/// let this = Vec2 { x: 1.0, y: 1.0 };
 	/// assert_eq!(Rad::eight(), this.polar_angle());
 	/// ```
+	#[inline]
 	pub fn polar_angle(self) -> Rad<T> where T: Float {
 		Rad::atan2(self.y, self.x)
 	}
@@ -1129,10 +1394,12 @@ vec!(Vec2 2 { x 0 T X, y 1 T Y } {
 	/// The resulting vector is perpendicular to the given vector.
 	///
 	/// ```
-	/// # use cvmath::vec::{Vec2};
+	/// use cvmath::Vec2;
+	///
 	/// let this = Vec2 { x: 3.0, y: 4.0 };
 	/// assert_eq!(Vec2(4.0, -3.0), this.ccw());
 	/// ```
+	#[inline]
 	pub fn ccw(self) -> Vec2<T> {
 		Vec2 { x: self.y, y: -self.x }
 	}
@@ -1141,10 +1408,12 @@ vec!(Vec2 2 { x 0 T X, y 1 T Y } {
 	/// The resulting vector is perpendicular to the given vector.
 	///
 	/// ```
-	/// # use cvmath::vec::{Vec2};
+	/// use cvmath::Vec2;
+	///
 	/// let this = Vec2 { x: 3.0, y: 4.0 };
 	/// assert_eq!(Vec2(-4.0, 3.0), this.cw());
 	/// ```
+	#[inline]
 	pub fn cw(self) -> Vec2<T> {
 		Vec2 { x: -self.y, y: self.x }
 	}
@@ -1158,29 +1427,34 @@ vec!(Vec2 2 { x 0 T X, y 1 T Y } {
 	/// <!--CROSS_2D-->
 	///
 	/// ```
-	/// # use cvmath::vec::{Vec2};
+	/// use cvmath::Vec2;
+	///
 	/// let lhs = Vec2 { x: -3, y: -4 };
 	/// let rhs = Vec2 { x: -1, y: 2 };
 	/// assert_eq!(-10, lhs.cross(rhs));
 	/// // Area under the parallelogram defined by (origin, lhs, rhs, lhs + rhs) equals 10
 	/// // Area under the triangle defined by (origin, lhs, rhs) equals 5
 	/// ```
+	#[inline]
 	pub fn cross(self, rhs: Vec2<T>) -> T {
 		self.x * rhs.y - self.y * rhs.x
 	}
 	/// Horizontal subtracts the components.
 	///
 	/// ```
-	/// # use cvmath::vec::{Vec2};
+	/// use cvmath::Vec2;
+	///
 	/// let this = Vec2 { x: 3, y: 4 };
 	/// assert_eq!(-1, this.hsub());
 	/// ```
+	#[inline]
 	pub fn hsub(self) -> T {
 		self.x - self.y
 	}
 	/// Intercepts the vector with `x = constant` returning the y.
+	#[inline]
 	pub fn y_intercept(self, x: T) -> Option<T> {
-		if self.x != T::zero() {
+		if self.x != T::ZERO {
 			Some((self.y * x) / self.x)
 		}
 		else {
@@ -1188,8 +1462,9 @@ vec!(Vec2 2 { x 0 T X, y 1 T Y } {
 		}
 	}
 	/// Intercepts the vector with `y = constant` returning the x.
+	#[inline]
 	pub fn x_intercept(self, y: T) -> Option<T> {
-		if self.y != T::zero() {
+		if self.y != T::ZERO {
 			Some((y * self.x) / self.y)
 		}
 		else {
@@ -1197,7 +1472,7 @@ vec!(Vec2 2 { x 0 T X, y 1 T Y } {
 		}
 	}
 });
-vec!(Vec3 3 { x 0 T X, y 1 T Y, z 2 T Z } {
+vec!(Vec3 3 { x 0 T U X, y 1 T U Y, z 2 T U Z } {
 	/// Calculates the 3D cross product.
 	///
 	/// Effectively calculates the vector perpendicular to both inputs with direction according to the [right-hand rule](https://en.wikipedia.org/wiki/Right-hand_rule).
@@ -1205,11 +1480,13 @@ vec!(Vec3 3 { x 0 T X, y 1 T Y, z 2 T Z } {
 	/// <!--CROSS_3D-->
 	///
 	/// ```
-	/// # use cvmath::vec::{Vec3};
+	/// use cvmath::Vec3;
+	///
 	/// let lhs = Vec3 { x: 3, y: -3, z: 1 };
 	/// let rhs = Vec3 { x: 4, y: 9, z: 1 };
 	/// assert_eq!(Vec3(-12, 1, 39), lhs.cross(rhs));
 	/// ```
+	#[inline]
 	pub fn cross(self, rhs: Vec3<T>) -> Vec3<T> {
 		Vec3 {
 			x: self.y * rhs.z - self.z * rhs.y,
@@ -1218,8 +1495,9 @@ vec!(Vec3 3 { x 0 T X, y 1 T Y, z 2 T Z } {
 		}
 	}
 	/// Homogeneous divide.
+	#[inline]
 	pub fn hdiv(self) -> Vec2<T> {
-		if self.z != T::zero() {
+		if self.z != T::ZERO {
 			Vec2 {
 				x: self.x / self.z,
 				y: self.x / self.z,
@@ -1228,25 +1506,90 @@ vec!(Vec3 3 { x 0 T X, y 1 T Y, z 2 T Z } {
 		else { self.xy() }
 	}
 });
-vec!(Vec4 4 { x 0 T X, y 1 T Y, z 2 T Z, w 3 T W } {
+vec!(Vec4 4 { x 0 T U X, y 1 T U Y, z 2 T U Z, w 3 T U W } {
 	/// Homogeneous divide.
+	#[inline]
 	pub fn hdiv(self) -> Vec3<T> {
-		if self.w != T::zero() {
+		if self.w != T::ZERO {
+			let inv_w = T::ONE / self.w;
 			Vec3 {
-				x: self.x / self.w,
-				y: self.y / self.w,
-				z: self.z / self.w,
+				x: self.x * inv_w,
+				y: self.y * inv_w,
+				z: self.z * inv_w,
 			}
 		}
 		else { self.xyz() }
 	}
 });
 
+specialized_type!(Vec2, Vec2f, f32, x, y);
+specialized_type!(Vec3, Vec3f, f32, x, y, z);
+specialized_type!(Vec4, Vec4f, f32, x, y, z, w);
+
+specialized_type!(Vec2, Vec2d, f64, x, y);
+specialized_type!(Vec3, Vec3d, f64, x, y, z);
+specialized_type!(Vec4, Vec4d, f64, x, y, z, w);
+
+specialized_type!(Vec2, Vec2i, i32, x, y);
+specialized_type!(Vec3, Vec3i, i32, x, y, z);
+specialized_type!(Vec4, Vec4i, i32, x, y, z, w);
+
+//----------------------------------------------------------------
+
+#[cfg(feature = "serde")]
+impl<T: serde::Serialize> serde::Serialize for Vec2<T> {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+		let slice = <Vec2<T> as AsRef<[T; 2]>>::as_ref(self).as_slice();
+		serializer.collect_seq(slice)
+	}
+}
+
+#[cfg(feature = "serde")]
+impl<T: serde::Serialize> serde::Serialize for Vec3<T> {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+		let slice = <Vec3<T> as AsRef<[T; 3]>>::as_ref(self).as_slice();
+		serializer.collect_seq(slice)
+	}
+}
+
+#[cfg(feature = "serde")]
+impl<T: serde::Serialize> serde::Serialize for Vec4<T> {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+		let slice = <Vec4<T> as AsRef<[T; 4]>>::as_ref(self).as_slice();
+		serializer.collect_seq(slice)
+	}
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Vec2<T> {
+	fn deserialize<D>(deserializer: D) -> Result<Vec2<T>, D::Error> where D: serde::Deserializer<'de> {
+		let [x, y] = <[T; 2]>::deserialize(deserializer)?;
+		Ok(Vec2 { x, y })
+	}
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Vec3<T> {
+	fn deserialize<D>(deserializer: D) -> Result<Vec3<T>, D::Error> where D: serde::Deserializer<'de> {
+		let [x, y, z] = <[T; 3]>::deserialize(deserializer)?;
+		Ok(Vec3 { x, y, z })
+	}
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Vec4<T> {
+	fn deserialize<D>(deserializer: D) -> Result<Vec4<T>, D::Error> where D: serde::Deserializer<'de> {
+		let [x, y, z, w] = <[T; 4]>::deserialize(deserializer)?;
+		Ok(Vec4 { x, y, z, w })
+	}
+}
+
 //----------------------------------------------------------------
 
 use std::str::FromStr;
 use std::error::Error;
 
+/// An error which can be returned when parsing a vec.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ParseVecError<E> {
 	/// Missing parentheses surrounding the vector elements.
@@ -1257,24 +1600,27 @@ pub enum ParseVecError<E> {
 	ParseValue(E),
 }
 impl<E> From<E> for ParseVecError<E> {
+	#[inline]
 	fn from(err: E) -> ParseVecError<E> {
 		ParseVecError::ParseValue(err)
 	}
 }
-impl<E: Error> fmt::Display for ParseVecError<E> {
+impl<E: Error + 'static> fmt::Display for ParseVecError<E> {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		#[allow(deprecated)]
 		self.description().fmt(f)
 	}
 }
-impl<E: Error> Error for ParseVecError<E> {
+impl<E: Error + 'static> Error for ParseVecError<E> {
 	fn description(&self) -> &str {
+		#[allow(deprecated)]
 		match *self {
 			ParseVecError::SyntaxError => "syntax error",
 			ParseVecError::DimMismatch => "dim mismatch",
 			ParseVecError::ParseValue(ref inner) => inner.description(),
 		}
 	}
-	fn cause(&self) -> Option<&Error> {
+	fn source(&self) -> Option<&(dyn Error + 'static)> {
 		match *self {
 			ParseVecError::SyntaxError => None,
 			ParseVecError::DimMismatch => None,
