@@ -83,7 +83,7 @@ impl<T: Float> TraceRay<T> for Plane<T> {
 
 	fn trace(&self, ray: &Ray<T>, hits: &mut [TraceHit<T>]) -> usize {
 		let denom = self.normal.dot(ray.direction);
-		if denom < T::EPSILON {
+		if denom.abs() < T::EPSILON {
 			return 0;
 		}
 
