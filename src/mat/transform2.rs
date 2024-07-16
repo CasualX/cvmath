@@ -118,6 +118,16 @@ impl<T: Scalar> Transform2<T> {
 	pub fn project(line: impl Into<Vec2<T>>) -> Transform2<T> {
 		Mat2::project(line).affine()
 	}
+
+	/// Remap matrix.
+	#[inline]
+	pub fn remap(from: Rect<T>, to: Rect<T>) -> Transform2<T> {
+		let scale = to.size() / from.size();
+		Transform2 {
+			a11: scale.x, a12: T::ZERO, a13: to.mins.x - from.mins.x * scale.x,
+			a21: T::ZERO, a22: scale.y, a23: to.mins.y - from.mins.y * scale.y,
+		}
+	}
 }
 
 //----------------------------------------------------------------
