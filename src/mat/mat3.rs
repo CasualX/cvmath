@@ -186,29 +186,17 @@ impl<T> Mat3<T> {
 	/// Gets the transformed X basis vector.
 	#[inline]
 	pub fn x(self) -> Vec3<T> {
-		Vec3 {
-			x: self.a11,
-			y: self.a21,
-			z: self.a31,
-		}
+		Vec3 { x: self.a11, y: self.a21, z: self.a31 }
 	}
 	/// Gets the transformed Y basis vector.
 	#[inline]
 	pub fn y(self) -> Vec3<T> {
-		Vec3 {
-			x: self.a12,
-			y: self.a22,
-			z: self.a32,
-		}
+		Vec3 { x: self.a12, y: self.a22, z: self.a32 }
 	}
 	/// Gets the transformed Z basis vector.
 	#[inline]
 	pub fn z(self) -> Vec3<T> {
-		Vec3 {
-			x: self.a13,
-			y: self.a23,
-			z: self.a33,
-		}
+		Vec3 { x: self.a13, y: self.a23, z: self.a33 }
 	}
 }
 
@@ -222,6 +210,11 @@ impl<T: Scalar> Mat3<T> {
 		self.a11 * (self.a22 * self.a33 - self.a23 * self.a32) +
 		self.a12 * (self.a23 * self.a31 - self.a21 * self.a33) +
 		self.a13 * (self.a21 * self.a32 - self.a22 * self.a31)
+	}
+	/// Computes the trace.
+	#[inline]
+	pub fn trace(self) -> T {
+		self.a11 + self.a22 + self.a33
 	}
 	/// Computes the inverse matrix.
 	#[inline]

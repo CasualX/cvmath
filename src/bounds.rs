@@ -489,8 +489,8 @@ impl<T: Float> TraceRay<T> for Cuboid<T> {
 			tmin.z = tmax.z;
 			tmax.z = tmin.z;
 		}
-		let t0 = tmin.max_element();
-		let t1 = tmax.min_element();
+		let t0 = tmin.vmax();
+		let t1 = tmax.vmin();
 		if t0 <= t1 {
 			hits[0] = TraceHit {
 				distance: t0,

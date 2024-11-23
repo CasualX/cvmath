@@ -33,6 +33,7 @@ pub trait Scalar where Self
 	fn mul_add(self, a: Self, b: Self) -> Self;
 }
 
+#[allow(dead_code)]
 pub trait Int where Self : Scalar + cmp::Eq + cmp::Ord {}
 
 pub trait Float where Self : Scalar + FloatOps + CastFrom<f64> {

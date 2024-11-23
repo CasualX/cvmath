@@ -321,42 +321,22 @@ impl<T> Mat4<T> {
 	/// Gets the transformed X basis vector.
 	#[inline]
 	pub fn x(self) -> Vec4<T> {
-		Vec4 {
-			x: self.a11,
-			y: self.a21,
-			z: self.a31,
-			w: self.a41,
-		}
+		Vec4 { x: self.a11, y: self.a21, z: self.a31, w: self.a41 }
 	}
 	/// Gets the transformed Y basis vector.
 	#[inline]
 	pub fn y(self) -> Vec4<T> {
-		Vec4 {
-			x: self.a12,
-			y: self.a22,
-			z: self.a32,
-			w: self.a42,
-		}
+		Vec4 { x: self.a12, y: self.a22, z: self.a32, w: self.a42 }
 	}
 	/// Gets the transformed Z basis vector.
 	#[inline]
 	pub fn z(self) -> Vec4<T> {
-		Vec4 {
-			x: self.a13,
-			y: self.a23,
-			z: self.a33,
-			w: self.a43,
-		}
+		Vec4 { x: self.a13, y: self.a23, z: self.a33, w: self.a43 }
 	}
 	/// Gets the transformed W basis vector.
 	#[inline]
 	pub fn w(self) -> Vec4<T> {
-		Vec4 {
-			x: self.a14,
-			y: self.a24,
-			z: self.a34,
-			w: self.a44,
-		}
+		Vec4 { x: self.a14, y: self.a24, z: self.a34, w: self.a44 }
 	}
 }
 
@@ -371,6 +351,11 @@ impl<T: Scalar> Mat4<T> {
 		self.a12 * (self.a21 * (self.a33 * self.a44 - self.a34 * self.a43) - self.a23 * (self.a31 * self.a44 - self.a34 * self.a41) + self.a24 * (self.a31 * self.a43 - self.a33 * self.a41)) +
 		self.a13 * (self.a21 * (self.a32 * self.a44 - self.a34 * self.a42) - self.a22 * (self.a31 * self.a44 - self.a34 * self.a41) + self.a24 * (self.a31 * self.a42 - self.a32 * self.a41)) -
 		self.a14 * (self.a21 * (self.a32 * self.a43 - self.a33 * self.a42) - self.a22 * (self.a31 * self.a43 - self.a33 * self.a41) + self.a23 * (self.a31 * self.a42 - self.a32 * self.a41))
+	}
+	/// Computes the trace.
+	#[inline]
+	pub fn trace(self) -> T {
+		self.a11 + self.a22 + self.a33 + self.a44
 	}
 	/// Computes the inverse matrix.
 	#[inline]

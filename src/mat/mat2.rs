@@ -213,18 +213,12 @@ impl<T> Mat2<T> {
 	/// Gets the transformed X basis vector.
 	#[inline]
 	pub fn x(self) -> Vec2<T> {
-		Vec2 {
-			x: self.a11,
-			y: self.a21,
-		}
+		Vec2 { x: self.a11, y: self.a21 }
 	}
 	/// Gets the transformed Y basis vector.
 	#[inline]
 	pub fn y(self) -> Vec2<T> {
-		Vec2 {
-			x: self.a12,
-			y: self.a22,
-		}
+		Vec2 { x: self.a12, y: self.a22 }
 	}
 }
 
@@ -236,6 +230,11 @@ impl<T: Scalar> Mat2<T> {
 	#[inline]
 	pub fn determinant(self) -> T {
 		self.a11 * self.a22 - self.a21 * self.a12
+	}
+	/// Computes the trace.
+	#[inline]
+	pub fn trace(self) -> T {
+		self.a11 + self.a22
 	}
 	/// Computes the inverse matrix.
 	#[inline]

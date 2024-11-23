@@ -165,7 +165,11 @@ assert_eq!(Vec2::<i32>::from((2, 3)), Vec2::from([2, 3]));
 
 `min(self, rhs)`: Component-wise minimum value.
 
+`vmin(self)`: Horizontal minimum value.
+
 `max(self, rhs)`: Component-wise maximum value.
+
+`vmax(self)`: Horizontal maximum value.
 
 `mul_add(self, vec, scale)`: Adds the scaled value.
 
@@ -295,40 +299,49 @@ pub trait ComponentImpl<T, C> {
 
 impl<T> ComponentImpl<T, X> for Vec2<T> {
 	#[inline]
+	#[must_use]
 	fn get(self) -> T { self.x }
 }
 impl<T> ComponentImpl<T, Y> for Vec2<T> {
 	#[inline]
+	#[must_use]
 	fn get(self) -> T { self.y }
 }
 
 impl<T> ComponentImpl<T, X> for Vec3<T> {
 	#[inline]
+	#[must_use]
 	fn get(self) -> T { self.x }
 }
 impl<T> ComponentImpl<T, Y> for Vec3<T> {
 	#[inline]
+	#[must_use]
 	fn get(self) -> T { self.y }
 }
 impl<T> ComponentImpl<T, Z> for Vec3<T> {
 	#[inline]
+	#[must_use]
 	fn get(self) -> T { self.z }
 }
 
 impl<T> ComponentImpl<T, X> for Vec4<T> {
 	#[inline]
+	#[must_use]
 	fn get(self) -> T { self.x }
 }
 impl<T> ComponentImpl<T, Y> for Vec4<T> {
 	#[inline]
+	#[must_use]
 	fn get(self) -> T { self.y }
 }
 impl<T> ComponentImpl<T, Z> for Vec4<T> {
 	#[inline]
+	#[must_use]
 	fn get(self) -> T { self.z }
 }
 impl<T> ComponentImpl<T, W> for Vec4<T> {
 	#[inline]
+	#[must_use]
 	fn get(self) -> T { self.w }
 }
 
@@ -367,39 +380,49 @@ macro_rules! with {
 	(Vec1) => {
 		/// Sets the `x` component.
 		#[inline]
+		#[must_use]
 		pub fn with_x(self, x: T) -> Vec1<T> { Vec1 { x } }
 	};
 	(Vec2) => {
 		/// Sets the `x` component.
 		#[inline]
+		#[must_use]
 		pub fn with_x(self, x: T) -> Vec2<T> { Vec2 { x, y: self.y } }
 		/// Sets the `y` component.
 		#[inline]
+		#[must_use]
 		pub fn with_y(self, y: T) -> Vec2<T> { Vec2 { x: self.x, y } }
 	};
 	(Vec3) => {
 		/// Sets the `x` component.
 		#[inline]
+		#[must_use]
 		pub fn with_x(self, x: T) -> Vec3<T> { Vec3 { x, y: self.y, z: self.z } }
 		/// Sets the `y` component.
 		#[inline]
+		#[must_use]
 		pub fn with_y(self, y: T) -> Vec3<T> { Vec3 { x: self.x, y, z: self.z } }
 		/// Sets the `z` component.
 		#[inline]
+		#[must_use]
 		pub fn with_z(self, z: T) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z } }
 	};
 	(Vec4) => {
 		/// Sets the `x` component.
 		#[inline]
+		#[must_use]
 		pub fn with_x(self, x: T) -> Vec4<T> { Vec4 { x, y: self.y, z: self.z, w: self.w } }
 		/// Sets the `y` component.
 		#[inline]
+		#[must_use]
 		pub fn with_y(self, y: T) -> Vec4<T> { Vec4 { x: self.x, y, z: self.z, w: self.w } }
 		/// Sets the `z` component.
 		#[inline]
+		#[must_use]
 		pub fn with_z(self, z: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z, w: self.w } }
 		/// Sets the `w` component.
 		#[inline]
+		#[must_use]
 		pub fn with_w(self, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: self.z, w } }
 	};
 }
@@ -408,30 +431,37 @@ macro_rules! cvt {
 	(Vec1) => {
 		/// Extends the 1D vector with a `y` component.
 		#[inline]
+		#[must_use]
 		pub fn vec2(self, y: T) -> Vec2<T> { Vec2 { x: self.x, y } }
 	};
 	(Vec2) => {
 		/// Extends the 2D vector with a `z` component.
 		#[inline]
+		#[must_use]
 		pub fn vec3(self, z: T) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z } }
 		/// Extends the 2D vector with a `z` and `w` component.
 		#[inline]
+		#[must_use]
 		pub fn vec4(self, z: T, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z, w } }
 	};
 	(Vec3) => {
 		/// Extends the 3D vector with a `w` component.
 		#[inline]
+		#[must_use]
 		pub fn vec4(self, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: self.z, w } }
 		/// Drops the `z` component.
 		#[inline]
+		#[must_use]
 		pub fn xy(self) -> Vec2<T> { Vec2 { x: self.x, y: self.y } }
 	};
 	(Vec4) => {
 		/// Drops the `z` and `w` coordinates.
 		#[inline]
+		#[must_use]
 		pub fn xy(self) -> Vec2<T> { Vec2 { x: self.x, y: self.y } }
 		/// Drops the `w` component.
 		#[inline]
+		#[must_use]
 		pub fn xyz(self) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z: self.z } }
 	};
 }
@@ -495,11 +525,13 @@ macro_rules! vec {
 		impl<T> $vec<T> {
 			/// Constructs a new vector from components.
 			#[inline]
+			#[must_use]
 			pub const fn new($($field: T),+) -> $vec<T> {
 				$vec { $($field),+ }
 			}
 			/// Constructs a new vector by broadcasting to all its components.
 			#[inline]
+			#[must_use]
 			pub const fn dup(u: T) -> $vec<T> where T: Copy {
 				$vec { $($field: u),+ }
 			}
@@ -508,6 +540,7 @@ macro_rules! vec {
 		impl<T: Zero> $vec<T> {
 			/// Returns the origin for the vector space.
 			#[inline]
+			#[must_use]
 			pub const fn zero() -> $vec<T> {
 				$vec { $($field: T::ZERO),+ }
 			}
@@ -534,6 +567,7 @@ macro_rules! vec {
 		#[doc = " constructor."]
 		#[allow(non_snake_case)]
 		#[inline]
+		#[must_use]
 		pub const fn $vec<T>($($field: T),+) -> $vec<T> {
 			$vec { $($field),+ }
 		}
@@ -546,11 +580,13 @@ macro_rules! vec {
 		impl<T: Copy> $vec<T> {
 			/// Gets a component generically.
 			#[inline]
+			#[must_use]
 			pub fn get<C>(self, _: C) -> T where Self: ComponentImpl<T, C> {
 				<Self as ComponentImpl<T, C>>::get(self)
 			}
 			/// Shuffles the components.
 			#[inline]
+			#[must_use]
 			#[allow(unused_variables)]
 			pub fn shuffle<$($C),+>(self, $($field: $C),+) -> $vec<T> where Self: $(ComponentImpl<$T, $C> +)+ {
 				$vec {
@@ -565,27 +601,32 @@ macro_rules! vec {
 		impl<T> $vec<T> {
 			/// Casts to a vector of different type with the same dimensions.
 			#[inline]
+			#[must_use]
 			pub fn cast<U>(self) -> $vec<U> where T: CastTo<U> {
 				$vec { $($field: self.$field.cast_to()),+ }
 			}
 			/// Maps a callable over the components.
 			#[inline]
+			#[must_use]
 			pub fn map<U, F>(self, mut f: F) -> $vec<U> where F: FnMut(T) -> U {
 				$vec { $($field: f(self.$field)),+ }
 			}
 			/// Zips two vectors together.
 			#[inline]
+			#[must_use]
 			pub fn zip<U, F>(self, rhs: $vec<T>, mut f: F) -> $vec<U> where F: FnMut(T, T) -> U {
 				$vec { $($field: f(self.$field, rhs.$field)),+ }
 			}
 			/// Reduces the vector.
 			#[inline]
+			#[must_use]
 			pub fn reduce<F>(self, f: F) -> T where F: Fn(T, T) -> T {
 				// These will end up nested without temporaries which won't work with `FnMut`...
 				fold!(f, $(self.$field),+)
 			}
 			/// Folds the vector.
 			#[inline]
+			#[must_use]
 			pub fn fold<A, F>(self, acc: A, f: F) -> A where F: Fn(A, T) -> A {
 				// These will end up nested without temporaries which won't work with `FnMut`...
 				fold!(f, acc, $(self.$field),+)
@@ -597,6 +638,7 @@ macro_rules! vec {
 
 		impl<T: Scalar> From<T> for $vec<T> {
 			#[inline]
+			#[must_use]
 			fn from(val: T) -> $vec<T> {
 				$vec { $($field: val),+ }
 			}
@@ -604,12 +646,14 @@ macro_rules! vec {
 
 		impl<T> From<($($T,)+)> for $vec<T> {
 			#[inline]
+			#[must_use]
 			fn from(val: ($($T,)+)) -> $vec<T> {
 				$vec { $($field: val.$I),+ }
 			}
 		}
 		impl<T> Into<($($T,)+)> for $vec<T> {
 			#[inline]
+			#[must_use]
 			fn into(self) -> ($($T,)+) {
 				($(self.$field,)+)
 			}
@@ -617,6 +661,7 @@ macro_rules! vec {
 
 		impl<T> From<[T; $N]> for $vec<T> {
 			#[inline]
+			#[must_use]
 			fn from(val: [T; $N]) -> $vec<T> {
 				let [$($field),+] = val;
 				$vec { $($field),+ }
@@ -624,6 +669,7 @@ macro_rules! vec {
 		}
 		impl<T> Into<[T; $N]> for $vec<T> {
 			#[inline]
+			#[must_use]
 			fn into(self) -> [T; $N] {
 				[$(self.$field),+]
 			}
@@ -634,18 +680,21 @@ macro_rules! vec {
 
 		impl<T> AsRef<[T; $N]> for $vec<T> {
 			#[inline]
+			#[must_use]
 			fn as_ref(&self) -> &[T; $N] {
 				unsafe { mem::transmute(self) }
 			}
 		}
 		impl<T> AsRef<[T]> for $vec<T> {
 			#[inline]
+			#[must_use]
 			fn as_ref(&self) -> &[T] {
 				<Self as AsRef<[T; $N]>>::as_ref(self)
 			}
 		}
 		impl<T> $vec<T> {
 			#[inline]
+			#[must_use]
 			pub fn as_bytes(&self) -> &[u8] {
 				unsafe { slice::from_raw_parts(self as *const _ as *const u8, mem::size_of_val(self)) }
 			}
@@ -653,12 +702,14 @@ macro_rules! vec {
 
 		impl<T> AsMut<[T; $N]> for $vec<T> {
 			#[inline]
+			#[must_use]
 			fn as_mut(&mut self) -> &mut [T; $N] {
 				unsafe { mem::transmute(self) }
 			}
 		}
 		impl<T> AsMut<[T]> for $vec<T> {
 			#[inline]
+			#[must_use]
 			fn as_mut(&mut self) -> &mut [T] {
 				<Self as AsMut<[T; $N]>>::as_mut(self)
 			}
@@ -667,6 +718,7 @@ macro_rules! vec {
 		impl<T> ops::Index<usize> for $vec<T> {
 			type Output = T;
 			#[inline]
+			#[must_use]
 			fn index(&self, i: usize) -> &T {
 				let array: &[T; $N] = self.as_ref();
 				&array[i]
@@ -690,6 +742,7 @@ macro_rules! vec {
 			/// assert_eq!(Vec3(4, 9, 36), this.sqr());
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn sqr(self) -> $vec<T> {
 				$vec { $($field: self.$field * self.$field),+ }
 			}
@@ -705,6 +758,7 @@ macro_rules! vec {
 			/// assert_eq!(49, this.len_sqr());
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn len_sqr(self) -> T {
 				infix!(+ $(self.$field * self.$field),+)
 			}
@@ -720,6 +774,7 @@ macro_rules! vec {
 			/// assert_eq!(7.0, this.len());
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn len(self) -> T where T: Float {
 				self.len_sqr().sqrt()
 			}
@@ -737,6 +792,7 @@ macro_rules! vec {
 			/// assert_eq!(11, this.len_hat());
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn len_hat(self) -> T {
 				infix!(+ $(self.$field.abs()),+)
 			}
@@ -750,6 +806,7 @@ macro_rules! vec {
 			/// assert_eq!(2, this.distance_sqr(to));
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn distance_sqr(self, to: $vec<T>) -> T {
 				infix!(+ $((to.$field - self.$field) * (to.$field - self.$field)),+)
 			}
@@ -763,6 +820,7 @@ macro_rules! vec {
 			/// assert_eq!(5.0, this.distance(to));
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn distance(self, to: $vec<T>) -> T where T: Float {
 				self.distance_sqr(to).sqrt()
 			}
@@ -782,6 +840,7 @@ macro_rules! vec {
 			/// assert_eq!(5.0, this.distance_hat(to));
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn distance_hat(self, to: $vec<T>) -> T {
 				infix!(+ $((to.$field - self.$field).abs()),+)
 			}
@@ -799,6 +858,7 @@ macro_rules! vec {
 			/// assert_eq!(this, this.normalize());
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn normalize(self) -> $vec<T> where T: Float {
 				self.normalize_len().0
 			}
@@ -816,6 +876,7 @@ macro_rules! vec {
 			/// assert_eq!((this, 0.0), this.normalize_len());
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn normalize_len(self) -> ($vec<T>, T) where T: Float {
 				let self_len = self.len();
 				if self_len > T::ZERO {
@@ -839,6 +900,7 @@ macro_rules! vec {
 			/// assert_eq!(Vec3(0.0, 0.0, 0.0), this.resize(2.0));
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn resize(self, len: T) -> $vec<T> where T: Float {
 				let self_len = self.len();
 				if self_len > T::ZERO {
@@ -862,6 +924,7 @@ macro_rules! vec {
 			/// assert_eq!(2.0, this.project_scalar(v));
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn project_scalar(self, v: $vec<T>) -> T where T: Float {
 				let len = v.len();
 				if len > T::ZERO {
@@ -885,6 +948,7 @@ macro_rules! vec {
 			/// assert_eq!(Vec3(-3.0, -4.0, 0.0), this.project(v));
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn project(self, v: $vec<T>) -> $vec<T> where T: Float {
 				let len_sqr = v.len_sqr();
 				if len_sqr > T::ZERO {
@@ -904,6 +968,7 @@ macro_rules! vec {
 			/// assert_eq!(Vec2(0.0, 0.0), this.project_sat(v));
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn project_sat(self, v: $vec<T>) -> $vec<T> {
 				let len_sqr = v.len_sqr();
 				if len_sqr > T::ZERO {
@@ -925,6 +990,7 @@ macro_rules! vec {
 			/// assert_eq!(Vec2(3.0, 1.0), this.reflect(v));
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn reflect(self, v: $vec<T>) -> $vec<T> where T: Float {
 				let p = self.project(v);
 				p + p - self
@@ -942,6 +1008,7 @@ macro_rules! vec {
 			/// assert_eq!(12, Vec3::dot(lhs, rhs));
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn dot(self, rhs: $vec<T>) -> T {
 				infix!(+ $(self.$field * rhs.$field),+)
 			}
@@ -958,6 +1025,7 @@ macro_rules! vec {
 			/// assert_eq!(sqrt_2_div_2, lhs.cos_angle(rhs));
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn cos_angle(self, rhs: $vec<T>) -> T where T: Float {
 				// |self| * |rhs| <=> √(self ∙ self * rhs ∙ rhs)
 				let d = (self.dot(self) * rhs.dot(rhs)).sqrt();
@@ -975,6 +1043,7 @@ macro_rules! vec {
 			/// assert_eq!(Deg(45_f32), lhs.angle(rhs).to_deg());
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn angle(self, rhs: $vec<T>) -> Rad<T> where T: Float {
 				Rad::acos(self.cos_angle(rhs))
 			}
@@ -990,10 +1059,11 @@ macro_rules! vec {
 			/// assert_eq!(12, this.hadd());
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn hadd(self) -> T {
 				infix!(+ $(self.$field),+)
 			}
-			/// Component wise absolute value.
+			/// Component-wise absolute value.
 			///
 			/// ```
 			/// use cvmath::Vec2;
@@ -1002,10 +1072,11 @@ macro_rules! vec {
 			/// assert_eq!(Vec2(3, 5), this.abs());
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn abs(self) -> $vec<T> {
 				$vec { $($field: self.$field.abs()),+ }
 			}
-			/// Component wise minimum value.
+			/// Component-wise minimum value.
 			///
 			/// ```
 			/// use cvmath::Vec2;
@@ -1015,15 +1086,17 @@ macro_rules! vec {
 			/// assert_eq!(Vec2(-3, 2), lhs.min(rhs));
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn min(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::min(self.$field, rhs.$field)),+ }
 			}
-			/// Minimum component value.
+			/// Horizontal minimum value.
 			#[inline]
-			pub fn min_element(self) -> T {
+			#[must_use]
+			pub fn vmin(self) -> T {
 				self.reduce(T::min)
 			}
-			/// Component wise maximum value.
+			/// Component-wise maximum value.
 			///
 			/// ```
 			/// use cvmath::Vec2;
@@ -1033,18 +1106,21 @@ macro_rules! vec {
 			/// assert_eq!(Vec2(0, 5), lhs.max(rhs));
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn max(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::max(self.$field, rhs.$field)),+ }
 			}
-			/// Maximum component value.
+			/// Horizontal maximum value.
 			#[inline]
-			pub fn max_element(self) -> T {
+			#[must_use]
+			pub fn vmax(self) -> T {
 				self.reduce(T::max)
 			}
 			/// Adds the scaled vector.
 			///
 			/// Equivalent to `self + (vec * scale)` with less rounding errors.
 			#[inline]
+			#[must_use]
 			pub fn mul_add(self, vec: $vec<T>, scale: T) -> $vec<T> {
 				$vec { $($field: T::mul_add(vec.$field, scale, self.$field)),+ }
 			}
@@ -1052,6 +1128,7 @@ macro_rules! vec {
 			///
 			/// <!--LERP--><svg width="400" height="120" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><line x1="40" y1="100" x2="104" y2="84" stroke="green" /><line x1="104" y1="84" x2="200" y2="60" stroke="blue" /><line x1="200" y1="60" x2="360" y2="20" stroke="black" /><circle cx="40" cy="100" r="2" fill="black" /><circle cx="360" cy="20" r="2" fill="black" /><circle cx="104" cy="84" r="2" fill="green" /><circle cx="200" cy="60" r="2" fill="blue" /><text x="20" y="90" fill="black">self</text><text x="345" y="40" fill="black">rhs</text><text x="84" y="104" fill="green">t = 0.2</text><text x="180" y="80" fill="blue">t = 0.5</text></svg>
 			#[inline]
+			#[must_use]
 			pub fn lerp(self, rhs: $vec<T>, t: T) -> $vec<T> {
 				self + (rhs - self) * t
 			}
@@ -1064,6 +1141,7 @@ macro_rules! vec {
 			///
 			/// <!--SLERP--><svg width="400" height="140" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M200 136.33249 L100 70 M108.87775 71.08883 L100 70 L104.45558 77.7555" stroke="black" stroke-width="0.5" /><path fill="none" d="M200 136.33249 L300 70 M295.54443 77.7555 L300 70 L291.12225 71.08883" stroke="black" stroke-width="0.5" /><path fill="none" d="M200 136.33249 L143.25452 30.597214 M150.56206 35.754715 L143.25452 30.597214 L143.51305 39.53775" stroke="green" stroke-width="0.25" /><path fill="none" d="M200 136.33249 L200 16.332481 M204 24.332481 L200 16.332481 L196 24.332481" stroke="green" stroke-width="0.25" /><path fill="none" d="M200 136.33249 L256.74548 30.597221 M256.48697 39.537758 L256.74548 30.597221 L249.43794 35.754723" stroke="green" /><path fill="none" d="M88.950035 90.85828 A120 120 0 0 1 100 70" stroke="black" stroke-width="0.5" /><path fill="none" d="M100 70 A120 120 0 0 1 256.74548 30.597221" stroke="green" /><path fill="none" d="M256.74548 30.597221 A120 120 0 0 1 300 70" stroke="black" /><path fill="none" d="M300 70 A120 120 0 0 1 311.05 90.85829" stroke="black" stroke-width="0.5" /><line x1="100" y1="70" x2="250" y2="70" stroke="blue" stroke-width="0.5" /><circle cx="100" cy="70" r="2" fill="black" /><circle cx="300" cy="70" r="2" fill="black" /><circle cx="250" cy="70" r="2" fill="blue" /><circle cx="256.74548" cy="30.597221" r="2" fill="green" /><text x="98.25452" y="25.597214" fill="green" font-size="10">t = 0.25</text><text x="180" y="11.332481" fill="green" font-size="10">t = 0.50</text><text x="256.74548" y="25.597221" fill="green" font-size="10">t = 0.75</text><text x="230" y="90" fill="blue">lerp</text><text x="196.74548" y="40.59722" fill="green">slerp</text><text x="50" y="70" fill="black">self</text><text x="310" y="70" fill="black">rhs</text></svg>
 			#[inline]
+			#[must_use]
 			pub fn slerp(self, rhs: $vec<T>, t: T) -> $vec<T> where T: Float {
 				let (v0, len0) = self.normalize_len();
 				let (v1, len1) = rhs.normalize_len();
@@ -1080,6 +1158,7 @@ macro_rules! vec {
 			///
 			/// <!--NLERP--><svg width="400" height="140" font-family="monospace" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M200 136.33249 L100 70 M108.87775 71.08883 L100 70 L104.45558 77.7555" stroke="black" stroke-width="0.5" /><path fill="none" d="M200 136.33249 L300 70 M295.54443 77.7555 L300 70 L291.12225 71.08883" stroke="black" stroke-width="0.5" /><path fill="none" d="M200 136.33249 L127.768486 40.50657 M135.77812 44.487244 L127.768486 40.50657 L129.38972 49.30268" stroke="green" stroke-width="0.25" /><path fill="none" d="M200 136.33249 L200 16.332497 M204 24.332497 L200 16.332497 L196 24.332497" stroke="green" stroke-width="0.25" /><path fill="none" d="M200 136.33249 L272.2315 40.50657 M270.61026 49.30268 L272.2315 40.50657 L264.2219 44.487244" stroke="green" /><path fill="none" d="M94.97722 78.27897 A120 120 0 0 1 100 70" stroke="black" stroke-width="0.5" /><path fill="none" d="M100 70 A120 120 0 0 1 272.2315 40.50657" stroke="green" /><path fill="none" d="M272.2315 40.50657 A120 120 0 0 1 300 70" stroke="black" /><path fill="none" d="M300 70 A120 120 0 0 1 305.02277 78.27897" stroke="black" stroke-width="0.5" /><line x1="100" y1="70" x2="250" y2="70" stroke="blue" stroke-width="0.5" /><circle cx="100" cy="70" r="2" fill="black" /><circle cx="300" cy="70" r="2" fill="black" /><circle cx="250" cy="70" r="2" fill="blue" /><circle cx="272.2315" cy="40.50657" r="2" fill="green" /><text x="82.768486" y="35.50657" fill="green" font-size="10">t = 0.25</text><text x="180" y="11.332497" fill="green" font-size="10">t = 0.50</text><text x="272.2315" y="35.50657" fill="green" font-size="10">t = 0.75</text><text x="230" y="90" fill="blue">lerp</text><text x="212.2315" y="50.50657" fill="green">nlerp</text><text x="50" y="70" fill="black">self</text><text x="310" y="70" fill="black">rhs</text></svg>
 			#[inline]
+			#[must_use]
 			pub fn nlerp(self, rhs: $vec<T>, t: T) -> $vec<T> where T: Float {
 				let self_len = self.len();
 				let rhs_len = rhs.len();
@@ -1106,6 +1185,7 @@ macro_rules! vec {
 			/// }
 			/// ```
 			#[inline]
+			#[must_use]
 			pub fn exp_decay(self, rhs: $vec<T>, decay: T, dt: T) -> $vec<T> where T: Float {
 				rhs + (self - rhs) * (-decay * dt).exp()
 			}
@@ -1113,23 +1193,27 @@ macro_rules! vec {
 
 		// Float ops
 		impl<T: Float> $vec<T> {
-			/// Component wise floor.
+			/// Component-wise floor.
 			#[inline]
+			#[must_use]
 			pub fn floor(self) -> $vec<T> {
 				$vec { $($field: self.$field.floor()),+ }
 			}
-			/// Component wise ceil.
+			/// Component-wise ceil.
 			#[inline]
+			#[must_use]
 			pub fn ceil(self) -> $vec<T> {
 				$vec { $($field: self.$field.ceil()),+ }
 			}
-			/// Component wise round.
+			/// Component-wise round.
 			#[inline]
+			#[must_use]
 			pub fn round(self) -> $vec<T> {
 				$vec { $($field: self.$field.round()),+ }
 			}
-			/// Component wise fract.
+			/// Component-wise fract.
 			#[inline]
+			#[must_use]
 			pub fn fract(self) -> $vec<T> {
 				$vec { $($field: self.$field.fract()),+ }
 			}
@@ -1140,14 +1224,17 @@ macro_rules! vec {
 
 		impl<T: Extrema> Extrema<$vec<T>> for $vec<T> {
 			#[inline]
+			#[must_use]
 			fn min(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::min(self.$field, rhs.$field)),+ }
 			}
 			#[inline]
+			#[must_use]
 			fn max(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::max(self.$field, rhs.$field)),+ }
 			}
 			#[inline]
+			#[must_use]
 			fn min_max(self, rhs: $vec<T>) -> ($vec<T>, $vec<T>) {
 				let temp = $vec { $($field: self.$field.min_max(rhs.$field)),+ };
 				($vec { $($field: temp.$field.0),+ }, $vec { $($field: temp.$field.1),+ })
