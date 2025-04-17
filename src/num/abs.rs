@@ -1,6 +1,7 @@
 
 pub trait Abs {
 	type Output;
+	#[must_use]
 	fn abs(self) -> Self::Output;
 }
 

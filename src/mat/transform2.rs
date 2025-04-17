@@ -22,7 +22,7 @@ pub struct Transform2<T> {
 // 	pub a13: T, pub a23: T,
 // }
 
-/// Constructs a new matrix from components.
+/// Transform2 constructor.
 #[allow(non_snake_case)]
 #[inline]
 pub const fn Transform2<T>(
@@ -121,7 +121,7 @@ impl<T: Scalar> Transform2<T> {
 
 	/// Remap matrix.
 	#[inline]
-	pub fn remap(from: Rect<T>, to: Rect<T>) -> Transform2<T> {
+	pub fn remap(from: Bounds2<T>, to: Bounds2<T>) -> Transform2<T> {
 		let scale = to.size() / from.size();
 		Transform2 {
 			a11: scale.x, a12: T::ZERO, a13: to.mins.x - from.mins.x * scale.x,

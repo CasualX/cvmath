@@ -21,7 +21,7 @@ pub struct Mat3<T> {
 // 	pub a13: T, pub a23: T, pub a33: T,
 // }
 
-/// Constructs a new matrix from components.
+/// Mat3 constructor.
 #[allow(non_snake_case)]
 #[inline]
 pub const fn Mat3<T>(
@@ -108,6 +108,14 @@ impl<T: Zero + One> From<Transform2<T>> for Mat3<T> {
 // Conversions
 
 impl<T> Mat3<T> {
+	/// Converts to a Mat2 matrix.
+	#[inline]
+	pub fn mat2(self) -> Mat2<T> {
+		Mat2 {
+			a11: self.a11, a12: self.a12,
+			a21: self.a21, a22: self.a22,
+		}
+	}
 	/// Converts to a Transform3 matrix.
 	#[inline]
 	pub fn affine(self) -> Transform3<T> where T: Zero {

@@ -67,16 +67,16 @@ impl QAngle {
 	}
 	#[inline]
 	pub fn normalize(mut self) -> QAngle {
-		while self.pitch.0 <= -180.0 { self.pitch.0 += 360.0; }
-		while self.pitch.0 > 180.0 { self.pitch.0 -= 360.0; }
-		while self.yaw.0 <= -180.0 { self.yaw.0 += 360.0; }
-		while self.yaw.0 > 180.0 { self.yaw.0 -= 360.0; }
+		while self.pitch.value <= -180.0 { self.pitch.value += 360.0; }
+		while self.pitch.value > 180.0 { self.pitch.value -= 360.0; }
+		while self.yaw.value <= -180.0 { self.yaw.value += 360.0; }
+		while self.yaw.value > 180.0 { self.yaw.value -= 360.0; }
 		self
 	}
 	#[inline]
 	pub fn diff(self, rhs: QAngle) -> f32 {
 		let delta = (self - rhs).normalize();
-		(delta.pitch.0 * delta.pitch.0 + delta.yaw.0 * delta.yaw.0).sqrt()
+		(delta.pitch.value * delta.pitch.value + delta.yaw.value * delta.yaw.value).sqrt()
 	}
 }
 
@@ -89,7 +89,7 @@ impl From<[f32; 3]> for QAngle {
 impl From<QAngle> for [f32; 3] {
 	#[inline]
 	fn from(QAngle { pitch, yaw, roll }: QAngle) -> [f32; 3] {
-		[pitch.0, yaw.0, roll.0]
+		[pitch.value, yaw.value, roll.value]
 	}
 }
 

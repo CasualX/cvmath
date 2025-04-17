@@ -27,6 +27,9 @@ mod plane;
 mod sphere;
 mod ray;
 
+#[cfg(test)]
+mod tests;
+
 use crate::num::*;
 use crate::angle::Angle;
 
@@ -41,7 +44,7 @@ pub use crate::quaternion::Quaternion;
 pub use crate::qangle::QAngle;
 
 pub use crate::point::{Point2, Point3};
-pub use crate::bounds::{Bounds, Rect, Cuboid};
+pub use crate::bounds::{Bounds, Bounds2, Bounds3};
 pub use crate::line::{Line, Line2, Line3};
 pub use crate::plane::Plane;
 pub use crate::sphere::Sphere;

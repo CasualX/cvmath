@@ -29,9 +29,9 @@ Square and affine transformation matrices.
 
 ### Shapes
 
-`Bounds<V>`, `Rect<T>`, `Cuboid<T>`, `Line<V>`, `Line2<T>`, `Line3<T>`, `Sphere<T>`, `Plane<T>`, `Ray<T>`
+`Bounds<V>`, `Bounds2<T>`, `Bounds3<T>`, `Line<V>`, `Line2<T>`, `Line3<T>`, `Sphere<T>`, `Plane<T>`, `Ray<T>`
 
-Rect and Cuboid are 2D and 3D specialized cases of Bounds. Bounds are defined by their minimum and maximum points. They are axis-aligned and can be used to represent any shape that can be enclosed in a bounding box.
+Bounds2 and Bounds3 are 2D and 3D specialized cases of Bounds. Bounds are defined by their minimum and maximum points. They are axis-aligned and can be used to represent any shape that can be enclosed in a bounding box.
 
 Line2 and Line3 are 2D and 3D specialized cases of Line. Lines are defined by two points.
 

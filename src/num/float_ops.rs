@@ -1,25 +1,42 @@
 
 pub trait FloatOps: Copy {
+	#[must_use]
 	fn is_finite(self) -> bool;
+	#[must_use]
 	fn is_infinite(self) -> bool;
+	#[must_use]
 	fn sqrt(self) -> Self;
+	#[must_use]
 	fn exp(self) -> Self;
+	#[must_use]
 	fn floor(self) -> Self;
+	#[must_use]
 	fn ceil(self) -> Self;
+	#[must_use]
 	fn round(self) -> Self;
+	#[must_use]
 	fn fract(self) -> Self;
+	#[must_use]
 	fn sin(self) -> Self;
+	#[must_use]
 	fn cos(self) -> Self;
+	#[must_use]
 	fn tan(self) -> Self;
+	#[must_use]
 	fn sin_cos(self) -> (Self, Self);
+	#[must_use]
 	fn asin(self) -> Self;
+	#[must_use]
 	fn acos(self) -> Self;
+	#[must_use]
 	fn atan(self) -> Self;
+	#[must_use]
 	fn atan2(self, _: Self) -> Self;
 
 	/// Returns true if the values are approximately equal.
 	///
 	/// The comparison is done with both absolute tolerances (for absolute values below 1.0) and relative tolerances (for absolute values above 1.0).
+	#[must_use]
 	fn is_close(self, other: Self) -> bool;
 }
 

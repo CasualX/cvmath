@@ -1,5 +1,5 @@
 /*!
-Rectangle and Cuboid bounding boxes.
+Bounding boxes.
 */
 
 use super::*;
@@ -283,27 +283,27 @@ impl<U: Copy, T: ops::SubAssign<U>> ops::SubAssign<U> for Bounds<T> {
 
 //----------------------------------------------------------------
 
-/// Rect structure.
-pub type Rect<T> = Bounds<Point2<T>>;
+/// Bounds2 structure.
+pub type Bounds2<T> = Bounds<Point2<T>>;
 
-/// Rect constructor.
+/// Bounds2 constructor.
 #[allow(non_snake_case)]
 #[inline]
-pub const fn Rect<T>(mins: Point2<T>, maxs: Point2<T>) -> Rect<T> {
-	Rect { mins, maxs }
+pub const fn Bounds2<T>(mins: Point2<T>, maxs: Point2<T>) -> Bounds2<T> {
+	Bounds2 { mins, maxs }
 }
 
-impl<T> Rect<T> {
-	/// Rect constructor from components.
+impl<T> Bounds2<T> {
+	/// Bounds2 constructor from components.
 	#[inline]
-	pub const fn c(mins_x: T, mins_y: T, maxs_x: T, maxs_y: T) -> Rect<T> {
+	pub const fn c(mins_x: T, mins_y: T, maxs_x: T, maxs_y: T) -> Bounds2<T> {
 		let mins = Point2 { x: mins_x, y: mins_y };
 		let maxs = Point2 { x: maxs_x, y: maxs_y };
-		Rect { mins, maxs }
+		Bounds2 { mins, maxs }
 	}
 }
 
-impl<T: Scalar> Rect<T> {
+impl<T: Scalar> Bounds2<T> {
 	/// X coordinate of the left side.
 	#[inline]
 	pub fn left(&self) -> T {
@@ -409,47 +409,47 @@ impl<T: Scalar> Rect<T> {
 
 //----------------------------------------------------------------
 
-/// Cuboid structure.
-pub type Cuboid<T> = Bounds<Point3<T>>;
+/// Bounds3 structure.
+pub type Bounds3<T> = Bounds<Point3<T>>;
 
-/// Cuboid constructor.
+/// Bounds3 constructor.
 #[allow(non_snake_case)]
-pub const fn Cuboid<T>(mins: Point3<T>, maxs: Point3<T>) -> Cuboid<T> {
-	Cuboid { mins, maxs }
+pub const fn Bounds3<T>(mins: Point3<T>, maxs: Point3<T>) -> Bounds3<T> {
+	Bounds3 { mins, maxs }
 }
 
-impl<T> Cuboid<T> {
-	/// Cuboid constructor from components.
+impl<T> Bounds3<T> {
+	/// Bounds3 constructor from components.
 	#[inline]
-	pub const fn c(mins_x: T, mins_y: T, mins_z: T, maxs_x: T, maxs_y: T, maxs_z: T) -> Cuboid<T> {
+	pub const fn c(mins_x: T, mins_y: T, mins_z: T, maxs_x: T, maxs_y: T, maxs_z: T) -> Bounds3<T> {
 		let mins = Point3 { x: mins_x, y: mins_y, z: mins_z };
 		let maxs = Point3 { x: maxs_x, y: maxs_y, z: maxs_z };
-		Cuboid { mins, maxs }
+		Bounds3 { mins, maxs }
 	}
 }
 
-impl<T: Scalar> Cuboid<T> {
-	/// Width of the cuboid.
+impl<T: Scalar> Bounds3<T> {
+	/// Width of the Bounds3.
 	#[inline]
 	pub fn width(&self) -> T {
 		self.maxs.x - self.mins.x
 	}
-	/// Height of the cuboid.
+	/// Height of the Bounds3.
 	#[inline]
 	pub fn height(&self) -> T {
 		self.maxs.y - self.mins.y
 	}
-	/// Depth of the cuboid.
+	/// Depth of the Bounds3.
 	#[inline]
 	pub fn depth(&self) -> T {
 		self.maxs.z - self.mins.z
 	}
-	/// Volume of the cuboid.
+	/// Volume of the Bounds3.
 	#[inline]
 	pub fn volume(&self) -> T {
 		(self.maxs.x - self.mins.x) * (self.maxs.y - self.mins.y) * (self.maxs.z - self.mins.z)
 	}
-	/// Center of the cuboid.
+	/// Center of the Bounds3.
 	#[inline]
 	pub fn center(&self) -> Point3<T> {
 		(self.mins + self.maxs) / (T::ONE + T::ONE)
@@ -468,7 +468,7 @@ impl<T: Scalar> Cuboid<T> {
 
 //----------------------------------------------------------------
 
-impl<T: Float> TraceRay<T> for Cuboid<T> {
+impl<T: Float> TraceRay<T> for Bounds3<T> {
 	fn inside(&self, ray: &Ray<T>) -> bool {
 		self.contains(ray.origin)
 	}

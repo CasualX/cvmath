@@ -16,44 +16,66 @@ pub trait Angle where Self:
 	/// The underlying float type.
 	type T: Float;
 	/// Returns a full turn of `360°` or `2π rad`.
+	#[must_use]
 	fn turn() -> Self;
 	/// Returns a half turn of `180°` or `π rad`.
+	#[must_use]
 	fn half() -> Self { Self::turn() / Self::T::cast_from(2.0) }
 	/// Returns a third turn of `120°` or `2π/3 rad`.
+	#[must_use]
 	fn third() -> Self { Self::turn() / Self::T::cast_from(3.0) }
 	/// Returns a quarter turn of `90°` or `π/2 rad`.
+	#[must_use]
 	fn quarter() -> Self { Self::turn() / Self::T::cast_from(4.0) }
 	/// Returns a fifth turn of `72°` or `2π/5 rad`.
+	#[must_use]
 	fn fifth() -> Self { Self::turn() / Self::T::cast_from(5.0) }
 	/// Returns a sixth turn of `60°` or `π/3 rad`.
+	#[must_use]
 	fn sixth() -> Self { Self::turn() / Self::T::cast_from(6.0) }
 	/// Returns an eight turn of `45°` or `π/4 rad`.
+	#[must_use]
 	fn eight() -> Self { Self::turn() / Self::T::cast_from(8.0) }
 	/// Returns a turn of `0°` or `0π rad`.
+	#[must_use]
 	fn zero() -> Self { Self::default() }
 	/// Normalizes the angle to range `[-180°, 180°]` or `[-π rad, π rad]`.
+	#[must_use]
 	fn normalize(self) -> Self;
 	/// Normalizes the angle to range `[0°, 360°]` or `[0 rad, 2π rad]`.
+	#[must_use]
 	fn normalize_abs(self) -> Self;
 	/// Sine.
+	#[must_use]
 	fn sin(self) -> Self::T;
 	/// Cosine.
+	#[must_use]
 	fn cos(self) -> Self::T;
 	/// Tangent.
+	#[must_use]
 	fn tan(self) -> Self::T;
 	/// Calculates the sine and cosine efficiently.
+	#[must_use]
 	fn sin_cos(self) -> (Self::T, Self::T);
+	#[must_use]
 	fn asin(sin: Self::T) -> Self;
+	#[must_use]
 	fn acos(cos: Self::T) -> Self;
+	#[must_use]
 	fn atan(tan: Self::T) -> Self;
+	#[must_use]
 	fn atan2(y: Self::T, x: Self::T) -> Self;
 	/// Converts from degrees.
+	#[must_use]
 	fn from_deg(deg: Deg<Self::T>) -> Self { deg.into() }
 	/// Converts from radians.
+	#[must_use]
 	fn from_rad(rad: Rad<Self::T>) -> Self { rad.into() }
 	/// Converts to degrees.
+	#[must_use]
 	fn to_deg(self) -> Deg<Self::T> { self.into() }
 	/// Converts to radians.
+	#[must_use]
 	fn to_rad(self) -> Rad<Self::T> { self.into() }
 }
 

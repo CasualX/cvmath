@@ -2,11 +2,13 @@
 /// Like the `From` trait implemented for numeric `as` conversions.
 pub trait CastFrom<T>: Sized {
 	/// Performs the `as` conversion.
+	#[must_use]
 	fn cast_from(_: T) -> Self;
 }
 /// Like the `Into` trait implemented for numeric `as` conversions.
 pub trait CastTo<T>: Sized {
 	/// Performs the `as` conversion.
+	#[must_use]
 	fn cast_to(self) -> T;
 }
 

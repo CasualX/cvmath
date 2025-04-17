@@ -2,11 +2,15 @@ use std::cmp;
 
 /// Calculate mins and maxs.
 pub trait Extrema<Rhs = Self>: Sized {
+	#[must_use]
 	fn min(self, rhs: Rhs) -> Self;
+	#[must_use]
 	fn max(self, rhs: Rhs) -> Self;
+	#[must_use]
 	fn min_max(self, rhs: Rhs) -> (Self, Self);
 
 	#[inline]
+	#[must_use]
 	fn clamp(self, min: Rhs, max: Rhs) -> Self {
 		self.min(min).max(max)
 	}

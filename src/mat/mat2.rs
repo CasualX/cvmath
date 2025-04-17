@@ -19,7 +19,7 @@ pub struct Mat2<T> {
 // 	pub a12: T, pub a22: T,
 // }
 
-/// Constructs a new matrix from components.
+/// Mat2 constructor.
 #[allow(non_snake_case)]
 #[inline]
 pub const fn Mat2<T>(

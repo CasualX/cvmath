@@ -24,7 +24,7 @@ pub struct Transform3<T> {
 // 	pub a14: T, pub a24: T, pub a34: T,
 // }
 
-/// Constructs a new matrix from components.
+/// Transform3 constructor.
 #[allow(non_snake_case)]
 #[inline]
 pub const fn Transform3<T>(

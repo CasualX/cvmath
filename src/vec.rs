@@ -37,7 +37,7 @@ assert!(Vec2(1, 9) > Vec2(1, -2));
 
 `X`, `Y`, `Z`, `W` where T: `Zero` + `One`: Constructs a unit vector along the given axis (given that axis exists for the vector).
 
-`with_x(self, x)`, `with_y(self, y)`, `with_z(self, z)`, `with_w(self, w)`: Note that these return new vectors with the respective component changed.
+`set_x(self, x)`, `set_y(self, y)`, `set_z(self, z)`, `set_w(self, w)`: Note that these return new vectors with the respective component changed.
 
 `get(self, c)`: Gets a component generically.
 
@@ -55,7 +55,7 @@ assert_eq!(Vec3 { x: 42, y: 42, z: 42 }, Vec3::dup(42));
 assert_eq!(Vec2 { x: 0.0, y: 1.0 }, Vec2::Y);
 assert_eq!(Vec3 { x: 1, y: 0, z: 0 }, Vec3::X);
 
-assert_eq!(Vec3 { x: -12, y: 0, z: 12 }, Vec3::default().with_x(-12).with_z(12));
+assert_eq!(Vec3 { x: -12, y: 0, z: 12 }, Vec3::default().set_x(-12).set_z(12));
 
 assert_eq!(2, Vec2 { x: 13, y: 2}.get(Y));
 
@@ -294,54 +294,46 @@ pub struct W;
 ///
 /// Implementation helper for other functions.
 pub trait ComponentImpl<T, C> {
+	#[must_use]
 	fn get(self) -> T;
 }
 
 impl<T> ComponentImpl<T, X> for Vec2<T> {
 	#[inline]
-	#[must_use]
 	fn get(self) -> T { self.x }
 }
 impl<T> ComponentImpl<T, Y> for Vec2<T> {
 	#[inline]
-	#[must_use]
 	fn get(self) -> T { self.y }
 }
 
 impl<T> ComponentImpl<T, X> for Vec3<T> {
 	#[inline]
-	#[must_use]
 	fn get(self) -> T { self.x }
 }
 impl<T> ComponentImpl<T, Y> for Vec3<T> {
 	#[inline]
-	#[must_use]
 	fn get(self) -> T { self.y }
 }
 impl<T> ComponentImpl<T, Z> for Vec3<T> {
 	#[inline]
-	#[must_use]
 	fn get(self) -> T { self.z }
 }
 
 impl<T> ComponentImpl<T, X> for Vec4<T> {
 	#[inline]
-	#[must_use]
 	fn get(self) -> T { self.x }
 }
 impl<T> ComponentImpl<T, Y> for Vec4<T> {
 	#[inline]
-	#[must_use]
 	fn get(self) -> T { self.y }
 }
 impl<T> ComponentImpl<T, Z> for Vec4<T> {
 	#[inline]
-	#[must_use]
 	fn get(self) -> T { self.z }
 }
 impl<T> ComponentImpl<T, W> for Vec4<T> {
 	#[inline]
-	#[must_use]
 	fn get(self) -> T { self.w }
 }
 
@@ -381,49 +373,49 @@ macro_rules! with {
 		/// Sets the `x` component.
 		#[inline]
 		#[must_use]
-		pub fn with_x(self, x: T) -> Vec1<T> { Vec1 { x } }
+		pub fn set_x(self, x: T) -> Vec1<T> { Vec1 { x } }
 	};
 	(Vec2) => {
 		/// Sets the `x` component.
 		#[inline]
 		#[must_use]
-		pub fn with_x(self, x: T) -> Vec2<T> { Vec2 { x, y: self.y } }
+		pub fn set_x(self, x: T) -> Vec2<T> { Vec2 { x, y: self.y } }
 		/// Sets the `y` component.
 		#[inline]
 		#[must_use]
-		pub fn with_y(self, y: T) -> Vec2<T> { Vec2 { x: self.x, y } }
+		pub fn set_y(self, y: T) -> Vec2<T> { Vec2 { x: self.x, y } }
 	};
 	(Vec3) => {
 		/// Sets the `x` component.
 		#[inline]
 		#[must_use]
-		pub fn with_x(self, x: T) -> Vec3<T> { Vec3 { x, y: self.y, z: self.z } }
+		pub fn set_x(self, x: T) -> Vec3<T> { Vec3 { x, y: self.y, z: self.z } }
 		/// Sets the `y` component.
 		#[inline]
 		#[must_use]
-		pub fn with_y(self, y: T) -> Vec3<T> { Vec3 { x: self.x, y, z: self.z } }
+		pub fn set_y(self, y: T) -> Vec3<T> { Vec3 { x: self.x, y, z: self.z } }
 		/// Sets the `z` component.
 		#[inline]
 		#[must_use]
-		pub fn with_z(self, z: T) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z } }
+		pub fn set_z(self, z: T) -> Vec3<T> { Vec3 { x: self.x, y: self.y, z } }
 	};
 	(Vec4) => {
 		/// Sets the `x` component.
 		#[inline]
 		#[must_use]
-		pub fn with_x(self, x: T) -> Vec4<T> { Vec4 { x, y: self.y, z: self.z, w: self.w } }
+		pub fn set_x(self, x: T) -> Vec4<T> { Vec4 { x, y: self.y, z: self.z, w: self.w } }
 		/// Sets the `y` component.
 		#[inline]
 		#[must_use]
-		pub fn with_y(self, y: T) -> Vec4<T> { Vec4 { x: self.x, y, z: self.z, w: self.w } }
+		pub fn set_y(self, y: T) -> Vec4<T> { Vec4 { x: self.x, y, z: self.z, w: self.w } }
 		/// Sets the `z` component.
 		#[inline]
 		#[must_use]
-		pub fn with_z(self, z: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z, w: self.w } }
+		pub fn set_z(self, z: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z, w: self.w } }
 		/// Sets the `w` component.
 		#[inline]
 		#[must_use]
-		pub fn with_w(self, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: self.z, w } }
+		pub fn set_w(self, w: T) -> Vec4<T> { Vec4 { x: self.x, y: self.y, z: self.z, w } }
 	};
 }
 
@@ -638,7 +630,6 @@ macro_rules! vec {
 
 		impl<T: Scalar> From<T> for $vec<T> {
 			#[inline]
-			#[must_use]
 			fn from(val: T) -> $vec<T> {
 				$vec { $($field: val),+ }
 			}
@@ -646,14 +637,12 @@ macro_rules! vec {
 
 		impl<T> From<($($T,)+)> for $vec<T> {
 			#[inline]
-			#[must_use]
 			fn from(val: ($($T,)+)) -> $vec<T> {
 				$vec { $($field: val.$I),+ }
 			}
 		}
 		impl<T> Into<($($T,)+)> for $vec<T> {
 			#[inline]
-			#[must_use]
 			fn into(self) -> ($($T,)+) {
 				($(self.$field,)+)
 			}
@@ -661,7 +650,6 @@ macro_rules! vec {
 
 		impl<T> From<[T; $N]> for $vec<T> {
 			#[inline]
-			#[must_use]
 			fn from(val: [T; $N]) -> $vec<T> {
 				let [$($field),+] = val;
 				$vec { $($field),+ }
@@ -669,7 +657,6 @@ macro_rules! vec {
 		}
 		impl<T> Into<[T; $N]> for $vec<T> {
 			#[inline]
-			#[must_use]
 			fn into(self) -> [T; $N] {
 				[$(self.$field),+]
 			}
@@ -680,14 +667,12 @@ macro_rules! vec {
 
 		impl<T> AsRef<[T; $N]> for $vec<T> {
 			#[inline]
-			#[must_use]
 			fn as_ref(&self) -> &[T; $N] {
 				unsafe { mem::transmute(self) }
 			}
 		}
 		impl<T> AsRef<[T]> for $vec<T> {
 			#[inline]
-			#[must_use]
 			fn as_ref(&self) -> &[T] {
 				<Self as AsRef<[T; $N]>>::as_ref(self)
 			}
@@ -702,14 +687,12 @@ macro_rules! vec {
 
 		impl<T> AsMut<[T; $N]> for $vec<T> {
 			#[inline]
-			#[must_use]
 			fn as_mut(&mut self) -> &mut [T; $N] {
 				unsafe { mem::transmute(self) }
 			}
 		}
 		impl<T> AsMut<[T]> for $vec<T> {
 			#[inline]
-			#[must_use]
 			fn as_mut(&mut self) -> &mut [T] {
 				<Self as AsMut<[T; $N]>>::as_mut(self)
 			}
@@ -718,7 +701,6 @@ macro_rules! vec {
 		impl<T> ops::Index<usize> for $vec<T> {
 			type Output = T;
 			#[inline]
-			#[must_use]
 			fn index(&self, i: usize) -> &T {
 				let array: &[T; $N] = self.as_ref();
 				&array[i]
@@ -1224,17 +1206,14 @@ macro_rules! vec {
 
 		impl<T: Extrema> Extrema<$vec<T>> for $vec<T> {
 			#[inline]
-			#[must_use]
 			fn min(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::min(self.$field, rhs.$field)),+ }
 			}
 			#[inline]
-			#[must_use]
 			fn max(self, rhs: $vec<T>) -> $vec<T> {
 				$vec { $($field: T::max(self.$field, rhs.$field)),+ }
 			}
 			#[inline]
-			#[must_use]
 			fn min_max(self, rhs: $vec<T>) -> ($vec<T>, $vec<T>) {
 				let temp = $vec { $($field: self.$field.min_max(rhs.$field)),+ };
 				($vec { $($field: temp.$field.0),+ }, $vec { $($field: temp.$field.1),+ })

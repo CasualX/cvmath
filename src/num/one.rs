@@ -2,8 +2,6 @@ use std::ops;
 
 pub trait One where Self: Sized + ops::Mul<Output = Self> {
 	const ONE: Self;
-	#[inline]
-	fn one() -> Self { Self::ONE }
 }
 
 //----------------------------------------------------------------

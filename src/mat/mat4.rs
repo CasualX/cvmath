@@ -23,7 +23,7 @@ pub struct Mat4<T> {
 // 	pub a14: T, pub a24: T, pub a34: T, pub a44: T,
 // }
 
-/// Constructs a new matrix from components.
+/// Mat4 constructor.
 #[allow(non_snake_case)]
 #[inline]
 pub const fn Mat4<T>(
@@ -250,7 +250,7 @@ impl<T: Float> Mat4<T> {
 
 	/// Screen coordinate matrix.
 	#[inline]
-	pub fn screen(screen: Rect<T>) -> Mat4<T> {
+	pub fn screen(screen: Bounds2<T>) -> Mat4<T> {
 		let half = T::ONE / (T::ONE + T::ONE);
 		Mat4::translate((screen.left(), screen.top(), T::ZERO)) * Mat4::scale((screen.width(), screen.height(), T::ONE)) * Mat4::translate((half, half, T::ZERO)) * Mat4::scale((half, -half, T::ONE))
 	}
@@ -258,6 +258,18 @@ impl<T: Float> Mat4<T> {
 
 //----------------------------------------------------------------
 // Conversions
+
+impl<T> Mat4<T> {
+	/// Converts to a Mat3 matrix.
+	#[inline]
+	pub fn mat3(self) -> Mat3<T> {
+		Mat3 {
+			a11: self.a11, a12: self.a12, a13: self.a13,
+			a21: self.a21, a22: self.a22, a23: self.a23,
+			a31: self.a31, a32: self.a32, a33: self.a33,
+		}
+	}
+}
 
 impl<T> Mat4<T> {
 	/// Imports the matrix from a row-major layout.

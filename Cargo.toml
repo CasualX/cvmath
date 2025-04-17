@@ -1,14 +1,14 @@
 [package]
 name = "cvmath"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Casper <CasualX@users.noreply.github.com>"]
 edition = "2021"
 
-description = "Computer Vector Graphics Math Library"
+description = "Computer Graphics Vector Math Library"
 
 # documentation =
 # homepage =
-repository = "https://github.com/CasualX/cgmath"
+repository = "https://github.com/CasualX/cvmath"
 
 readme = "readme.md"
 
