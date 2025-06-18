@@ -12,7 +12,7 @@ pub trait Extrema<Rhs = Self>: Sized {
 	#[inline]
 	#[must_use]
 	fn clamp(self, min: Rhs, max: Rhs) -> Self {
-		self.min(min).max(max)
+		self.max(min).min(max)
 	}
 }
 

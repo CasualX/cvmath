@@ -6,7 +6,7 @@ use super::*;
 /// Angle units.
 pub trait Angle where Self:
 	Copy + Default + PartialEq + PartialOrd +
-	fmt::Debug + fmt::Display +
+	fmt::Debug + fmt::Display + Extrema +
 	From<Deg<<Self as Angle>::T>> + From<Rad<<Self as Angle>::T>> +
 	Into<Deg<<Self as Angle>::T>> + Into<Rad<<Self as Angle>::T>> +
 	/*addition*/ops::Add<Output = Self> + /*difference*/ops::Sub<Output = Self> + /*inverse*/ops::Neg<Output = Self> +
@@ -80,7 +80,7 @@ pub trait Angle where Self:
 }
 
 /// Angle (degrees).
-#[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Default, PartialEq, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct Deg<T> {
 	pub value: T,
@@ -97,7 +97,7 @@ pub const fn Deg<T>(value: T) -> Deg<T> {
 unsafe impl<T: dataview::Pod> dataview::Pod for Deg<T> {}
 
 /// Angle (radians).
-#[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Default, PartialEq, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct Rad<T> {
 	pub value: T,
@@ -205,6 +205,22 @@ macro_rules! angle {
 			fn to_rad(self) -> Rad<T> { Rad(cvt!($ty<T> to Rad self.value)) }
 		}
 
+		impl<T: Float> Extrema for $ty<T> {
+			#[inline]
+			fn min(self, rhs: $ty<T>) -> $ty<T> {
+				$ty(self.value.min(rhs.value))
+			}
+			#[inline]
+			fn max(self, rhs: $ty<T>) -> $ty<T> {
+				$ty(self.value.max(rhs.value))
+			}
+			#[inline]
+			fn min_max(self, rhs: $ty<T>) -> ($ty<T>, $ty<T>) {
+				let (min, max) = self.value.min_max(rhs.value);
+				($ty(min), $ty(max))
+			}
+		}
+
 		//----------------------------------------------------------------
 		// Inherent methods
 
@@ -239,6 +255,9 @@ macro_rules! angle {
 			/// Normalizes the angle to range `[0°, 360°]` or `[0 rad, 2π rad]`.
 			#[inline]
 			pub fn normalize_abs(self) -> $ty<T> { Angle::normalize_abs(self) }
+			/// Clamps the angle to the given range.
+			#[inline]
+			pub fn clamp(self, min: $ty<T>, max: $ty<T>) -> $ty<T> { Extrema::clamp(self, min, max) }
 			/// Sine.
 			#[inline]
 			pub fn sin(self) -> T { Angle::sin(self) }

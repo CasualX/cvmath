@@ -15,7 +15,7 @@ mod vec;
 mod bools;
 mod packed;
 mod mat;
-mod quaternion;
+mod quat;
 
 #[cfg(feature = "qangle")]
 mod qangle;
@@ -38,7 +38,7 @@ pub use crate::vec::{Vec2, Vec3, Vec4, X, Y, Z, W};
 pub use crate::bools::{Bool2, Bool3, Bool4};
 pub use crate::mat::{Mat2, Mat3, Mat4, Transform2, Transform3, Hand, Clip};
 pub use crate::mat::{Hand::*, Clip::*};
-pub use crate::quaternion::Quaternion;
+pub use crate::quat::Quat;
 
 #[cfg(feature = "qangle")]
 pub use crate::qangle::QAngle;
@@ -57,4 +57,4 @@ pub use crate::point::{Point2f, Point3f, Point2d, Point3d, Point2i, Point3i};
 #[doc(hidden)]
 pub use crate::mat::{Mat2f, Mat3f, Mat4f, Transform2f, Transform3f, Mat2d, Mat3d, Mat4d, Transform2d, Transform3d};
 #[doc(hidden)]
-pub use crate::quaternion::{Quaternionf, Quaterniond};
+pub use crate::quat::{Quatf, Quatd};

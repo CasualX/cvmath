@@ -177,6 +177,8 @@ Exclusive to `Vec2`:
 
 `polar_angle(self)`: Calculates the polar angle.
 
+`signed_angle(self, rhs)`: Calculates the signed angle between two vectors.
+
 `ccw(self)`: Rotates the vector counter-clockwise by 90°.
 
 `cw(self)`: Rotates the vector clockwise by 90°.
@@ -188,6 +190,10 @@ Exclusive to `Vec2`:
 Exclusive to `Vec3`:
 
 `cross(self, rhs)`: Calculates the 3D cross product.
+
+`signed_angle(self, rhs)`: Calculates the signed angle between two vectors in 3D space.
+
+`any_perp(self)`: Returns a normalized vector perpendicular to the vector.
 
 ### Examples
 
@@ -1455,6 +1461,23 @@ vec!(Vec2 2 { x 0 T U X, y 1 T U Y } {
 	pub fn polar_angle(self) -> Rad<T> where T: Float {
 		Rad::atan2(self.y, self.x)
 	}
+	/// Returns the signed angle between two 2D vectors.
+	///
+	/// The sign of the angle follows the right-hand rule (counter-clockwise is positive).
+	///
+	/// ```
+	/// use cvmath::{Vec2, Deg};
+	///
+	/// let a = Vec2::X;
+	/// let b = Vec2::Y;
+	/// assert_eq!(Deg(90.0), a.signed_angle(b).to_deg());
+	/// assert_eq!(Deg(-90.0), b.signed_angle(a).to_deg());
+	/// ```
+	#[inline]
+	#[must_use]
+	pub fn signed_angle(self, rhs: Vec2<T>) -> Rad<T> where T: Float {
+		Rad::atan2(self.cross(rhs), self.dot(rhs))
+	}
 	/// Rotates the vector counter-clockwise by 90°.
 	///
 	/// The resulting vector is perpendicular to the given vector.
@@ -1559,6 +1582,43 @@ vec!(Vec3 3 { x 0 T U X, y 1 T U Y, z 2 T U Z } {
 			y: self.z * rhs.x - self.x * rhs.z,
 			z: self.x * rhs.y - self.y * rhs.x,
 		}
+	}
+	/// Returns the signed angle between two 3D vectors around a given axis.
+	///
+	/// The sign of the angle is determined by the right-hand rule around the `axis`.
+	///
+	/// ```
+	/// use cvmath::{Vec3, Deg};
+	///
+	/// let a = Vec3::X;
+	/// let b = Vec3::Y;
+	/// let axis = Vec3::Z;
+	///
+	/// assert_eq!(Deg(90.0), a.signed_angle(b, axis).to_deg());
+	/// ```
+	#[inline]
+	#[must_use]
+	pub fn signed_angle(self, rhs: Vec3<T>, axis: Vec3<T>) -> Rad<T> where T: Float {
+		Rad::atan2(axis.dot(self.cross(rhs)), self.dot(rhs))
+	}
+	/// Returns a normalized vector perpendicular to `self`.
+	///
+	/// ```
+	/// use cvmath::Vec3;
+	///
+	/// let v: Vec3<f64> = Vec3::new(0.0, 0.0, 1.0);
+	/// let perp = v.any_perp();
+	///
+	/// // Dot product is (close to) zero, meaning perpendicular:
+	/// assert_eq!(v.dot(perp).abs(), 0.0);
+	/// assert_eq!(perp.len(), 1.0);
+	/// ```
+	#[inline]
+	#[must_use]
+	pub fn any_perp(self) -> Vec3<T> where T: Float {
+		let v = if self.x != T::ZERO || self.y != T::ZERO { Vec3::new(-self.y, self.x, T::ZERO) }
+		else { Vec3::new(T::ZERO, -self.z, self.y) };
+		v.normalize()
 	}
 	/// Homogeneous divide.
 	#[inline]

@@ -206,12 +206,10 @@ impl<T: Float> Mat4<T> {
 
 	/// Orthographic 3D matrix.
 	#[inline]
-	pub fn ortho_3d(left: T, right: T, bottom: T, top: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
+	pub fn ortho_3d(left: T, right: T, bottom: T, top: T, near: T, far: T, (hand, clip): (Hand, Clip)) -> Mat4<T> {
 		debug_assert!(T::ZERO < near && near < far);
 
 		let two = T::ONE + T::ONE;
-		let (hand, clip) = flags;
-
 		let a11 = two / (right - left);
 		let a14 = -(right + left) / (right - left);
 		let a22 = two / (top - bottom);
