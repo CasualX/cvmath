@@ -120,12 +120,15 @@ impl<T: Scalar> Transform2<T> {
 	}
 
 	/// Remap matrix.
+	///
+	/// Remaps the coordinates from one bounding box to another.
 	#[inline]
 	pub fn remap(from: Bounds2<T>, to: Bounds2<T>) -> Transform2<T> {
 		let scale = to.size() / from.size();
+		let Vec2 { x: a13, y: a23 } = to.mins - from.mins * scale;
 		Transform2 {
-			a11: scale.x, a12: T::ZERO, a13: to.mins.x - from.mins.x * scale.x,
-			a21: T::ZERO, a22: scale.y, a23: to.mins.y - from.mins.y * scale.y,
+			a11: scale.x, a12: T::ZERO, a13,
+			a21: T::ZERO, a22: scale.y, a23,
 		}
 	}
 }
@@ -232,21 +235,20 @@ impl<T: Scalar> Transform2<T> {
 	}
 	/// Computes the inverse matrix.
 	#[inline]
-	pub fn inverse(self) -> Transform2<T> {
+	pub fn inverse(self) -> Transform2<T> where T: Float {
 		let det = self.determinant();
-		if det != T::ZERO {
-			let inv_det = T::ONE / det;
-			Transform2 {
-				a11: self.a22 * inv_det,
-				a12: -self.a12 * inv_det,
-				a13: (self.a12 * self.a23 - self.a13 * self.a22) * inv_det,
-				a21: -self.a21 * inv_det,
-				a22: self.a11 * inv_det,
-				a23: (self.a13 * self.a21 - self.a11 * self.a23) * inv_det,
-			}
+		if det.abs() < T::EPSILON {
+			return Transform2::ZERO;
 		}
-		else {
-			self
+
+		let inv_det = T::ONE / det;
+		Transform2 {
+			a11: self.a22 * inv_det,
+			a12: -self.a12 * inv_det,
+			a13: (self.a12 * self.a23 - self.a13 * self.a22) * inv_det,
+			a21: -self.a21 * inv_det,
+			a22: self.a11 * inv_det,
+			a23: (self.a13 * self.a21 - self.a11 * self.a23) * inv_det,
 		}
 	}
 }
@@ -316,5 +318,39 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Mat2<
 	#[inline]
 	fn mul_assign(&mut self, rhs: Mat2<T>) {
 		*self = *self * rhs;
+	}
+}
+
+#[test]
+fn test_inverse() {
+	let mut rng = urandom::seeded(42);
+
+	for _ in 0..1000 {
+		let x = Vec2(
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+		);
+		let y = Vec2(
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+		);
+		let t = Vec2(
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+		);
+
+		let mat = Transform2::compose(x, y, t);
+		let inv = mat.inverse();
+		let _identity = mat * inv;
+
+		let p = Vec2(
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+		);
+		let projected = mat * p;
+		let unprojected = inv * projected;
+
+		let error = (unprojected - p).len();
+		assert!(error < 1e-6, "Failed for mat: {mat:?}, p: {p:?}, error: {error}");
 	}
 }

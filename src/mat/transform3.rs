@@ -217,33 +217,32 @@ impl<T: Scalar> Transform3<T> {
 	}
 	/// Computes the inverse matrix.
 	#[inline]
-	pub fn inverse(self) -> Transform3<T> {
+	pub fn inverse(self) -> Transform3<T> where T: Float {
 		let det = self.determinant();
-		if det != T::ZERO {
-			let inv_det = T::ONE / det;
-			Transform3 {
-				a11: (self.a22 * self.a33 - self.a23 * self.a32) * inv_det,
-				a12: (self.a13 * self.a32 - self.a12 * self.a33) * inv_det,
-				a13: (self.a12 * self.a23 - self.a13 * self.a22) * inv_det,
-				a14: (self.a12 * (self.a24 * self.a33 - self.a23 * self.a34) +
-					self.a13 * (self.a22 * self.a34 - self.a24 * self.a32) +
-					self.a14 * (self.a23 * self.a32 - self.a22 * self.a33)) * inv_det,
-				a21: (self.a23 * self.a31 - self.a21 * self.a33) * inv_det,
-				a22: (self.a11 * self.a33 - self.a13 * self.a31) * inv_det,
-				a23: (self.a13 * self.a21 - self.a11 * self.a23) * inv_det,
-				a24: (self.a11 * (self.a23 * self.a34 - self.a24 * self.a33) +
-					self.a13 * (self.a24 * self.a31 - self.a21 * self.a34) +
-					self.a14 * (self.a21 * self.a33 - self.a23 * self.a31)) * inv_det,
-				a31: (self.a21 * self.a32 - self.a22 * self.a31) * inv_det,
-				a32: (self.a12 * self.a31 - self.a11 * self.a32) * inv_det,
-				a33: (self.a11 * self.a22 - self.a12 * self.a21) * inv_det,
-				a34: (self.a11 * (self.a24 * self.a32 - self.a22 * self.a34) +
-					self.a12 * (self.a21 * self.a34 - self.a24 * self.a31) +
-					self.a14 * (self.a22 * self.a31 - self.a21 * self.a32)) * inv_det,
-			}
+		if det.abs() < T::EPSILON {
+			return Transform3::ZERO;
 		}
-		else {
-			self
+
+		let inv_det = T::ONE / det;
+		Transform3 {
+			a11: (self.a22 * self.a33 - self.a23 * self.a32) * inv_det,
+			a12: (self.a13 * self.a32 - self.a12 * self.a33) * inv_det,
+			a13: (self.a12 * self.a23 - self.a13 * self.a22) * inv_det,
+			a14: (self.a12 * (self.a24 * self.a33 - self.a23 * self.a34) +
+				self.a13 * (self.a22 * self.a34 - self.a24 * self.a32) +
+				self.a14 * (self.a23 * self.a32 - self.a22 * self.a33)) * inv_det,
+			a21: (self.a23 * self.a31 - self.a21 * self.a33) * inv_det,
+			a22: (self.a11 * self.a33 - self.a13 * self.a31) * inv_det,
+			a23: (self.a13 * self.a21 - self.a11 * self.a23) * inv_det,
+			a24: (self.a11 * (self.a23 * self.a34 - self.a24 * self.a33) +
+				self.a13 * (self.a24 * self.a31 - self.a21 * self.a34) +
+				self.a14 * (self.a21 * self.a33 - self.a23 * self.a31)) * inv_det,
+			a31: (self.a21 * self.a32 - self.a22 * self.a31) * inv_det,
+			a32: (self.a12 * self.a31 - self.a11 * self.a32) * inv_det,
+			a33: (self.a11 * self.a22 - self.a12 * self.a21) * inv_det,
+			a34: (self.a11 * (self.a24 * self.a32 - self.a22 * self.a34) +
+				self.a12 * (self.a21 * self.a34 - self.a24 * self.a31) +
+				self.a14 * (self.a22 * self.a31 - self.a21 * self.a32)) * inv_det,
 		}
 	}
 }
@@ -329,5 +328,47 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Trans
 	#[inline]
 	fn mul_assign(&mut self, rhs: Transform3<T>) {
 		*self = *self * rhs;
+	}
+}
+
+#[test]
+fn test_inverse() {
+	let mut rng = urandom::seeded(42);
+
+	for _ in 0..1000 {
+		let x = Vec3(
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+		);
+		let y = Vec3(
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+		);
+		let z = Vec3(
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+		);
+		let t = Vec3(
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+		);
+
+		let mat = Transform3::compose(x, y, z, t);
+		let inv = mat.inverse();
+		let _identity = mat * inv;
+
+		let p = Vec3(
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+			rng.range(-1.0..1.0),
+		);
+		let projected = mat * p;
+		let unprojected = inv * projected;
+		let error = (unprojected - p).len();
+		assert!(error < 1e-6, "Failed for mat: {mat:?}, p: {p:?}, error: {error}");
 	}
 }

@@ -238,14 +238,12 @@ impl<T: Scalar> Mat2<T> {
 	}
 	/// Computes the inverse matrix.
 	#[inline]
-	pub fn inverse(self) -> Mat2<T> {
+	pub fn inverse(self) -> Mat2<T> where T: Float {
 		let det = self.determinant();
-		if det != T::ZERO {
-			self.adjugate() * (T::ONE / det)
+		if det.abs() < T::EPSILON {
+			return Mat2::ZERO;
 		}
-		else {
-			self
-		}
+		self.adjugate() * (T::ONE / det)
 	}
 	/// Returns the transposed matrix.
 	#[inline]
@@ -332,5 +330,30 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Mat2<
 	#[inline]
 	fn mul_assign(&mut self, rhs: Mat2<T>) {
 		*self = *self * rhs;
+	}
+}
+
+#[test]
+fn test_inverse() {
+	let mut rng = urandom::seeded(42);
+
+	for _ in 0..1000 {
+		let a11 = rng.range(-10.0..10.0);
+		let a12 = rng.range(-10.0..10.0);
+		let a21 = rng.range(-10.0..10.0);
+		let a22 = rng.range(-10.0..10.0);
+
+		let mat = Mat2(a11, a12, a21, a22);
+		let inv = mat.inverse();
+		let _identity = mat * inv;
+
+		let p = Vec2(
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+		);
+		let projected = mat * p;
+		let unprojected = inv * projected;
+		let error = (unprojected - p).len();
+		assert!(error < 1e-6, "Failed for mat: {mat:?}, p: {p:?}, error: {error}");
 	}
 }

@@ -37,7 +37,6 @@ pub use crate::angle::{Rad, Deg};
 pub use crate::vec::{Vec2, Vec3, Vec4, X, Y, Z, W};
 pub use crate::bools::{Bool2, Bool3, Bool4};
 pub use crate::mat::{Mat2, Mat3, Mat4, Transform2, Transform3, Hand, Clip};
-pub use crate::mat::{Hand::*, Clip::*};
 pub use crate::quat::Quat;
 
 #[cfg(feature = "qangle")]

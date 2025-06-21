@@ -128,65 +128,68 @@ impl<T: Zero + One> From<Transform3<T>> for Mat4<T> {
 // https://miz-ar.info/glm-notes/gtc/matrix-transform.html
 
 impl<T: Float> Mat4<T> {
-	#[doc(hidden)]
-	#[inline]
-	pub fn no_to_zo(self) -> Mat4<T> {
-		let conv = Mat4 {
-			a11: T::ONE, a12: T::ZERO, a13: T::ZERO, a14: T::ZERO,
-			a21: T::ZERO, a22: T::ONE, a23: T::ZERO, a24: T::ZERO,
-			a31: T::ZERO, a32: T::ZERO, a33: T::ONE / (T::ONE + T::ONE), a34: T::ONE / (T::ONE + T::ONE),
-			a41: T::ZERO, a42: T::ZERO, a43: T::ZERO, a44: T::ONE,
-		};
-		conv * self
-	}
-
-	#[doc(hidden)]
-	#[inline]
-	pub fn zo_to_no(self) -> Mat4<T> {
-		let half = T::ONE / (T::ONE + T::ONE);
-		let conv = Mat4 {
-			a11: T::ONE, a12: T::ZERO, a13: T::ZERO, a14: T::ZERO,
-			a21: T::ZERO, a22: T::ONE, a23: T::ZERO, a24: T::ZERO,
-			a31: T::ZERO, a32: T::ZERO, a33: half, a34: half,
-			a41: T::ZERO, a42: T::ZERO, a43: T::ZERO, a44: T::ONE,
-		}.inverse();
-		conv * self
-	}
-
 	/// Look-at matrix.
 	#[inline]
-	pub fn look_at(eye: Vec3<T>, target: Vec3<T>, up: Vec3<T>, hand: Hand) -> Mat4<T> {
-		let forward = (target - eye).normalize();
-		let side = up.cross(forward).normalize();
-		let up = forward.cross(side);
+	pub fn look_at(eye: Vec3<T>, target: Vec3<T>, ref_up: Vec3<T>, hand: Hand) -> Mat4<T> {
+		let (forward, side, up);
+
+		match hand {
+			Hand::LH => {
+				forward = (target - eye).normalize();
+				side = ref_up.cross(forward).normalize();
+				up = forward.cross(side);
+			}
+			Hand::RH => {
+				forward = (eye - target).normalize();  // flipped for RH
+				side = ref_up.cross(forward).normalize();
+				up = forward.cross(side);
+			}
+		}
 
 		let Vec3 { x: a11, y: a12, z: a13 } = side;
+		let a14 = -side.dot(eye);
+
 		let Vec3 { x: a21, y: a22, z: a23 } = up;
-		let Vec3 { x: a31, y: a32, z: a33 } = match hand { Hand::LH => forward, Hand::RH => -forward };
-		let (a14, a24, a34) = (-side.dot(eye), -up.dot(eye), forward.dot(eye));
-		let a34 = match hand { Hand::LH => -a34, Hand::RH => a34 };
+		let a24 = -up.dot(eye);
+
+		let Vec3 { x: a31, y: a32, z: a33 } = forward;
+		let a34 = -forward.dot(eye);
+
 		Mat4 { a11, a12, a13, a14, a21, a22, a23, a24, a31, a32, a33, a34, a44: T::ONE, ..Mat4::ZERO }
 	}
 
 	/// Frustum matrix.
 	#[inline]
-	pub fn frustum(left: T, right: T, bottom: T, top: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
+	pub fn frustum(left: T, right: T, bottom: T, top: T, near: T, far: T, (hand, clip): (Hand, Clip)) -> Mat4<T> {
 		debug_assert!(T::ZERO < near && near < far);
 
-		let (hand, clip) = flags;
+		let nf = far - near;
+		let np = near + near;
 
-		let a11 = (near + near) / (right - left);
+		let a11 = np / (right - left);
 		let a13 = (right + left) / (right - left);
-		let a22 = (near + near) / (top - bottom);
+		let a22 = np / (top - bottom);
 		let a23 = (top + bottom) / (top - bottom);
 
-		let a33 = match clip { Clip::ZO => far, Clip::NO => far + near } / (far - near);
-		let a33 = match hand { Hand::LH => a33, Hand::RH => -a33 };
+		let a33 = match clip {
+			Clip::ZO => far / nf,
+			Clip::NO => (far + near) / nf,
+		};
+		let a33 = match hand {
+			Hand::LH => a33,
+			Hand::RH => -a33,
+		};
 
-		let a34 = -far * near / (far - near);
-		let a34 = match clip { Clip::ZO => a34, Clip::NO => a34 + a34 };
+		let a34 = -far * near / nf;
+		let a34 = match clip {
+			Clip::ZO => a34,
+			Clip::NO => a34 + a34,
+		};
 
-		let a43 = match hand { Hand::LH => T::ONE, Hand::RH => -T::ONE };
+		let a43 = match hand {
+			Hand::LH => T::ONE,
+			Hand::RH => -T::ONE,
+		};
 
 		Mat4 { a11, a13, a22, a23, a33, a34, a43, ..Mat4::ZERO }
 	}
@@ -224,18 +227,20 @@ impl<T: Float> Mat4<T> {
 	/// Perspective matrix.
 	#[inline]
 	pub fn perspective(fovy: impl Angle<T = T>, aspect: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
-		// debug_assert!(fovy > T::zero() && fovy < T::half());
+		let fovy = fovy.to_rad();
+		debug_assert!(fovy > Rad::zero() && fovy < Rad::half());
 		debug_assert!(aspect > T::ZERO);
 		debug_assert!(T::ZERO < near && near < far);
 
-		let two = T::ONE + T::ONE;
-		let h = two * near * (fovy / (T::ONE + T::ONE)).tan();
-		let w = aspect * h;
+		let half_fovy = fovy / (T::ONE + T::ONE);
+		let half_height = near * half_fovy.tan();
+		let half_width = aspect * half_height;
 
-		let left = -w / two;
-		let right = w / two;
-		let bottom = -h / two;
-		let top = h / two;
+		let left = -half_width;
+		let right = half_width;
+		let bottom = -half_height;
+		let top = half_height;
+
 		Mat4::frustum(left, right, bottom, top, near, far, flags)
 	}
 
@@ -246,11 +251,19 @@ impl<T: Float> Mat4<T> {
 		Mat4::perspective(fovy, width / height, near, far, flags)
 	}
 
-	/// Screen coordinate matrix.
+	/// NDC to viewport pixel matrix.
 	#[inline]
-	pub fn screen(screen: Bounds2<T>) -> Mat4<T> {
+	pub fn viewport(viewport: Bounds2<T>) -> Mat4<T> {
 		let half = T::ONE / (T::ONE + T::ONE);
-		Mat4::translate((screen.left(), screen.top(), T::ZERO)) * Mat4::scale((screen.width(), screen.height(), T::ONE)) * Mat4::translate((half, half, T::ZERO)) * Mat4::scale((half, -half, T::ONE))
+		let w = viewport.width();
+		let h = viewport.height();
+
+		Mat4 {
+			a11: w * half, a12: T::ZERO,   a13: T::ZERO, a14: w * half + viewport.left(),
+			a21: T::ZERO,  a22: -h * half, a23: T::ZERO, a24: h * half + viewport.top(),
+			a31: T::ZERO,  a32: T::ZERO,   a33: T::ONE,  a34: T::ZERO,
+			a41: T::ZERO,  a42: T::ZERO,   a43: T::ZERO, a44: T::ONE,
+		}
 	}
 }
 
@@ -357,10 +370,22 @@ impl<T: Scalar> Mat4<T> {
 	/// Computes the determinant.
 	#[inline]
 	pub fn determinant(self) -> T {
-		self.a11 * (self.a22 * (self.a33 * self.a44 - self.a34 * self.a43) - self.a23 * (self.a32 * self.a44 - self.a34 * self.a42) + self.a24 * (self.a32 * self.a43 - self.a33 * self.a42)) -
-		self.a12 * (self.a21 * (self.a33 * self.a44 - self.a34 * self.a43) - self.a23 * (self.a31 * self.a44 - self.a34 * self.a41) + self.a24 * (self.a31 * self.a43 - self.a33 * self.a41)) +
-		self.a13 * (self.a21 * (self.a32 * self.a44 - self.a34 * self.a42) - self.a22 * (self.a31 * self.a44 - self.a34 * self.a41) + self.a24 * (self.a31 * self.a42 - self.a32 * self.a41)) -
-		self.a14 * (self.a21 * (self.a32 * self.a43 - self.a33 * self.a42) - self.a22 * (self.a31 * self.a43 - self.a33 * self.a41) + self.a23 * (self.a31 * self.a42 - self.a32 * self.a41))
+		// 2×2 subfactors
+		let s0 = self.a33 * self.a44 - self.a34 * self.a43;
+		let s1 = self.a32 * self.a44 - self.a34 * self.a42;
+		let s2 = self.a32 * self.a43 - self.a33 * self.a42;
+		let s3 = self.a31 * self.a44 - self.a34 * self.a41;
+		let s4 = self.a31 * self.a43 - self.a33 * self.a41;
+		let s5 = self.a31 * self.a42 - self.a32 * self.a41;
+
+		// Cofactors for first row
+		let c0 = self.a22 * s0 - self.a23 * s1 + self.a24 * s2;
+		let c1 = self.a21 * s0 - self.a23 * s3 + self.a24 * s4;
+		let c2 = self.a21 * s1 - self.a22 * s3 + self.a24 * s5;
+		let c3 = self.a21 * s2 - self.a22 * s4 + self.a23 * s5;
+
+		// Final determinant using expansion by first row
+		self.a11 * c0 - self.a12 * c1 + self.a13 * c2 - self.a14 * c3
 	}
 	/// Computes the trace.
 	#[inline]
@@ -369,14 +394,8 @@ impl<T: Scalar> Mat4<T> {
 	}
 	/// Computes the inverse matrix.
 	#[inline]
-	pub fn inverse(self) -> Mat4<T> {
-		let det = self.determinant();
-		if det != T::ZERO {
-			self.adjugate() * (T::ONE / det)
-		}
-		else {
-			self
-		}
+	pub fn inverse(self) -> Mat4<T> where T: Float {
+		glu_invert(&self).unwrap_or(Mat4::ZERO)
 	}
 	/// Returns the transposed matrix.
 	#[inline]
@@ -386,28 +405,6 @@ impl<T: Scalar> Mat4<T> {
 			a21: self.a12, a22: self.a22, a23: self.a32, a24: self.a42,
 			a31: self.a13, a32: self.a23, a33: self.a33, a34: self.a43,
 			a41: self.a14, a42: self.a24, a43: self.a34, a44: self.a44,
-		}
-	}
-	/// Computes the adjugate matrix.
-	#[inline]
-	pub fn adjugate(self) -> Mat4<T> {
-		Mat4 {
-			a11: self.a22 * (self.a33 * self.a44 - self.a34 * self.a43) - self.a23 * (self.a32 * self.a44 - self.a34 * self.a42) + self.a24 * (self.a32 * self.a43 - self.a33 * self.a42),
-			a12: -(self.a21 * (self.a33 * self.a44 - self.a34 * self.a43) - self.a23 * (self.a31 * self.a44 - self.a34 * self.a41) + self.a24 * (self.a31 * self.a43 - self.a33 * self.a41)),
-			a13: self.a21 * (self.a32 * self.a44 - self.a34 * self.a42) - self.a22 * (self.a31 * self.a44 - self.a34 * self.a41) + self.a24 * (self.a31 * self.a42 - self.a32 * self.a41),
-			a14: -(self.a21 * (self.a32 * self.a43 - self.a33 * self.a42) - self.a22 * (self.a31 * self.a43 - self.a33 * self.a41) + self.a23 * (self.a31 * self.a42 - self.a32 * self.a41)),
-			a21: -(self.a12 * (self.a33 * self.a44 - self.a34 * self.a43) - self.a13 * (self.a32 * self.a44 - self.a34 * self.a42) + self.a14 * (self.a32 * self.a43 - self.a33 * self.a42)),
-			a22: self.a11 * (self.a33 * self.a44 - self.a34 * self.a43) - self.a13 * (self.a31 * self.a44 - self.a34 * self.a41) + self.a14 * (self.a31 * self.a43 - self.a33 * self.a41),
-			a23: -(self.a11 * (self.a32 * self.a44 - self.a34 * self.a42) - self.a12 * (self.a31 * self.a44 - self.a34 * self.a41) + self.a14 * (self.a31 * self.a42 - self.a32 * self.a41)),
-			a24: self.a11 * (self.a32 * self.a43 - self.a33 * self.a42) - self.a12 * (self.a31 * self.a43 - self.a33 * self.a41) + self.a13 * (self.a31 * self.a42 - self.a32 * self.a41),
-			a31: self.a12 * (self.a23 * self.a44 - self.a24 * self.a43) - self.a13 * (self.a22 * self.a44 - self.a24 * self.a42) + self.a14 * (self.a22 * self.a43 - self.a23 * self.a42),
-			a32: -(self.a11 * (self.a23 * self.a44 - self.a24 * self.a43) - self.a13 * (self.a21 * self.a44 - self.a24 * self.a41) + self.a14 * (self.a21 * self.a43 - self.a23 * self.a41)),
-			a33: self.a11 * (self.a22 * self.a44 - self.a24 * self.a42) - self.a12 * (self.a21 * self.a44 - self.a24 * self.a41) + self.a14 * (self.a21 * self.a42 - self.a22 * self.a41),
-			a34: -(self.a11 * (self.a22 * self.a43 - self.a23 * self.a42) - self.a12 * (self.a21 * self.a43 - self.a23 * self.a41) + self.a13 * (self.a21 * self.a42 - self.a22 * self.a41)),
-			a41: -(self.a12 * (self.a23 * self.a34 - self.a24 * self.a33) - self.a13 * (self.a22 * self.a34 - self.a24 * self.a32) + self.a14 * (self.a22 * self.a33 - self.a23 * self.a32)),
-			a42: self.a11 * (self.a23 * self.a34 - self.a24 * self.a33) - self.a13 * (self.a21 * self.a34 - self.a24 * self.a31) + self.a14 * (self.a21 * self.a33 - self.a23 * self.a31),
-			a43: -(self.a11 * (self.a22 * self.a34 - self.a24 * self.a32) - self.a12 * (self.a21 * self.a34 - self.a24 * self.a31) + self.a14 * (self.a21 * self.a32 - self.a22 * self.a31)),
-			a44: self.a11 * (self.a22 * self.a33 - self.a23 * self.a32) - self.a12 * (self.a21 * self.a33 - self.a23 * self.a31) + self.a13 * (self.a21 * self.a32 - self.a22 * self.a31),
 		}
 	}
 }
@@ -515,5 +512,115 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Trans
 	#[inline]
 	fn mul_assign(&mut self, rhs: Transform3<T>) {
 		*self = *self * rhs;
+	}
+}
+
+/// Inverts the matrix using the gluInvertMatrix algorithm.
+/// Returns Some(inverse) or None if non-invertible.
+#[inline(always)]
+fn glu_invert<T: Float>(this: &Mat4<T>) -> Option<Mat4<T>> {
+	let m = [
+		this.a11, this.a12, this.a13, this.a14,
+		this.a21, this.a22, this.a23, this.a24,
+		this.a31, this.a32, this.a33, this.a34,
+		this.a41, this.a42, this.a43, this.a44,
+	];
+
+	let mut inv = [T::ZERO; 16];
+
+	inv[0] =  m[5]  * m[10] * m[15] - m[5]  * m[11] * m[14] - m[9]  * m[6]  * m[15]
+	        + m[9]  * m[7]  * m[14] + m[13] * m[6]  * m[11] - m[13] * m[7]  * m[10];
+
+	inv[4] = -m[4]  * m[10] * m[15] + m[4]  * m[11] * m[14] + m[8]  * m[6]  * m[15]
+	        - m[8]  * m[7]  * m[14] - m[12] * m[6]  * m[11] + m[12] * m[7]  * m[10];
+
+	inv[8] =  m[4]  * m[9]  * m[15] - m[4]  * m[11] * m[13] - m[8]  * m[5]  * m[15]
+	        + m[8]  * m[7]  * m[13] + m[12] * m[5]  * m[11] - m[12] * m[7]  * m[9];
+
+	inv[12] = -m[4]  * m[9]  * m[14] + m[4]  * m[10] * m[13] + m[8]  * m[5]  * m[14]
+	         - m[8]  * m[6]  * m[13] - m[12] * m[5]  * m[10] + m[12] * m[6]  * m[9];
+
+	inv[1] = -m[1]  * m[10] * m[15] + m[1]  * m[11] * m[14] + m[9]  * m[2]  * m[15]
+	        - m[9]  * m[3]  * m[14] - m[13] * m[2]  * m[11] + m[13] * m[3]  * m[10];
+
+	inv[5] =  m[0]  * m[10] * m[15] - m[0]  * m[11] * m[14] - m[8]  * m[2]  * m[15]
+	        + m[8]  * m[3]  * m[14] + m[12] * m[2]  * m[11] - m[12] * m[3]  * m[10];
+
+	inv[9] = -m[0]  * m[9]  * m[15] + m[0]  * m[11] * m[13] + m[8]  * m[1]  * m[15]
+	        - m[8]  * m[3]  * m[13] - m[12] * m[1]  * m[11] + m[12] * m[3]  * m[9];
+
+	inv[13] = m[0]  * m[9]  * m[14] - m[0]  * m[10] * m[13] - m[8]  * m[1]  * m[14]
+	        + m[8]  * m[2]  * m[13] + m[12] * m[1]  * m[10] - m[12] * m[2]  * m[9];
+
+	inv[2] =  m[1]  * m[6]  * m[15] - m[1]  * m[7]  * m[14] - m[5]  * m[2]  * m[15]
+	        + m[5]  * m[3]  * m[14] + m[13] * m[2]  * m[7]  - m[13] * m[3]  * m[6];
+
+	inv[6] = -m[0]  * m[6]  * m[15] + m[0]  * m[7]  * m[14] + m[4]  * m[2]  * m[15]
+	        - m[4]  * m[3]  * m[14] - m[12] * m[2]  * m[7]  + m[12] * m[3]  * m[6];
+
+	inv[10] = m[0]  * m[5]  * m[15] - m[0]  * m[7]  * m[13] - m[4]  * m[1]  * m[15]
+	        + m[4]  * m[3]  * m[13] + m[12] * m[1]  * m[7]  - m[12] * m[3]  * m[5];
+
+	inv[14] = -m[0]  * m[5]  * m[14] + m[0]  * m[6]  * m[13] + m[4]  * m[1]  * m[14]
+	         - m[4]  * m[2]  * m[13] - m[12] * m[1]  * m[6]  + m[12] * m[2]  * m[5];
+
+	inv[3] = -m[1]  * m[6]  * m[11] + m[1]  * m[7]  * m[10] + m[5]  * m[2]  * m[11]
+	        - m[5]  * m[3]  * m[10] - m[9]  * m[2]  * m[7]  + m[9]  * m[3]  * m[6];
+
+	inv[7] =  m[0]  * m[6]  * m[11] - m[0]  * m[7]  * m[10] - m[4]  * m[2]  * m[11]
+	        + m[4]  * m[3]  * m[10] + m[8]  * m[2]  * m[7]  - m[8]  * m[3]  * m[6];
+
+	inv[11] = -m[0]  * m[5]  * m[11] + m[0]  * m[7]  * m[9]  + m[4]  * m[1]  * m[11]
+	         - m[4]  * m[3]  * m[9]  - m[8]  * m[1]  * m[7]  + m[8]  * m[3]  * m[5];
+
+	inv[15] =  m[0]  * m[5]  * m[10] - m[0]  * m[6]  * m[9]  - m[4]  * m[1]  * m[10]
+	         + m[4]  * m[2]  * m[9]  + m[8]  * m[1]  * m[6]  - m[8]  * m[2]  * m[5];
+
+	let det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+	if det.abs() < T::EPSILON {
+		return None; // Not invertible
+	}
+
+	let inv_det = T::ONE / det;
+
+	Some(Mat4 {
+		a11: inv[0] * inv_det, a12: inv[1] * inv_det, a13: inv[2] * inv_det, a14: inv[3] * inv_det,
+		a21: inv[4] * inv_det, a22: inv[5] * inv_det, a23: inv[6] * inv_det, a24: inv[7] * inv_det,
+		a31: inv[8] * inv_det, a32: inv[9] * inv_det, a33: inv[10] * inv_det, a34: inv[11] * inv_det,
+		a41: inv[12] * inv_det, a42: inv[13] * inv_det, a43: inv[14] * inv_det, a44: inv[15] * inv_det,
+	})
+}
+
+#[test]
+fn test_inverse() {
+	let mut rng = urandom::seeded(42);
+
+	for _ in 0..1000 {
+		let fovy = Deg(rng.range(1.0..179.0));
+
+		let aspect = rng.range(0.5..4.0);
+
+		let near = rng.range(0.1..10.0);
+		let far = near + rng.range(10.0..100.0);
+
+		let hand = if rng.coin_flip() { Hand::RH } else { Hand::LH };
+		let clip = if rng.coin_flip() { Clip::NO } else { Clip::ZO };
+
+		let mat = Mat4::perspective(fovy, aspect, near, far, (hand, clip));
+		let inv = mat.inverse();
+
+		let p = Vec4(
+			rng.range(-10.0..10.0),
+			rng.range(-10.0..10.0),
+			rng.range(near..far),
+			rng.range(0.1..10.0),
+		);
+
+		let projected = mat * p;
+		let unprojected = inv * projected;
+		let _identity = mat * inv;
+
+		let error = (unprojected - p).len();
+		assert!(error < 1e-6, "Failed for fovy: {fovy}, aspect: {aspect}, near: {near}, far: {far}, hand: {hand:?}, clip: {clip:?}, p: {p:?}, error: {error}");
 	}
 }
