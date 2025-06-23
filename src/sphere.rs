@@ -1,6 +1,6 @@
 use super::*;
 
-/// Sphere structure.
+/// Sphere shape.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]
@@ -26,6 +26,17 @@ impl<T> Sphere<T> {
 	#[inline]
 	pub const fn new(center: Point3<T>, radius: T) -> Sphere<T> {
 		Sphere { center, radius }
+	}
+}
+
+impl<T: Scalar> Sphere<T> {
+	/// Linear interpolation between the shapes.
+	#[inline]
+	pub fn lerp(self, target: Sphere<T>, t: T) -> Sphere<T> {
+		Sphere {
+			center: self.center.lerp(target.center, t),
+			radius: self.radius + (target.radius - self.radius) * t,
+		}
 	}
 }
 

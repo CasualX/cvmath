@@ -48,6 +48,7 @@ impl<T> Mat2<T> {
 		}
 	}
 }
+
 impl<T: Zero> Mat2<T> {
 	/// Zero matrix.
 	pub const ZERO: Mat2<T> = Mat2 {
@@ -55,6 +56,7 @@ impl<T: Zero> Mat2<T> {
 		a21: T::ZERO, a22: T::ZERO,
 	};
 }
+
 impl<T: Zero + One> Mat2<T> {
 	/// Identity matrix.
 	pub const IDENTITY: Mat2<T> = Mat2 {
@@ -62,7 +64,8 @@ impl<T: Zero + One> Mat2<T> {
 		a21: T::ZERO, a22: T::ONE,
 	};
 }
-impl<T: Scalar> Mat2<T> {
+
+impl<T: Float> Mat2<T> {
 	/// Scaling matrix.
 	///
 	/// Scales around the origin.
@@ -74,6 +77,7 @@ impl<T: Scalar> Mat2<T> {
 			a21: T::ZERO, a22: scale.y,
 		}
 	}
+
 	/// Rotation matrix.
 	///
 	/// Rotates around the origin.
@@ -85,6 +89,7 @@ impl<T: Scalar> Mat2<T> {
 			a21: cy, a22:  cx,
 		}
 	}
+
 	/// Skewing matrix.
 	#[inline]
 	pub fn skew(skew: impl Into<Vec2<T>>) -> Mat2<T> {
@@ -94,6 +99,7 @@ impl<T: Scalar> Mat2<T> {
 			a21: skew.y, a22: T::ONE,
 		}
 	}
+
 	/// Reflection matrix.
 	///
 	/// Reflects around the given axis.
@@ -102,7 +108,7 @@ impl<T: Scalar> Mat2<T> {
 	pub fn reflect(axis: impl Into<Vec2<T>>) -> Mat2<T> {
 		let axis = axis.into();
 		let ls = axis.dot(axis);
-		if ls > T::ZERO {
+		if ls > T::EPSILON {
 			let Vec2 { x, y } = axis;
 			let ls = T::ONE / ls;
 			Mat2 {
@@ -115,6 +121,7 @@ impl<T: Scalar> Mat2<T> {
 			Mat2::scale(-T::ONE)
 		}
 	}
+
 	/// Projection matrix.
 	///
 	/// Projects onto the given axis.
@@ -123,7 +130,7 @@ impl<T: Scalar> Mat2<T> {
 	pub fn project(axis: impl Into<Vec2<T>>) -> Mat2<T> {
 		let axis = axis.into();
 		let ls = axis.dot(axis);
-		if ls > T::ZERO {
+		if ls > T::EPSILON {
 			let Vec2 { x, y } = axis;
 			let ls = T::ONE / ls;
 			Mat2 {
@@ -144,7 +151,7 @@ impl<T: Scalar> Mat2<T> {
 impl<T> Mat2<T> {
 	/// Converts to a Transform2 matrix.
 	#[inline]
-	pub fn affine(self) -> Transform2<T> where T: Zero {
+	pub fn transform2(self) -> Transform2<T> where T: Zero {
 		Transform2 {
 			a11: self.a11, a12: self.a12, a13: T::ZERO,
 			a21: self.a21, a22: self.a22, a23: T::ZERO,
@@ -153,10 +160,10 @@ impl<T> Mat2<T> {
 	/// Adds a translation to the matrix.
 	#[inline]
 	pub fn translate(self, trans: impl Into<Vec2<T>>) -> Transform2<T> {
-		let trans = trans.into();
+		let Vec2 { x: a13, y: a23 } = trans.into();
 		Transform2 {
-			a11: self.a11, a12: self.a12, a13: trans.x,
-			a21: self.a21, a22: self.a22, a23: trans.y,
+			a11: self.a11, a12: self.a12, a13,
+			a21: self.a21, a22: self.a22, a23,
 		}
 	}
 }
@@ -236,14 +243,30 @@ impl<T: Scalar> Mat2<T> {
 	pub fn trace(self) -> T {
 		self.a11 + self.a22
 	}
-	/// Computes the inverse matrix.
+	/// Computes the squared Frobenius norm (sum of squares of all matrix elements).
+	///
+	/// This measure is useful for quickly checking matrix magnitude or comparing matrices without the cost of a square root operation.
+	///
+	/// To check if a matrix is effectively zero, test if `flat_norm_sqr()` is below a small epsilon threshold.
 	#[inline]
-	pub fn inverse(self) -> Mat2<T> where T: Float {
+	pub fn flat_norm_sqr(self) -> T {
+		self.a11 * self.a11 + self.a12 * self.a12 +
+		self.a21 * self.a21 + self.a22 * self.a22
+	}
+	#[inline]
+	pub fn try_invert(self) -> Option<Mat2<T>> where T: Float {
 		let det = self.determinant();
 		if det.abs() < T::EPSILON {
-			return Mat2::ZERO;
+			return None;
 		}
-		self.adjugate() * (T::ONE / det)
+		Some(self.adjugate() * (T::ONE / det))
+	}
+	/// Computes the inverse matrix.
+	///
+	/// Returns the zero matrix if the determinant is near zero.
+	#[inline]
+	pub fn inverse(self) -> Mat2<T> where T: Float {
+		self.try_invert().unwrap_or(Mat2::ZERO)
 	}
 	/// Returns the transposed matrix.
 	#[inline]
@@ -332,6 +355,10 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Mat2<
 		*self = *self * rhs;
 	}
 }
+
+impl_mat_mul_scalar!(Mat2);
+impl_mat_mul_vec!(Mat2, Vec2);
+impl_mat_mul_mat!(Mat2);
 
 #[test]
 fn test_inverse() {

@@ -4,6 +4,9 @@ Transformation matrices.
 
 use super::*;
 
+#[macro_use]
+mod macros;
+
 mod mat2;
 mod mat3;
 mod mat4;

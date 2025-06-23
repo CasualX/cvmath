@@ -1,6 +1,6 @@
 use super::*;
 
-/// Plane structure.
+/// Plane shape.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]

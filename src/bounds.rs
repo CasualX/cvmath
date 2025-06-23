@@ -6,7 +6,7 @@ use super::*;
 
 //----------------------------------------------------------------
 
-/// Bounds structure.
+/// Bounds shape.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]
@@ -281,9 +281,34 @@ impl<U: Copy, T: ops::SubAssign<U>> ops::SubAssign<U> for Bounds<T> {
 	}
 }
 
+impl<T> AsRef<[T; 2]> for Bounds<T> {
+	#[inline]
+	fn as_ref(&self) -> &[T; 2] {
+		unsafe { core::mem::transmute(self) }
+	}
+}
+impl<T> AsMut<[T; 2]> for Bounds<T> {
+	#[inline]
+	fn as_mut(&mut self) -> &mut [T; 2] {
+		unsafe { core::mem::transmute(self) }
+	}
+}
+impl<T> From<[T; 2]> for Bounds<T> {
+	#[inline]
+	fn from([mins, maxs]: [T; 2]) -> Bounds<T> {
+		Bounds { mins, maxs }
+	}
+}
+impl<T> From<Bounds<T>> for [T; 2] {
+	#[inline]
+	fn from(bounds: Bounds<T>) -> [T; 2] {
+		[bounds.mins, bounds.maxs]
+	}
+}
+
 //----------------------------------------------------------------
 
-/// Bounds2 structure.
+/// Bounds2 shape.
 pub type Bounds2<T> = Bounds<Point2<T>>;
 
 /// Bounds2 constructor.
@@ -396,9 +421,17 @@ impl<T: Scalar> Bounds2<T> {
 			end: self.top_left(),
 		}
 	}
+	/// Linear interpolation between the shapes.
+	#[inline]
+	pub fn lerp(self, target: Bounds2<T>, t: T) -> Bounds2<T> where T: Scalar {
+		Bounds2 {
+			mins: self.mins.lerp(target.mins, t),
+			maxs: self.maxs.lerp(target.maxs, t),
+		}
+	}
 	/// Transform of the unit square.
 	#[inline]
-	pub fn into_transform(self) -> Transform2<T> {
+	pub fn transform(self) -> Transform2<T> {
 		Transform2::compose(
 			Vec2(self.width(), T::ZERO),
 			Vec2(T::ZERO, self.height()),
@@ -409,7 +442,7 @@ impl<T: Scalar> Bounds2<T> {
 
 //----------------------------------------------------------------
 
-/// Bounds3 structure.
+/// Bounds3 shape.
 pub type Bounds3<T> = Bounds<Point3<T>>;
 
 /// Bounds3 constructor.
@@ -454,9 +487,17 @@ impl<T: Scalar> Bounds3<T> {
 	pub fn center(&self) -> Point3<T> {
 		(self.mins + self.maxs) / (T::ONE + T::ONE)
 	}
+	/// Linear interpolation between the bounds.
+	#[inline]
+	pub fn lerp(self, rhs: Bounds3<T>, t: T) -> Bounds3<T> where T: Scalar {
+		Bounds3 {
+			mins: self.mins.lerp(rhs.mins, t),
+			maxs: self.maxs.lerp(rhs.maxs, t),
+		}
+	}
 	/// Transform of the unit cube.
 	#[inline]
-	pub fn into_transform(self) -> Transform3<T> {
+	pub fn transform(self) -> Transform3<T> {
 		Transform3::compose(
 			Vec3(self.width(), T::ZERO, T::ZERO),
 			Vec3(T::ZERO, self.height(), T::ZERO),

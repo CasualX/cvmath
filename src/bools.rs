@@ -141,12 +141,12 @@ macro_rules! bools {
 			/// Returns `true` if any of the components are `true`.
 			#[inline]
 			pub const fn any(self) -> bool {
-				infix!(|| $(self.$field),+)
+				infix!(| $(self.$field),+)
 			}
 			/// Returns `true` if all the components are `true`.
 			#[inline]
 			pub const fn all(self) -> bool {
-				infix!(&& $(self.$field),+)
+				infix!(& $(self.$field),+)
 			}
 			/// Returns `true` if none of the components are `true`.
 			#[inline]

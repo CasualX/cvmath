@@ -11,6 +11,10 @@ pub trait FloatOps: Copy {
 	#[must_use]
 	fn floor(self) -> Self;
 	#[must_use]
+	fn ln(self) -> Self;
+	#[must_use]
+	fn powf(self, exp: Self) -> Self;
+	#[must_use]
 	fn ceil(self) -> Self;
 	#[must_use]
 	fn round(self) -> Self;
@@ -61,6 +65,14 @@ macro_rules! impl_float_ops {
 			#[inline]
 			fn exp(self) -> $ty {
 				self.exp()
+			}
+			#[inline]
+			fn ln(self) -> $ty {
+				self.ln()
+			}
+			#[inline]
+			fn powf(self, exp: $ty) -> $ty {
+				self.powf(exp)
 			}
 			#[inline]
 			fn floor(self) -> $ty {

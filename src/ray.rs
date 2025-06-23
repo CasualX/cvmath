@@ -38,7 +38,7 @@ impl<T> Ray<T> {
 	}
 }
 
-/// Applies a [`Transform3`] to a [`Ray`], transforming both its origin and direction.
+/// Transforms the ray's origin and direction.
 ///
 /// This allows transforming rays through space using standard linear transforms.
 /// Assumes the transform preserves ray semantics (e.g., no non-uniform scaling for normals).

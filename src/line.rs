@@ -4,7 +4,7 @@ Line 2D segment.
 
 use super::*;
 
-/// Line structure.
+/// Line shape.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]
@@ -115,6 +115,7 @@ impl<T: Float> Line2<T> {
 	/// Calculates the y coordinate where the line intercepts the Y axis.
 	///
 	/// Returns none if the line is parallel with the Y axis.
+	#[inline]
 	pub fn y_intercept(self) -> Option<T> {
 		if self.direction().x == T::ZERO {
 			return None;
@@ -126,6 +127,7 @@ impl<T: Float> Line2<T> {
 	/// Calculates the x coordinate where the line intercepts the X axis.
 	///
 	/// Returns none if the line is parallel with the X axis.
+	#[inline]
 	pub fn x_intercept(self) -> Option<T> {
 		if self.direction().y == T::ZERO {
 			return None;
@@ -134,23 +136,41 @@ impl<T: Float> Line2<T> {
 		let x = self.start.x + self.direction().x * f;
 		Some(x)
 	}
+	/// Linear interpolation between the shapes.
+	#[inline]
+	pub fn lerp(self, target: Line2<T>, t: T) -> Line2<T> {
+		Line2 {
+			start: self.start.lerp(target.start, t),
+			end: self.end.lerp(target.end, t),
+		}
+	}
 }
 
 impl<T: Float> Line3<T> {
 	/// Projects the point onto the line.
+	#[inline]
 	pub fn project(self, pt: Point3<T>) -> Point3<T> {
 		self.start + (pt - self.start).project(self.direction())
 	}
 	/// Point to line distance.
+	#[inline]
 	pub fn dist_pt(self, pt: Point3<T>) -> T {
 		self.project(pt).distance(pt)
 	}
+	/// Linear interpolation between the shapes.
+	#[inline]
+	pub fn lerp(self, target: Line3<T>, t: T) -> Line3<T> {
+		Line3 {
+			start: self.start.lerp(target.start, t),
+			end: self.end.lerp(target.end, t),
+		}
+	}
 }
 
-/// Line2 structure.
+/// Line2 shape.
 pub type Line2<T> = Line<Point2<T>>;
 
-/// Line3 structure.
+/// Line3 shape.
 pub type Line3<T> = Line<Point3<T>>;
 
 /// Line2 constructor.

@@ -20,10 +20,10 @@ An overview of their implementations:
 ```
 use cvmath::{Vec2, Vec3};
 
-assert_eq!("(2,3,4)", format!("{}", Vec3(2, 3, 4)));
-assert_eq!("(2.300,2.142)", format!("{:.3}", Vec2(2.3, 2.14159278)));
-assert_eq!("(16,25)", format!("{:?}", Vec2(16, 25)));
-assert_eq!("(  2,  3, 14)", format!("{:>3}", Vec3(2, 3, 14)));
+assert_eq!("[2, 3, 4]", format!("{}", Vec3(2, 3, 4)));
+assert_eq!("[2.300, 2.142]", format!("{:.3}", Vec2(2.3, 2.14159278)));
+assert_eq!("[16, 25]", format!("{:?}", Vec2(16, 25)));
+assert_eq!("[  2,   3,  14]", format!("{:>3}", Vec3(2, 3, 14)));
 
 assert_eq!(Vec2 { x: -5, y: 9 }, Vec2(-5, 9));
 assert!(Vec2(1, 9) > Vec2(1, -2));
@@ -478,9 +478,9 @@ macro_rules! fmt {
 	($ty:ident { $($field:ident),+ } $fmt:path) => {
 		impl<T: $fmt> $fmt for $ty<T> {
 			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-				f.write_str("(")?;
-				instmt!(f.write_str(",")?; $(self.$field.fmt(f)?;)+);
-				f.write_str(")")
+				f.write_str("[")?;
+				instmt!(f.write_str(", ")?; $(self.$field.fmt(f)?;)+);
+				f.write_str("]")
 			}
 		}
 	};
@@ -867,7 +867,7 @@ macro_rules! vec {
 			#[must_use]
 			pub fn normalize_len(self) -> ($vec<T>, T) where T: Float {
 				let self_len = self.len();
-				if self_len > T::ZERO {
+				if self_len > T::EPSILON {
 					(self / self_len, self_len)
 				}
 				else {
@@ -891,7 +891,7 @@ macro_rules! vec {
 			#[must_use]
 			pub fn resize(self, len: T) -> $vec<T> where T: Float {
 				let self_len = self.len();
-				if self_len > T::ZERO {
+				if self_len > T::EPSILON {
 					self * (len / self_len)
 				}
 				else { self }
@@ -915,7 +915,7 @@ macro_rules! vec {
 			#[must_use]
 			pub fn project_scalar(self, v: $vec<T>) -> T where T: Float {
 				let len = v.len();
-				if len > T::ZERO {
+				if len > T::EPSILON {
 					v.dot(self) / len
 				}
 				else { len }
@@ -939,7 +939,7 @@ macro_rules! vec {
 			#[must_use]
 			pub fn project(self, v: $vec<T>) -> $vec<T> where T: Float {
 				let len_sqr = v.len_sqr();
-				if len_sqr > T::ZERO {
+				if len_sqr > T::EPSILON {
 					v * (v.dot(self) / len_sqr)
 				}
 				else { v }
@@ -960,7 +960,7 @@ macro_rules! vec {
 			pub fn project_sat(self, v: $vec<T>) -> $vec<T> {
 				let len_sqr = v.len_sqr();
 				if len_sqr > T::ZERO {
-					v * (v.dot(self) / len_sqr).min(T::ONE).max(T::ZERO)
+					v * (v.dot(self) / len_sqr).clamp(T::ZERO, T::ONE)
 				}
 				else { v }
 			}

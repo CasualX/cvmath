@@ -53,6 +53,7 @@ impl<T> Mat3<T> {
 		}
 	}
 }
+
 impl<T: Zero> Mat3<T> {
 	/// Zero matrix.
 	pub const ZERO: Mat3<T> = Mat3 {
@@ -61,6 +62,7 @@ impl<T: Zero> Mat3<T> {
 		a31: T::ZERO, a32: T::ZERO, a33: T::ZERO,
 	};
 }
+
 impl<T: Zero + One> Mat3<T> {
 	/// Identity matrix.
 	pub const IDENTITY: Mat3<T> = Mat3 {
@@ -69,37 +71,36 @@ impl<T: Zero + One> Mat3<T> {
 		a31: T::ZERO, a32: T::ZERO, a33: T::ONE,
 	};
 }
-impl<T: Scalar> Mat3<T> {
+
+impl<T: Float> Mat3<T> {
 	/// Scaling matrix.
 	#[inline]
 	pub fn scale(scale: impl Into<Vec3<T>>) -> Mat3<T> {
-		let scale = scale.into();
-		Mat3 {
-			a11: scale.x, a12: T::ZERO, a13: T::ZERO,
-			a21: T::ZERO, a22: scale.y, a23: T::ZERO,
-			a31: T::ZERO, a32: T::ZERO, a33: scale.z,
-		}
+		let Vec3 { x: a11, y: a22, z: a33 } = scale.into();
+		Mat3 { a11, a22, a33, ..Mat3::IDENTITY }
 	}
+
 	/// Rotation matrix around an axis.
 	#[inline]
-	pub fn rotate(angle: impl Angle<T = T>, axis: Vec3<T>) -> Mat3<T> where T: Float {
-		let (sin, cos) = angle.sin_cos();
+	pub fn rotate(axis: Vec3<T>, angle: impl Angle<T = T>) -> Mat3<T> {
+		let (s, c) = angle.sin_cos();
 		let Vec3 { x, y, z } = axis;
-		let omc = T::ONE - cos;
+		let t = T::ONE - c;
 		Mat3 {
-			a11: cos + x * x * omc,     a12: x * y * omc + z * sin, a13: x * z * omc - y * sin,
-			a21: x * y * omc - z * sin, a22: cos + y * y * omc,     a23: y * z * omc + x * sin,
-			a31: x * z * omc + y * sin, a32: y * z * omc - x * sin, a33: cos + z * z * omc,
+			a11: t * x * x + c,     a12: t * x * y - s * z, a13: t * x * z + s * y,
+			a21: t * x * y + s * z, a22: t * y * y + c,     a23: t * y * z - s * x,
+			a31: t * x * z - s * y, a32: t * y * z + s * x, a33: t * z * z + c,
 		}
 	}
 }
+
 impl<T: Zero + One> From<Transform2<T>> for Mat3<T> {
 	#[inline]
 	fn from(mat: Transform2<T>) -> Mat3<T> {
 		Mat3 {
 			a11: mat.a11, a12: mat.a12, a13: mat.a13,
 			a21: mat.a21, a22: mat.a22, a23: mat.a23,
-			a31: T::ZERO, a32: T::ZERO, a33: T::ONE,
+			..Mat3::IDENTITY
 		}
 	}
 }
@@ -118,7 +119,7 @@ impl<T> Mat3<T> {
 	}
 	/// Converts to a Transform3 matrix.
 	#[inline]
-	pub fn affine(self) -> Transform3<T> where T: Zero {
+	pub fn transform3(self) -> Transform3<T> where T: Zero {
 		Transform3 {
 			a11: self.a11, a12: self.a12, a13: self.a13, a14: T::ZERO,
 			a21: self.a21, a22: self.a22, a23: self.a23, a24: T::ZERO,
@@ -128,11 +129,11 @@ impl<T> Mat3<T> {
 	/// Adds a translation to the matrix.
 	#[inline]
 	pub fn translate(self, trans: impl Into<Vec3<T>>) -> Transform3<T> {
-		let trans = trans.into();
+		let Vec3 { x: a14, y: a24, z: a34 } = trans.into();
 		Transform3 {
-			a11: self.a11, a12: self.a12, a13: self.a13, a14: trans.x,
-			a21: self.a21, a22: self.a22, a23: self.a23, a24: trans.y,
-			a31: self.a31, a32: self.a32, a33: self.a33, a34: trans.z,
+			a11: self.a11, a12: self.a12, a13: self.a13, a14,
+			a21: self.a21, a22: self.a22, a23: self.a23, a24,
+			a31: self.a31, a32: self.a32, a33: self.a33, a34,
 		}
 	}
 }
@@ -224,14 +225,31 @@ impl<T: Scalar> Mat3<T> {
 	pub fn trace(self) -> T {
 		self.a11 + self.a22 + self.a33
 	}
-	/// Computes the inverse matrix.
+	/// Computes the squared Frobenius norm (sum of squares of all matrix elements).
+	///
+	/// This measure is useful for quickly checking matrix magnitude or comparing matrices without the cost of a square root operation.
+	///
+	/// To check if a matrix is effectively zero, test if `flat_norm_sqr()` is below a small epsilon threshold.
 	#[inline]
-	pub fn inverse(self) -> Mat3<T> where T: Float {
+	pub fn flat_norm_sqr(self) -> T {
+		self.a11 * self.a11 + self.a12 * self.a12 + self.a13 * self.a13 +
+		self.a21 * self.a21 + self.a22 * self.a22 + self.a23 * self.a23 +
+		self.a31 * self.a31 + self.a32 * self.a32 + self.a33 * self.a33
+	}
+	#[inline]
+	pub fn try_invert(self) -> Option<Mat3<T>> where T: Float {
 		let det = self.determinant();
 		if det.abs() < T::EPSILON {
-			return Mat3::ZERO;
+			return None;
 		}
-		self.adjugate() * (T::ONE / det)
+		Some(self.adjugate() * (T::ONE / det))
+	}
+	/// Computes the inverse matrix.
+	///
+	/// Returns the zero matrix if the determinant is near zero.
+	#[inline]
+	pub fn inverse(self) -> Mat3<T> where T: Float {
+		self.try_invert().unwrap_or(Mat3::ZERO)
 	}
 	/// Returns the transposed matrix.
 	#[inline]
@@ -347,6 +365,10 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Trans
 		*self = *self * rhs;
 	}
 }
+
+impl_mat_mul_scalar!(Mat3);
+impl_mat_mul_vec!(Mat3, Vec3);
+impl_mat_mul_mat!(Mat3);
 
 #[test]
 fn test_inverse() {

@@ -51,6 +51,7 @@ impl<T> Transform2<T> {
 		}
 	}
 }
+
 impl<T: Zero> Transform2<T> {
 	/// Zero matrix.
 	pub const ZERO: Transform2<T> = Transform2 {
@@ -58,6 +59,7 @@ impl<T: Zero> Transform2<T> {
 		a21: T::ZERO, a22: T::ZERO, a23: T::ZERO,
 	};
 }
+
 impl<T: Zero + One> Transform2<T> {
 	/// Identity matrix.
 	pub const IDENTITY: Transform2<T> = Transform2 {
@@ -65,7 +67,8 @@ impl<T: Zero + One> Transform2<T> {
 		a21: T::ZERO, a22: T::ONE,  a23: T::ZERO,
 	};
 }
-impl<T: Scalar> Transform2<T> {
+
+impl<T: Float> Transform2<T> {
 	/// Translation matrix.
 	#[inline]
 	pub fn translate(trans: impl Into<Vec2<T>>) -> Transform2<T> {
@@ -75,6 +78,7 @@ impl<T: Scalar> Transform2<T> {
 			a21: T::ZERO, a22: T::ONE,  a23: trans.y,
 		}
 	}
+
 	/// Scaling matrix.
 	///
 	/// Scales around the origin.
@@ -86,13 +90,15 @@ impl<T: Scalar> Transform2<T> {
 			a21: T::ZERO, a22: scale.y, a23: T::ZERO,
 		}
 	}
+
 	/// Rotation matrix.
 	///
 	/// Rotates around the origin.
 	#[inline]
 	pub fn rotate(angle: impl Angle<T = T>) -> Transform2<T> {
-		Mat2::rotate(angle).affine()
+		Mat2::rotate(angle).transform2()
 	}
+
 	/// Skewing matrix.
 	#[inline]
 	pub fn skew(skew: impl Into<Vec2<T>>) -> Transform2<T> {
@@ -102,33 +108,61 @@ impl<T: Scalar> Transform2<T> {
 			a21: skew.y, a22: T::ONE, a23: T::ZERO,
 		}
 	}
+
 	/// Reflection matrix.
 	///
 	/// Reflects around the given axis.
 	/// If axis is the zero vector, returns a point reflection around the origin.
 	#[inline]
 	pub fn reflect(line: impl Into<Vec2<T>>) -> Transform2<T> {
-		Mat2::reflect(line).affine()
+		Mat2::reflect(line).transform2()
 	}
+
 	/// Projection matrix.
 	///
 	/// Projects onto the given axis.
 	/// If axis is the zero vector, returns the zero matrix.
 	#[inline]
 	pub fn project(line: impl Into<Vec2<T>>) -> Transform2<T> {
-		Mat2::project(line).affine()
+		Mat2::project(line).transform2()
 	}
 
-	/// Remap matrix.
+	/// Fit matrix.
 	///
-	/// Remaps the coordinates from one bounding box to another.
+	/// Fits coordinates from a source rect into a target rect.
 	#[inline]
-	pub fn remap(from: Bounds2<T>, to: Bounds2<T>) -> Transform2<T> {
-		let scale = to.size() / from.size();
-		let Vec2 { x: a13, y: a23 } = to.mins - from.mins * scale;
+	pub fn fit(source: Bounds2<T>, target: Bounds2<T>) -> Transform2<T> {
+		let scale = target.size() / source.size();
+		let Vec2 { x: a13, y: a23 } = target.mins - source.mins * scale;
 		Transform2 {
 			a11: scale.x, a12: T::ZERO, a13,
 			a21: T::ZERO, a22: scale.y, a23,
+		}
+	}
+
+	/// Orthographic matrix.
+	///
+	/// Fits the coordinates from a rectangle to `x = [-1, 1]` and `y = [1, -1]`.
+	#[inline]
+	pub fn ortho(rect: Bounds2<T>) -> Transform2<T> {
+		let Bounds2 {
+			mins: Vec2 { x: left, y: top },
+			maxs: Vec2 { x: right, y: bottom },
+		} = rect;
+
+		let two = T::ONE + T::ONE;
+		let inv_width = T::ONE / (right - left);
+		let inv_height = T::ONE / (bottom - top);
+
+		let a11 = two * inv_width;
+		let a22 = -two * inv_height; // flip Y
+
+		let a13 = -(right + left) * inv_width;
+		let a23 = (bottom + top) * inv_height; // flip Y
+
+		Transform2 {
+			a11, a12: T::ZERO, a13,
+			a21: T::ZERO, a22, a23,
 		}
 	}
 }
@@ -233,23 +267,39 @@ impl<T: Scalar> Transform2<T> {
 	pub fn trace(self) -> T {
 		self.a11 + self.a22 + T::ONE
 	}
-	/// Computes the inverse matrix.
+	/// Computes the squared Frobenius norm (sum of squares of all matrix elements).
+	///
+	/// This measure is useful for quickly checking matrix magnitude or comparing matrices without the cost of a square root operation.
+	///
+	/// To check if a matrix is effectively zero, test if `flat_norm_sqr()` is below a small epsilon threshold.
 	#[inline]
-	pub fn inverse(self) -> Transform2<T> where T: Float {
+	pub fn flat_norm_sqr(self) -> T {
+		self.a11 * self.a11 + self.a12 * self.a12 + self.a13 * self.a13 +
+		self.a21 * self.a21 + self.a22 * self.a22 + self.a23 * self.a23
+	}
+	#[inline]
+	pub fn try_invert(self) -> Option<Transform2<T>> where T: Float {
 		let det = self.determinant();
 		if det.abs() < T::EPSILON {
-			return Transform2::ZERO;
+			return None;
 		}
 
 		let inv_det = T::ONE / det;
-		Transform2 {
+		Some(Transform2 {
 			a11: self.a22 * inv_det,
 			a12: -self.a12 * inv_det,
 			a13: (self.a12 * self.a23 - self.a13 * self.a22) * inv_det,
 			a21: -self.a21 * inv_det,
 			a22: self.a11 * inv_det,
 			a23: (self.a13 * self.a21 - self.a11 * self.a23) * inv_det,
-		}
+		})
+	}
+	/// Computes the inverse matrix.
+	///
+	/// Returns the zero matrix if the determinant is near zero.
+	#[inline]
+	pub fn inverse(self) -> Transform2<T> where T: Float {
+		self.try_invert().unwrap_or(Transform2::ZERO)
 	}
 }
 
@@ -320,6 +370,11 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Mat2<
 		*self = *self * rhs;
 	}
 }
+
+impl_mat_mul_scalar!(Transform2);
+impl_mat_mul_vec!(Transform2, Vec2);
+impl_mat_mul_vec!(Transform2, Vec3);
+impl_mat_mul_mat!(Transform2);
 
 #[test]
 fn test_inverse() {

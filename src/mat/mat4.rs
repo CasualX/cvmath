@@ -58,6 +58,7 @@ impl<T> Mat4<T> {
 		}
 	}
 }
+
 impl<T: Zero> Mat4<T> {
 	/// Zero matrix.
 	pub const ZERO: Mat4<T> = Mat4 {
@@ -67,6 +68,7 @@ impl<T: Zero> Mat4<T> {
 		a41: T::ZERO, a42: T::ZERO, a43: T::ZERO, a44: T::ZERO,
 	};
 }
+
 impl<T: Zero + One> Mat4<T> {
 	/// Identity matrix.
 	pub const IDENTITY: Mat4<T> = Mat4 {
@@ -76,43 +78,19 @@ impl<T: Zero + One> Mat4<T> {
 		a41: T::ZERO, a42: T::ZERO, a43: T::ZERO, a44: T::ONE,
 	};
 }
-impl<T: Scalar> Mat4<T> {
-	/// Translation matrix.
+
+impl<T: Zero + One> From<Mat3<T>> for Mat4<T> {
 	#[inline]
-	pub fn translate(trans: impl Into<Vec3<T>>) -> Mat4<T> {
-		let trans = trans.into();
+	fn from(mat: Mat3<T>) -> Mat4<T> {
 		Mat4 {
-			a11: T::ONE, a12: T::ZERO, a13: T::ZERO, a14: trans.x,
-			a21: T::ZERO, a22: T::ONE, a23: T::ZERO, a24: trans.y,
-			a31: T::ZERO, a32: T::ZERO, a33: T::ONE, a34: trans.z,
-			a41: T::ZERO, a42: T::ZERO, a43: T::ZERO, a44: T::ONE,
-		}
-	}
-	/// Scaling matrix.
-	#[inline]
-	pub fn scale(scale: impl Into<Vec3<T>>) -> Mat4<T> {
-		let scale = scale.into();
-		Mat4 {
-			a11: scale.x, a12: T::ZERO, a13: T::ZERO, a14: T::ZERO,
-			a21: T::ZERO, a22: scale.y, a23: T::ZERO, a24: T::ZERO,
-			a31: T::ZERO, a32: T::ZERO, a33: scale.z, a34: T::ZERO,
-			a41: T::ZERO, a42: T::ZERO, a43: T::ZERO, a44: T::ONE,
-		}
-	}
-	/// Rotation matrix around an axis.
-	#[inline]
-	pub fn rotate(angle: impl Angle<T = T>, axis: Vec3<T>) -> Mat4<T> where T: Float {
-		let (s, c) = angle.sin_cos();
-		let Vec3 { x, y, z } = axis;
-		let t = T::ONE - c;
-		Mat4 {
-			a11: t * x * x + c, a12: t * x * y - s * z, a13: t * x * z + s * y, a14: T::ZERO,
-			a21: t * x * y + s * z, a22: t * y * y + c, a23: t * y * z - s * x, a24: T::ZERO,
-			a31: t * x * z - s * y, a32: t * y * z + s * x, a33: t * z * z + c, a34: T::ZERO,
-			a41: T::ZERO, a42: T::ZERO, a43: T::ZERO, a44: T::ONE,
+			a11: mat.a11, a12: mat.a12, a13: mat.a13,
+			a21: mat.a21, a22: mat.a22, a23: mat.a23,
+			a31: mat.a31, a32: mat.a32, a33: mat.a33,
+			..Mat4::IDENTITY
 		}
 	}
 }
+
 impl<T: Zero + One> From<Transform3<T>> for Mat4<T> {
 	#[inline]
 	fn from(mat: Transform3<T>) -> Mat4<T> {
@@ -120,7 +98,7 @@ impl<T: Zero + One> From<Transform3<T>> for Mat4<T> {
 			a11: mat.a11, a12: mat.a12, a13: mat.a13, a14: mat.a14,
 			a21: mat.a21, a22: mat.a22, a23: mat.a23, a24: mat.a24,
 			a31: mat.a31, a32: mat.a32, a33: mat.a33, a34: mat.a34,
-			a41: T::ZERO, a42: T::ZERO, a43: T::ZERO, a44: T::ONE,
+			..Mat4::IDENTITY
 		}
 	}
 }
@@ -130,32 +108,18 @@ impl<T: Zero + One> From<Transform3<T>> for Mat4<T> {
 impl<T: Float> Mat4<T> {
 	/// Look-at matrix.
 	#[inline]
-	pub fn look_at(eye: Vec3<T>, target: Vec3<T>, ref_up: Vec3<T>, hand: Hand) -> Mat4<T> {
-		let (forward, side, up);
+	pub fn look_at(position: Vec3<T>, target: Vec3<T>, ref_up: Vec3<T>, hand: Hand) -> Mat4<T> {
+		Transform3::look_at(position, target, ref_up, hand).into()
+	}
 
-		match hand {
-			Hand::LH => {
-				forward = (target - eye).normalize();
-				side = ref_up.cross(forward).normalize();
-				up = forward.cross(side);
-			}
-			Hand::RH => {
-				forward = (eye - target).normalize();  // flipped for RH
-				side = ref_up.cross(forward).normalize();
-				up = forward.cross(side);
-			}
-		}
-
-		let Vec3 { x: a11, y: a12, z: a13 } = side;
-		let a14 = -side.dot(eye);
-
-		let Vec3 { x: a21, y: a22, z: a23 } = up;
-		let a24 = -up.dot(eye);
-
-		let Vec3 { x: a31, y: a32, z: a33 } = forward;
-		let a34 = -forward.dot(eye);
-
-		Mat4 { a11, a12, a13, a14, a21, a22, a23, a24, a31, a32, a33, a34, a44: T::ONE, ..Mat4::ZERO }
+	/// Orthographic projection matrix.
+	///
+	/// Clip and hand parameters only affect the Z coordinate.
+	#[inline]
+	pub fn ortho(left: T, right: T, bottom: T, top: T, near: T, far: T, (hand, clip): (Hand, Clip)) -> Mat4<T> {
+		let mins = Vec3(left, bottom, near);
+		let maxs = Vec3(right, top, far);
+		Transform3::ortho(Bounds { mins, maxs }, (hand, clip)).into()
 	}
 
 	/// Frustum matrix.
@@ -194,47 +158,17 @@ impl<T: Float> Mat4<T> {
 		Mat4 { a11, a13, a22, a23, a33, a34, a43, ..Mat4::ZERO }
 	}
 
-	/// Orthographic 2D matrix.
+	/// Perspective projection matrix.
 	#[inline]
-	pub fn ortho_2d(left: T, right: T, bottom: T, top: T) -> Mat4<T> {
-		let two = T::ONE + T::ONE;
-
-		let a11 = two / (right - left);
-		let a14 = -(right + left) / (right - left);
-		let a22 = two / (top - bottom);
-		let a24 = -(top + bottom) / (top - bottom);
-
-		Mat4 { a11, a14, a22, a24, a33: -T::ONE, a44: T::ONE, ..Mat4::ZERO }
-	}
-
-	/// Orthographic 3D matrix.
-	#[inline]
-	pub fn ortho_3d(left: T, right: T, bottom: T, top: T, near: T, far: T, (hand, clip): (Hand, Clip)) -> Mat4<T> {
-		debug_assert!(T::ZERO < near && near < far);
-
-		let two = T::ONE + T::ONE;
-		let a11 = two / (right - left);
-		let a14 = -(right + left) / (right - left);
-		let a22 = two / (top - bottom);
-		let a24 = -(top + bottom) / (top - bottom);
-		let a33 = match clip { Clip::ZO => T::ONE, Clip::NO => two } / (far - near);
-		let a33 = match hand { Hand::LH => a33, Hand::RH => -a33 };
-		let a34 = -match clip { Clip::ZO => near, Clip::NO => far + near } / (far - near);
-
-		Mat4 { a11, a14, a22, a24, a33, a34, a44: T::ONE, ..Mat4::ZERO }
-	}
-
-	/// Perspective matrix.
-	#[inline]
-	pub fn perspective(fovy: impl Angle<T = T>, aspect: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
-		let fovy = fovy.to_rad();
+	pub fn perspective(fov_y: impl Angle<T = T>, aspect_ratio: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
+		let fovy = fov_y.to_rad();
 		debug_assert!(fovy > Rad::zero() && fovy < Rad::half());
-		debug_assert!(aspect > T::ZERO);
+		debug_assert!(aspect_ratio > T::ZERO);
 		debug_assert!(T::ZERO < near && near < far);
 
 		let half_fovy = fovy / (T::ONE + T::ONE);
 		let half_height = near * half_fovy.tan();
-		let half_width = aspect * half_height;
+		let half_width = aspect_ratio * half_height;
 
 		let left = -half_width;
 		let right = half_width;
@@ -244,26 +178,11 @@ impl<T: Float> Mat4<T> {
 		Mat4::frustum(left, right, bottom, top, near, far, flags)
 	}
 
-	/// Perspective FOV matrix.
+	/// Perspective FOV projection matrix.
 	#[inline]
-	pub fn perspective_fov(fovy: impl Angle<T = T>, width: T, height: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
+	pub fn perspective_fov(fov_y: impl Angle<T = T>, width: T, height: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
 		debug_assert!(width > T::ZERO && height > T::ZERO);
-		Mat4::perspective(fovy, width / height, near, far, flags)
-	}
-
-	/// NDC to viewport pixel matrix.
-	#[inline]
-	pub fn viewport(viewport: Bounds2<T>) -> Mat4<T> {
-		let half = T::ONE / (T::ONE + T::ONE);
-		let w = viewport.width();
-		let h = viewport.height();
-
-		Mat4 {
-			a11: w * half, a12: T::ZERO,   a13: T::ZERO, a14: w * half + viewport.left(),
-			a21: T::ZERO,  a22: -h * half, a23: T::ZERO, a24: h * half + viewport.top(),
-			a31: T::ZERO,  a32: T::ZERO,   a33: T::ONE,  a34: T::ZERO,
-			a41: T::ZERO,  a42: T::ZERO,   a43: T::ZERO, a44: T::ONE,
-		}
+		Mat4::perspective(fov_y, width / height, near, far, flags)
 	}
 }
 
@@ -392,7 +311,25 @@ impl<T: Scalar> Mat4<T> {
 	pub fn trace(self) -> T {
 		self.a11 + self.a22 + self.a33 + self.a44
 	}
+	/// Computes the squared Frobenius norm (sum of squares of all matrix elements).
+	///
+	/// This measure is useful for quickly checking matrix magnitude or comparing matrices without the cost of a square root operation.
+	///
+	/// To check if a matrix is effectively zero, test if `flat_norm_sqr()` is below a small epsilon threshold.
+	#[inline]
+	pub fn flat_norm_sqr(self) -> T {
+		self.a11 * self.a11 + self.a12 * self.a12 + self.a13 * self.a13 + self.a14 * self.a14 +
+		self.a21 * self.a21 + self.a22 * self.a22 + self.a23 * self.a23 + self.a24 * self.a24 +
+		self.a31 * self.a31 + self.a32 * self.a32 + self.a33 * self.a33 + self.a34 * self.a34 +
+		self.a41 * self.a41 + self.a42 * self.a42 + self.a43 * self.a43 + self.a44 * self.a44
+	}
+	#[inline]
+	pub fn try_invert(self) -> Option<Mat4<T>> where T: Float {
+		glu_invert(&self)
+	}
 	/// Computes the inverse matrix.
+	///
+	/// Returns the zero matrix if the determinant is near zero.
 	#[inline]
 	pub fn inverse(self) -> Mat4<T> where T: Float {
 		glu_invert(&self).unwrap_or(Mat4::ZERO)
@@ -590,6 +527,10 @@ fn glu_invert<T: Float>(this: &Mat4<T>) -> Option<Mat4<T>> {
 		a41: inv[12] * inv_det, a42: inv[13] * inv_det, a43: inv[14] * inv_det, a44: inv[15] * inv_det,
 	})
 }
+
+impl_mat_mul_scalar!(Mat4);
+impl_mat_mul_vec!(Mat4, Vec4);
+impl_mat_mul_mat!(Mat4);
 
 #[test]
 fn test_inverse() {

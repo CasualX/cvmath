@@ -56,6 +56,7 @@ impl<T> Transform3<T> {
 		}
 	}
 }
+
 impl<T: Zero> Transform3<T> {
 	/// Zero matrix.
 	pub const ZERO: Transform3<T> = Transform3 {
@@ -64,6 +65,7 @@ impl<T: Zero> Transform3<T> {
 		a31: T::ZERO, a32: T::ZERO, a33: T::ZERO, a34: T::ZERO,
 	};
 }
+
 impl<T: Zero + One> Transform3<T> {
 	/// Identity matrix.
 	pub const IDENTITY: Transform3<T> = Transform3 {
@@ -72,33 +74,81 @@ impl<T: Zero + One> Transform3<T> {
 		a31: T::ZERO, a32: T::ZERO, a33: T::ONE,  a34: T::ZERO,
 	};
 }
-impl<T: Scalar> Transform3<T> {
+
+impl<T: Float> Transform3<T> {
 	/// Translation matrix.
 	#[inline]
 	pub fn translate(trans: impl Into<Vec3<T>>) -> Transform3<T> {
-		let trans = trans.into();
-		Transform3 {
-			a11: T::ONE,  a12: T::ZERO, a13: T::ZERO, a14: trans.x,
-			a21: T::ZERO, a22: T::ONE,  a23: T::ZERO, a24: trans.y,
-			a31: T::ZERO, a32: T::ZERO, a33: T::ONE,  a34: trans.z,
-		}
+		let Vec3 { x: a14, y: a24, z: a34 } = trans.into();
+		Transform3 { a14, a24, a34, ..Transform3::IDENTITY }
 	}
+
 	/// Scaling matrix.
 	///
 	/// Scales around the origin.
 	#[inline]
 	pub fn scale(scale: impl Into<Vec3<T>>) -> Transform3<T> {
-		let scale = scale.into();
-		Transform3 {
-			a11: scale.x, a12: T::ZERO, a13: T::ZERO, a14: T::ZERO,
-			a21: T::ZERO, a22: scale.y, a23: T::ZERO, a24: T::ZERO,
-			a31: T::ZERO, a32: T::ZERO, a33: scale.z, a34: T::ZERO,
-		}
+		let Vec3 { x: a11, y: a22, z: a33 } = scale.into();
+		Transform3 { a11, a22, a33, ..Transform3::IDENTITY }
 	}
+
 	/// Rotation matrix around an axis.
 	#[inline]
-	pub fn rotate(angle: impl Angle<T = T>, axis: Vec3<T>) -> Transform3<T> where T: Float {
-		Mat3::rotate(angle, axis).affine()
+	pub fn rotate(axis: Vec3<T>, angle: impl Angle<T = T>) -> Transform3<T> {
+		Mat3::rotate(axis, angle).transform3()
+	}
+}
+
+impl<T: Float> Transform3<T> {
+	/// Look-at matrix.
+	#[inline]
+	pub fn look_at(position: Vec3<T>, target: Vec3<T>, ref_up: Vec3<T>, hand: Hand) -> Transform3<T> {
+		let forward = match hand {
+			Hand::LH => target - position,
+			Hand::RH => position - target,
+		}.normalize();
+
+		let side = ref_up.cross(forward).normalize();
+		let up = forward.cross(side);
+
+		let Vec3 { x: a11, y: a12, z: a13 } = side;
+		let a14 = -side.dot(position);
+
+		let Vec3 { x: a21, y: a22, z: a23 } = up;
+		let a24 = -up.dot(position);
+
+		let Vec3 { x: a31, y: a32, z: a33 } = forward;
+		let a34 = -forward.dot(position);
+
+		Transform3 {
+			a11, a12, a13, a14,
+			a21, a22, a23, a24,
+			a31, a32, a33, a34,
+		}
+	}
+
+	/// Orthographic projection matrix.
+	///
+	/// Clip and hand parameters only affect the Z coordinate.
+	#[inline]
+	pub fn ortho(bounds: Bounds3<T>, (hand, clip): (Hand, Clip)) -> Transform3<T> {
+		let Bounds3 {
+			mins: Vec3 { x: left, y: bottom, z: near },
+			maxs: Vec3 { x: right, y: top, z: far },
+		} = bounds;
+
+		debug_assert!(T::ZERO < near && near < far);
+
+		let two = T::ONE + T::ONE;
+		let a11 = two / (right - left);
+		let a14 = -(right + left) / (right - left);
+		let a22 = two / (top - bottom);
+		let a24 = -(top + bottom) / (top - bottom);
+		let a33 = match clip { Clip::ZO => T::ONE, Clip::NO => two } / (far - near);
+		let a33 = match hand { Hand::LH => a33, Hand::RH => -a33 };
+		let a34 = -match clip { Clip::ZO => near, Clip::NO => far + near } / (far - near);
+
+		Transform3 { a11, a14, a22, a24, a33, a34, ..Self::IDENTITY }
 	}
 }
 
@@ -215,16 +265,26 @@ impl<T: Scalar> Transform3<T> {
 	pub fn trace(self) -> T {
 		self.a11 + self.a22 + self.a33 + T::ONE
 	}
-	/// Computes the inverse matrix.
+	/// Computes the squared Frobenius norm (sum of squares of all matrix elements).
+	///
+	/// This measure is useful for quickly checking matrix magnitude or comparing matrices without the cost of a square root operation.
+	///
+	/// To check if a matrix is effectively zero, test if `flat_norm_sqr()` is below a small epsilon threshold.
 	#[inline]
-	pub fn inverse(self) -> Transform3<T> where T: Float {
+	pub fn flat_norm_sqr(self) -> T {
+		self.a11 * self.a11 + self.a12 * self.a12 + self.a13 * self.a13 + self.a14 * self.a14 +
+		self.a21 * self.a21 + self.a22 * self.a22 + self.a23 * self.a23 + self.a24 * self.a24 +
+		self.a31 * self.a31 + self.a32 * self.a32 + self.a33 * self.a33 + self.a34 * self.a34
+	}
+	#[inline]
+	pub fn try_invert(self) -> Option<Transform3<T>> where T: Float {
 		let det = self.determinant();
 		if det.abs() < T::EPSILON {
-			return Transform3::ZERO;
+			return None;
 		}
 
 		let inv_det = T::ONE / det;
-		Transform3 {
+		Some(Transform3 {
 			a11: (self.a22 * self.a33 - self.a23 * self.a32) * inv_det,
 			a12: (self.a13 * self.a32 - self.a12 * self.a33) * inv_det,
 			a13: (self.a12 * self.a23 - self.a13 * self.a22) * inv_det,
@@ -243,7 +303,14 @@ impl<T: Scalar> Transform3<T> {
 			a34: (self.a11 * (self.a24 * self.a32 - self.a22 * self.a34) +
 				self.a12 * (self.a21 * self.a34 - self.a24 * self.a31) +
 				self.a14 * (self.a22 * self.a31 - self.a21 * self.a32)) * inv_det,
-		}
+		})
+	}
+	/// Computes the inverse matrix.
+	///
+	/// Returns the zero matrix if the determinant is near zero.
+	#[inline]
+	pub fn inverse(self) -> Transform3<T> where T: Float {
+		self.try_invert().unwrap_or(Transform3::ZERO)
 	}
 }
 
@@ -330,6 +397,11 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Trans
 		*self = *self * rhs;
 	}
 }
+
+impl_mat_mul_scalar!(Transform3);
+impl_mat_mul_vec!(Transform3, Vec3);
+impl_mat_mul_vec!(Transform3, Vec4);
+impl_mat_mul_mat!(Transform3);
 
 #[test]
 fn test_inverse() {

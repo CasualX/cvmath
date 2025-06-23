@@ -1,6 +1,6 @@
 use super::*;
 
-/// Quaternion structure.
+/// Quaternion number.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[repr(C)]
 pub struct Quat<T> {
@@ -36,7 +36,7 @@ impl<T: Zero> Quat<T> {
 	pub const ZERO: Quat<T> = Quat { a: T::ZERO, b: T::ZERO, c: T::ZERO, d: T::ZERO };
 }
 impl<T: Zero + One> Quat<T> {
-	pub const IDENTITY: Quat<T> = Quat { a: T::ONE, b: T::ZERO, c: T::ZERO, d: T::ZERO };
+	pub const UNIT: Quat<T> = Quat { a: T::ONE, b: T::ZERO, c: T::ZERO, d: T::ZERO };
 }
 
 impl<T: Float> From<Quat<T>> for Mat4<T> {
@@ -103,7 +103,7 @@ impl<T: Float> Quat<T> {
 	#[inline]
 	pub fn normalize(self) -> Quat<T> {
 		let len = self.len();
-		if len == T::ZERO {
+		if len < T::EPSILON {
 			Quat::ZERO
 		}
 		else {
@@ -161,7 +161,7 @@ impl<T: Float> Quat<T> {
 		let to = to.normalize();
 		let dot = from.dot(to);
 		if dot >= T::ONE - T::EPSILON {
-			Quat::IDENTITY
+			Quat::UNIT
 		}
 		else if dot <= -(T::ONE - T::EPSILON) {
 			let axis = from.any_perp();
@@ -197,7 +197,7 @@ impl<T: Float> Quat<T> {
 		if cos_theta <= -(T::ONE - T::EPSILON) {
 			let axis = self.vec3().any_perp();
 			let orthogonal = Quat::from_axis_angle(axis, Rad::half());
-			return (self * (Quat::IDENTITY + (orthogonal - Quat::IDENTITY) * t)).normalize();
+			return (self * (Quat::UNIT + (orthogonal - Quat::UNIT) * t)).normalize();
 		}
 
 		let theta = cos_theta.acos();
@@ -342,10 +342,9 @@ impl<T: Copy + ops::Add<Output = T> + ops::Sub<Output = T> + ops::Mul<Output = T
 impl<T: Float> ops::Mul<Vec3<T>> for Quat<T> {
 	type Output = Vec3<T>;
 	#[inline]
-	fn mul(self, rhs: Vec3<T>) -> Vec3<T> {
+	fn mul(self, v: Vec3<T>) -> Vec3<T> {
 		let s = self.a;
 		let u = self.vec3();
-		let v = rhs;
 		u * (u.dot(v) + u.dot(v)) + v * (s * s - u.dot(u)) + u.cross(v) * (s + s)
 	}
 }
