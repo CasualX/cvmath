@@ -65,3 +65,6 @@ pub use crate::complex::{Complexf, Complexd};
 pub use crate::mat::{Mat2f, Mat3f, Mat4f, Transform2f, Transform3f, Mat2d, Mat3d, Mat4d, Transform2d, Transform3d};
 #[doc(hidden)]
 pub use crate::quat::{Quatf, Quatd};
+
+#[doc(hidden)]
+pub use crate::bounds::{Bounds2f, Bounds3f, Bounds2d, Bounds3d, Bounds2i, Bounds3i};

@@ -326,6 +326,14 @@ impl<T> Bounds2<T> {
 		let maxs = Point2 { x: maxs_x, y: maxs_y };
 		Bounds2 { mins, maxs }
 	}
+	/// Casts the bounds to a different unit type.
+	#[inline]
+	pub fn cast<U>(self) -> Bounds2<U> where T: CastTo<U> {
+		Bounds2 {
+			mins: self.mins.cast(),
+			maxs: self.maxs.cast(),
+		}
+	}
 }
 
 impl<T: Scalar> Bounds2<T> {
@@ -440,6 +448,10 @@ impl<T: Scalar> Bounds2<T> {
 	}
 }
 
+specialized_type!(Bounds, Bounds2f, Vec2f, mins, maxs);
+specialized_type!(Bounds, Bounds2d, Vec2d, mins, maxs);
+specialized_type!(Bounds, Bounds2i, Vec2i, mins, maxs);
+
 //----------------------------------------------------------------
 
 /// Bounds3 shape.
@@ -458,6 +470,14 @@ impl<T> Bounds3<T> {
 		let mins = Point3 { x: mins_x, y: mins_y, z: mins_z };
 		let maxs = Point3 { x: maxs_x, y: maxs_y, z: maxs_z };
 		Bounds3 { mins, maxs }
+	}
+	/// Casts the bounds to a different unit type.
+	#[inline]
+	pub fn cast<U>(self) -> Bounds3<U> where T: CastTo<U> {
+		Bounds3 {
+			mins: self.mins.cast(),
+			maxs: self.maxs.cast(),
+		}
 	}
 }
 
@@ -506,6 +526,10 @@ impl<T: Scalar> Bounds3<T> {
 		)
 	}
 }
+
+specialized_type!(Bounds, Bounds3f, Vec3f, mins, maxs);
+specialized_type!(Bounds, Bounds3d, Vec3d, mins, maxs);
+specialized_type!(Bounds, Bounds3i, Vec3i, mins, maxs);
 
 //----------------------------------------------------------------
 
