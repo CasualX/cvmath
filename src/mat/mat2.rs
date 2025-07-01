@@ -7,17 +7,18 @@ use super::*;
 /// 2D transformation matrix.
 ///
 /// Each field _a_<sub>i</sub><sub>j</sub> represents the _i_-th row and _j_-th column of the matrix.
+///
+/// Row-major storage with column-major semantics.
+///
+/// Stored in row-major order (fields appear in reading order),
+/// but interpreted as column-major: each column is a transformed basis vector,
+/// and matrices are applied to column vectors via `mat * vec`.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
 pub struct Mat2<T> {
 	pub a11: T, pub a12: T,
 	pub a21: T, pub a22: T,
 }
-
-// pub struct Mat2<T> {
-// 	pub a11: T, pub a21: T,
-// 	pub a12: T, pub a22: T,
-// }
 
 /// Mat2 constructor.
 #[allow(non_snake_case)]
