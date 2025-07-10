@@ -159,14 +159,13 @@ impl<T: Float> Mat4<T> {
 
 	/// Perspective projection matrix.
 	#[inline]
-	pub fn perspective(fov_y: impl Angle<T = T>, aspect_ratio: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
-		let fovy = fov_y.to_rad();
-		debug_assert!(fovy > Rad::zero() && fovy < Rad::half());
+	pub fn perspective(fov_y: Angle<T>, aspect_ratio: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
+		debug_assert!(fov_y > Angle::ZERO && fov_y < Angle::HALF);
 		debug_assert!(aspect_ratio > T::ZERO);
 		debug_assert!(T::ZERO < near && near < far);
 
-		let half_fovy = fovy / (T::ONE + T::ONE);
-		let half_height = near * half_fovy.tan();
+		let half_fov_y = fov_y / T::TWO;
+		let half_height = near * half_fov_y.tan();
 		let half_width = aspect_ratio * half_height;
 
 		let left = -half_width;
@@ -179,9 +178,36 @@ impl<T: Float> Mat4<T> {
 
 	/// Perspective FOV projection matrix.
 	#[inline]
-	pub fn perspective_fov(fov_y: impl Angle<T = T>, width: T, height: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
+	pub fn perspective_fov(fov_y: Angle<T>, width: T, height: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
 		debug_assert!(width > T::ZERO && height > T::ZERO);
 		Mat4::perspective(fov_y, width / height, near, far, flags)
+	}
+
+
+	/// Projection matrix blending orthographic and perspective.
+	///
+	/// * `blend` controls the mix between ortho (0.0) and perspective (1.0).
+	/// * `focus_depth` is the distance to the subject kept stable in the transition.
+	pub fn blend_ortho_perspective(blend: T, focus_depth: T, fov_y: Angle<T>, aspect_ratio: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
+		debug_assert!(blend >= T::ZERO && blend <= T::ONE, "fraction must be in [0, 1]");
+		let blend = blend.clamp(T::ZERO, T::ONE);
+		let blend = blend * blend;
+		let blend = blend * blend;
+
+		let half_height = (fov_y / T::TWO).tan() * focus_depth;
+		if blend <= T::EPSILON {
+			let half_width = half_height * aspect_ratio;
+			return Mat4::ortho(-half_width, half_width, -half_height, half_height, near, far, flags);
+		}
+
+		let dz = (T::ONE - blend) / blend;
+		let adjusted_fov_y = Angle::atan(half_height / (focus_depth + dz)) * T::TWO;
+
+		let projection = Mat4::perspective(adjusted_fov_y, aspect_ratio, near + dz, far + dz, flags);
+		let trans = Vec3(T::ZERO, T::ZERO, match flags.0 { Hand::LH => dz, Hand::RH => -dz });
+		let view_shift = Transform3::translate(trans);
+
+		projection * view_shift
 	}
 }
 
@@ -536,7 +562,7 @@ fn test_inverse() {
 	let mut rng = urandom::seeded(42);
 
 	for _ in 0..1000 {
-		let fovy = Deg(rng.range(1.0..179.0));
+		let fov_y = Angle::deg(rng.range(1.0..179.0));
 
 		let aspect = rng.range(0.5..4.0);
 
@@ -546,7 +572,7 @@ fn test_inverse() {
 		let hand = if rng.coin_flip() { Hand::RH } else { Hand::LH };
 		let clip = if rng.coin_flip() { Clip::NO } else { Clip::ZO };
 
-		let mat = Mat4::perspective(fovy, aspect, near, far, (hand, clip));
+		let mat = Mat4::perspective(fov_y, aspect, near, far, (hand, clip));
 		let inv = mat.inverse();
 
 		let p = Vec4(
@@ -561,6 +587,6 @@ fn test_inverse() {
 		let _identity = mat * inv;
 
 		let error = (unprojected - p).len();
-		assert!(error < 1e-6, "Failed for fovy: {fovy}, aspect: {aspect}, near: {near}, far: {far}, hand: {hand:?}, clip: {clip:?}, p: {p:?}, error: {error}");
+		assert!(error < 1e-6, "Failed for fov_y: {fov_y}, aspect: {aspect}, near: {near}, far: {far}, hand: {hand:?}, clip: {clip:?}, p: {p:?}, error: {error}");
 	}
 }

@@ -5,13 +5,13 @@ use super::*;
 #[repr(C)]
 pub struct Polar<T> {
 	pub radius: T,
-	pub theta: Rad<T>,
+	pub theta: Angle<T>,
 }
 
 /// Polar constructor.
 #[allow(non_snake_case)]
 #[inline]
-pub const fn Polar<T>(radius: T, theta: Rad<T>) -> Polar<T> {
+pub const fn Polar<T>(radius: T, theta: Angle<T>) -> Polar<T> {
 	Polar { radius, theta }
 }
 
@@ -46,12 +46,12 @@ impl<T: ops::Mul<Output = T> + ops::Add<Output = T>> ops::Mul<Polar<T>> for Pola
 
 macro_rules! impl_fmt {
 	($fmt:path) => {
-		impl<T: $fmt> $fmt for Polar<T> where Rad<T>: $fmt {
+		impl<T: $fmt> $fmt for Polar<T> where Angle<T>: $fmt {
 			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 				self.radius.fmt(f)?;
 				let symbol = if f.alternate() { " angle " } else { " ∠ " };
 				f.write_str(symbol)?;
-				<Rad<T> as $fmt>::fmt(&self.theta, f)
+				<Angle<T> as $fmt>::fmt(&self.theta, f)
 			}
 		}
 	};

@@ -1024,16 +1024,17 @@ macro_rules! vec {
 			/// <!--ANGLE-->
 			///
 			/// ```
-			/// use cvmath::{Deg, Vec2};
+			/// use cvmath::Vec2;
+			/// # macro_rules! assert_eq { ($a:expr, $b:expr) => { assert!((f64::abs($a - $b) < 0.00001), "Expected {}, got {}", $b, $a); } }
 			///
 			/// let lhs = Vec2 { x: 1.0, y: 1.0 };
 			/// let rhs = Vec2 { x: 1.0, y: 0.0 };
-			/// assert_eq!(Deg(45_f32), lhs.angle(rhs).to_deg());
+			/// assert_eq!(45.0, lhs.angle(rhs).to_deg());
 			/// ```
 			#[inline]
 			#[must_use]
-			pub fn angle(self, rhs: $vec<T>) -> Rad<T> where T: Float {
-				Rad::acos(self.cos_angle(rhs))
+			pub fn angle(self, rhs: $vec<T>) -> Angle<T> where T: Float {
+				Angle::acos(self.cos_angle(rhs))
 			}
 			/// Horizontal adds all components.
 			///
@@ -1136,7 +1137,7 @@ macro_rules! vec {
 				let len = len0 + (len1 - len0) * t;
 
 				let dot = v0.dot(v1);
-				let theta = Rad::acos(dot) * t;
+				let theta = Angle::acos(dot) * t;
 				let (sin, cos) = theta.sin_cos();
 
 				let v2 = (v1 - v0 * dot).normalize();
@@ -1452,31 +1453,32 @@ vec!(Vec2 2 { x 0 T U X, y 1 T U Y } {
 	/// <!--POLAR_ANGLE-->
 	///
 	/// ```
-	/// use cvmath::{Rad, Vec2};
+	/// use cvmath::Vec2;
+	/// # macro_rules! assert_eq { ($a:expr, $b:expr) => { assert!((f64::abs($a - $b) < 0.00001), "Expected {}, got {}", $b, $a); } }
 	///
 	/// let this = Vec2 { x: 1.0, y: 1.0 };
-	/// assert_eq!(Rad::eight(), this.polar_angle());
+	/// assert_eq!(45.0, this.polar_angle().to_deg());
 	/// ```
 	#[inline]
-	pub fn polar_angle(self) -> Rad<T> where T: Float {
-		Rad::atan2(self.y, self.x)
+	pub fn polar_angle(self) -> Angle<T> where T: Float {
+		Angle::atan2(self.y, self.x)
 	}
 	/// Returns the signed angle between two 2D vectors.
 	///
 	/// The sign of the angle follows the right-hand rule (counter-clockwise is positive).
 	///
 	/// ```
-	/// use cvmath::{Vec2, Deg};
+	/// use cvmath::Vec2;
 	///
 	/// let a = Vec2::X;
 	/// let b = Vec2::Y;
-	/// assert_eq!(Deg(90.0), a.signed_angle(b).to_deg());
-	/// assert_eq!(Deg(-90.0), b.signed_angle(a).to_deg());
+	/// assert_eq!(90.0, a.signed_angle(b).to_deg());
+	/// assert_eq!(-90.0, b.signed_angle(a).to_deg());
 	/// ```
 	#[inline]
 	#[must_use]
-	pub fn signed_angle(self, rhs: Vec2<T>) -> Rad<T> where T: Float {
-		Rad::atan2(self.cross(rhs), self.dot(rhs))
+	pub fn signed_angle(self, rhs: Vec2<T>) -> Angle<T> where T: Float {
+		Angle::atan2(self.cross(rhs), self.dot(rhs))
 	}
 	/// Rotates the vector counter-clockwise by 90°.
 	///
@@ -1588,18 +1590,18 @@ vec!(Vec3 3 { x 0 T U X, y 1 T U Y, z 2 T U Z } {
 	/// The sign of the angle is determined by the right-hand rule around the `axis`.
 	///
 	/// ```
-	/// use cvmath::{Vec3, Deg};
+	/// use cvmath::Vec3;
 	///
 	/// let a = Vec3::X;
 	/// let b = Vec3::Y;
 	/// let axis = Vec3::Z;
 	///
-	/// assert_eq!(Deg(90.0), a.signed_angle(b, axis).to_deg());
+	/// assert_eq!(90.0, a.signed_angle(b, axis).to_deg());
 	/// ```
 	#[inline]
 	#[must_use]
-	pub fn signed_angle(self, rhs: Vec3<T>, axis: Vec3<T>) -> Rad<T> where T: Float {
-		Rad::atan2(axis.dot(self.cross(rhs)), self.dot(rhs))
+	pub fn signed_angle(self, rhs: Vec3<T>, axis: Vec3<T>) -> Angle<T> where T: Float {
+		Angle::atan2(axis.dot(self.cross(rhs)), self.dot(rhs))
 	}
 	/// Returns a normalized vector perpendicular to `self`.
 	///

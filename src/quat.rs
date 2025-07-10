@@ -133,16 +133,16 @@ impl<T: Float> Quat<T> {
 	///
 	/// The axis should be a normalized vector, and the angle is in radians.
 	#[inline]
-	pub fn from_axis_angle(axis: Vec3<T>, angle: Rad<T>) -> Quat<T> {
-		let half_angle = angle * (T::ONE / (T::ONE + T::ONE));
+	pub fn from_axis_angle(axis: Vec3<T>, angle: Angle<T>) -> Quat<T> {
+		let half_angle = angle * (T::ONE / T::TWO);
 		let (sin, cos) = half_angle.sin_cos();
 		Quat { a: cos, b: axis.x * sin, c: axis.y * sin, d: axis.z * sin }
 	}
 	#[inline]
-	pub fn to_axis_angle(self) -> (Vec3<T>, Rad<T>) {
+	pub fn to_axis_angle(self) -> (Vec3<T>, Angle<T>) {
 		let q = self.normalize();
 
-		let half_angle = Rad(q.a.acos());
+		let half_angle = Angle::acos(q.a);
 		let angle = half_angle + half_angle;
 
 		let s = (T::ONE - q.a * q.a).sqrt();
@@ -165,11 +165,11 @@ impl<T: Float> Quat<T> {
 		}
 		else if dot <= -(T::ONE - T::EPSILON) {
 			let axis = from.any_perp();
-			Quat::from_axis_angle(axis, Rad::half())
+			Quat::from_axis_angle(axis, Angle::HALF)
 		}
 		else {
 			let axis = from.cross(to).normalize();
-			let angle = Rad(dot.acos());
+			let angle = Angle::acos(dot);
 			Quat::from_axis_angle(axis, angle)
 		}
 	}
@@ -196,7 +196,7 @@ impl<T: Float> Quat<T> {
 		// Find an orthogonal axis to self's vector part
 		if cos_theta <= -(T::ONE - T::EPSILON) {
 			let axis = self.vec3().any_perp();
-			let orthogonal = Quat::from_axis_angle(axis, Rad::half());
+			let orthogonal = Quat::from_axis_angle(axis, Angle::HALF);
 			return (self * (Quat::UNIT + (orthogonal - Quat::UNIT) * t)).normalize();
 		}
 

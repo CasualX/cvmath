@@ -71,8 +71,7 @@ impl<T: Zero + One> Transform2<T> {
 impl<T: Float> Transform2<T> {
 	/// Translation matrix.
 	#[inline]
-	pub fn translate(trans: impl Into<Vec2<T>>) -> Transform2<T> {
-		let trans = trans.into();
+	pub fn translate(trans: Vec2<T>) -> Transform2<T> {
 		Transform2 {
 			a11: T::ONE,  a12: T::ZERO, a13: trans.x,
 			a21: T::ZERO, a22: T::ONE,  a23: trans.y,
@@ -83,8 +82,7 @@ impl<T: Float> Transform2<T> {
 	///
 	/// Scales around the origin.
 	#[inline]
-	pub fn scale(scale: impl Into<Vec2<T>>) -> Transform2<T> {
-		let scale = scale.into();
+	pub fn scale(scale: Vec2<T>) -> Transform2<T> {
 		Transform2 {
 			a11: scale.x, a12: T::ZERO, a13: T::ZERO,
 			a21: T::ZERO, a22: scale.y, a23: T::ZERO,
@@ -95,14 +93,13 @@ impl<T: Float> Transform2<T> {
 	///
 	/// Rotates around the origin.
 	#[inline]
-	pub fn rotate(angle: impl Angle<T = T>) -> Transform2<T> {
+	pub fn rotate(angle: Angle<T>) -> Transform2<T> {
 		Mat2::rotate(angle).transform2()
 	}
 
 	/// Skewing matrix.
 	#[inline]
-	pub fn skew(skew: impl Into<Vec2<T>>) -> Transform2<T> {
-		let skew = skew.into();
+	pub fn skew(skew: Vec2<T>) -> Transform2<T> {
 		Transform2 {
 			a11: T::ONE, a12: skew.x, a13: T::ZERO,
 			a21: skew.y, a22: T::ONE, a23: T::ZERO,
@@ -114,7 +111,7 @@ impl<T: Float> Transform2<T> {
 	/// Reflects around the given axis.
 	/// If axis is the zero vector, returns a point reflection around the origin.
 	#[inline]
-	pub fn reflect(line: impl Into<Vec2<T>>) -> Transform2<T> {
+	pub fn reflect(line: Vec2<T>) -> Transform2<T> {
 		Mat2::reflect(line).transform2()
 	}
 
@@ -123,7 +120,7 @@ impl<T: Float> Transform2<T> {
 	/// Projects onto the given axis.
 	/// If axis is the zero vector, returns the zero matrix.
 	#[inline]
-	pub fn project(line: impl Into<Vec2<T>>) -> Transform2<T> {
+	pub fn project(line: Vec2<T>) -> Transform2<T> {
 		Mat2::project(line).transform2()
 	}
 
@@ -150,12 +147,11 @@ impl<T: Float> Transform2<T> {
 			maxs: Vec2 { x: right, y: bottom },
 		} = rect;
 
-		let two = T::ONE + T::ONE;
 		let inv_width = T::ONE / (right - left);
 		let inv_height = T::ONE / (bottom - top);
 
-		let a11 = two * inv_width;
-		let a22 = -two * inv_height; // flip Y
+		let a11 = T::TWO * inv_width;
+		let a22 = -T::TWO * inv_height; // flip Y
 
 		let a13 = -(right + left) * inv_width;
 		let a23 = (bottom + top) * inv_height; // flip Y

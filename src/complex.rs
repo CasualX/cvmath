@@ -46,7 +46,7 @@ impl<T: Zero + One> Complex<T> {
 impl<T: Float> Complex<T> {
 	/// Rotating complex number.
 	#[inline]
-	pub fn rotate(angle: impl Angle<T = T>) -> Complex<T> {
+	pub fn rotate(angle: Angle<T>) -> Complex<T> {
 		let (re, im) = angle.sin_cos();
 		Complex { re, im }
 	}
@@ -73,8 +73,8 @@ impl<T: Float> Complex<T> {
 	}
 	/// Calculates the argument (angle).
 	#[inline]
-	pub fn arg(self) -> Rad<T> {
-		Rad(self.im.atan2(self.re))
+	pub fn arg(self) -> Angle<T> {
+		Angle(self.im.atan2(self.re))
 	}
 	/// Calculates the complex conjugate.
 	#[inline]
@@ -167,7 +167,7 @@ impl<T: Float> Complex<T> {
 		let theta = self.arg();
 		Complex {
 			re: radius.ln(),
-			im: theta.value,
+			im: theta.radians,
 		}
 	}
 	/// Calculates the exponential.

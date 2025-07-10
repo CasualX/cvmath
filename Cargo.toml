@@ -23,7 +23,5 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 [features]
 default = []
 
-qangle = []
-
 [dev-dependencies]
 urandom = "0.2"

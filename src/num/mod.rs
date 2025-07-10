@@ -37,9 +37,14 @@ pub trait Scalar where Self
 pub trait Int where Self : Scalar + cmp::Eq + cmp::Ord {}
 
 pub trait Float where Self : Scalar + FloatOps + CastFrom<f64> {
+	const TWO: Self;
 	const INFINITY: Self;
 	const NEG_INFINITY: Self;
 	const EPSILON: Self;
+	const THREE_SIXTY: Self;
+	const TAU: Self;
+	const PI: Self;
+	const FRAC_PI_2: Self;
 }
 
 //----------------------------------------------------------------
@@ -89,12 +94,22 @@ impl Int for i32 {}
 impl Int for i64 {}
 
 impl Float for f32 {
+	const TWO: f32 = 2.0;
 	const INFINITY: f32 = f32::INFINITY;
 	const NEG_INFINITY: f32 = f32::NEG_INFINITY;
 	const EPSILON: f32 = f32::EPSILON;
+	const THREE_SIXTY: f32 = 360.0;
+	const TAU: f32 = std::f32::consts::TAU;
+	const PI: f32 = std::f32::consts::PI;
+	const FRAC_PI_2: f32 = std::f32::consts::FRAC_PI_2;
 }
 impl Float for f64 {
+	const TWO: f64 = 2.0;
 	const INFINITY: f64 = f64::INFINITY;
 	const NEG_INFINITY: f64 = f64::NEG_INFINITY;
 	const EPSILON: f64 = f64::EPSILON;
+	const THREE_SIXTY: f64 = 360.0;
+	const TAU: f64 = std::f64::consts::TAU;
+	const PI: f64 = std::f64::consts::PI;
+	const FRAC_PI_2: f64 = std::f64::consts::FRAC_PI_2;
 }

@@ -229,7 +229,7 @@ fn reflect_2d() -> String {
 	let origin = Vec2::ZERO;
 
 	// Visualize data
-	let transform = Transform2::translate((40.0f32, 120.0f32)) * Mat2::scale((25.0, -25.0));
+	let transform = Transform2::translate(Vec2(40.0f32, 120.0f32)) * Mat2::scale(Vec2(25.0, -25.0));
 	let this = transform * this;
 	let v = transform * v;
 	let p = transform * p;

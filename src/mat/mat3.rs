@@ -75,14 +75,14 @@ impl<T: Zero + One> Mat3<T> {
 impl<T: Float> Mat3<T> {
 	/// Scaling matrix.
 	#[inline]
-	pub fn scale(scale: impl Into<Vec3<T>>) -> Mat3<T> {
-		let Vec3 { x: a11, y: a22, z: a33 } = scale.into();
+	pub fn scale(scale: Vec3<T>) -> Mat3<T> {
+		let Vec3 { x: a11, y: a22, z: a33 } = scale;
 		Mat3 { a11, a22, a33, ..Mat3::IDENTITY }
 	}
 
 	/// Rotation matrix around an axis.
 	#[inline]
-	pub fn rotate(axis: Vec3<T>, angle: impl Angle<T = T>) -> Mat3<T> {
+	pub fn rotate(axis: Vec3<T>, angle: Angle<T>) -> Mat3<T> {
 		let (s, c) = angle.sin_cos();
 		let Vec3 { x, y, z } = axis;
 		let t = T::ONE - c;
@@ -128,8 +128,8 @@ impl<T> Mat3<T> {
 	}
 	/// Adds a translation to the matrix.
 	#[inline]
-	pub fn translate(self, trans: impl Into<Vec3<T>>) -> Transform3<T> {
-		let Vec3 { x: a14, y: a24, z: a34 } = trans.into();
+	pub fn translate(self, trans: Vec3<T>) -> Transform3<T> {
+		let Vec3 { x: a14, y: a24, z: a34 } = trans;
 		Transform3 {
 			a11: self.a11, a12: self.a12, a13: self.a13, a14,
 			a21: self.a21, a22: self.a22, a23: self.a23, a24,

@@ -77,8 +77,8 @@ impl<T: Zero + One> Transform3<T> {
 impl<T: Float> Transform3<T> {
 	/// Translation matrix.
 	#[inline]
-	pub fn translate(trans: impl Into<Vec3<T>>) -> Transform3<T> {
-		let Vec3 { x: a14, y: a24, z: a34 } = trans.into();
+	pub fn translate(trans: Vec3<T>) -> Transform3<T> {
+		let Vec3 { x: a14, y: a24, z: a34 } = trans;
 		Transform3 { a14, a24, a34, ..Transform3::IDENTITY }
 	}
 
@@ -86,14 +86,14 @@ impl<T: Float> Transform3<T> {
 	///
 	/// Scales around the origin.
 	#[inline]
-	pub fn scale(scale: impl Into<Vec3<T>>) -> Transform3<T> {
-		let Vec3 { x: a11, y: a22, z: a33 } = scale.into();
+	pub fn scale(scale: Vec3<T>) -> Transform3<T> {
+		let Vec3 { x: a11, y: a22, z: a33 } = scale;
 		Transform3 { a11, a22, a33, ..Transform3::IDENTITY }
 	}
 
 	/// Rotation matrix around an axis.
 	#[inline]
-	pub fn rotate(axis: Vec3<T>, angle: impl Angle<T = T>) -> Transform3<T> {
+	pub fn rotate(axis: Vec3<T>, angle: Angle<T>) -> Transform3<T> {
 		Mat3::rotate(axis, angle).transform3()
 	}
 }
@@ -138,12 +138,11 @@ impl<T: Float> Transform3<T> {
 
 		debug_assert!(T::ZERO < near && near < far);
 
-		let two = T::ONE + T::ONE;
-		let a11 = two / (right - left);
+		let a11 = T::TWO / (right - left);
 		let a14 = -(right + left) / (right - left);
-		let a22 = two / (top - bottom);
+		let a22 = T::TWO / (top - bottom);
 		let a24 = -(top + bottom) / (top - bottom);
-		let a33 = match clip { Clip::ZO => T::ONE, Clip::NO => two } / (far - near);
+		let a33 = match clip { Clip::ZO => T::ONE, Clip::NO => T::TWO } / (far - near);
 		let a33 = match hand { Hand::LH => a33, Hand::RH => -a33 };
 		let a34 = -match clip { Clip::ZO => near, Clip::NO => far + near } / (far - near);
 

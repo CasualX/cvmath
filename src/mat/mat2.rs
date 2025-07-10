@@ -71,8 +71,7 @@ impl<T: Float> Mat2<T> {
 	///
 	/// Scales around the origin.
 	#[inline]
-	pub fn scale(scale: impl Into<Vec2<T>>) -> Mat2<T> {
-		let scale = scale.into();
+	pub fn scale(scale: Vec2<T>) -> Mat2<T> {
 		Mat2 {
 			a11: scale.x, a12: T::ZERO,
 			a21: T::ZERO, a22: scale.y,
@@ -83,7 +82,7 @@ impl<T: Float> Mat2<T> {
 	///
 	/// Rotates around the origin.
 	#[inline]
-	pub fn rotate(angle: impl Angle<T = T>) -> Mat2<T> {
+	pub fn rotate(angle: Angle<T>) -> Mat2<T> {
 		let (cy, cx) = angle.sin_cos();
 		Mat2 {
 			a11: cx, a12: -cy,
@@ -93,8 +92,7 @@ impl<T: Float> Mat2<T> {
 
 	/// Skewing matrix.
 	#[inline]
-	pub fn skew(skew: impl Into<Vec2<T>>) -> Mat2<T> {
-		let skew = skew.into();
+	pub fn skew(skew: Vec2<T>) -> Mat2<T> {
 		Mat2 {
 			a11: T::ONE, a12: skew.x,
 			a21: skew.y, a22: T::ONE,
@@ -106,8 +104,7 @@ impl<T: Float> Mat2<T> {
 	/// Reflects around the given axis.
 	/// If axis is the zero vector, returns a point reflection around the origin.
 	#[inline]
-	pub fn reflect(axis: impl Into<Vec2<T>>) -> Mat2<T> {
-		let axis = axis.into();
+	pub fn reflect(axis: Vec2<T>) -> Mat2<T> {
 		let ls = axis.dot(axis);
 		if ls > T::EPSILON {
 			let Vec2 { x, y } = axis;
@@ -119,7 +116,7 @@ impl<T: Float> Mat2<T> {
 		}
 		else {
 			// Do something like point reflection instead of NaN
-			Mat2::scale(-T::ONE)
+			Mat2::scale(Vec2::dup(-T::ONE))
 		}
 	}
 
@@ -128,8 +125,7 @@ impl<T: Float> Mat2<T> {
 	/// Projects onto the given axis.
 	/// If axis is the zero vector, returns the zero matrix.
 	#[inline]
-	pub fn project(axis: impl Into<Vec2<T>>) -> Mat2<T> {
-		let axis = axis.into();
+	pub fn project(axis: Vec2<T>) -> Mat2<T> {
 		let ls = axis.dot(axis);
 		if ls > T::EPSILON {
 			let Vec2 { x, y } = axis;
@@ -160,8 +156,8 @@ impl<T> Mat2<T> {
 	}
 	/// Adds a translation to the matrix.
 	#[inline]
-	pub fn translate(self, trans: impl Into<Vec2<T>>) -> Transform2<T> {
-		let Vec2 { x: a13, y: a23 } = trans.into();
+	pub fn translate(self, trans: Vec2<T>) -> Transform2<T> {
+		let Vec2 { x: a13, y: a23 } = trans;
 		Transform2 {
 			a11: self.a11, a12: self.a12, a13,
 			a21: self.a21, a22: self.a22, a23,

@@ -1,6 +1,6 @@
 use std::ops;
 
-pub trait Zero where Self: Sized + ops::Add<Output = Self> + ops::Mul<Output = Self> {
+pub trait Zero where Self: Sized + ops::Add<Output = Self> {
 	const ZERO: Self;
 }
 

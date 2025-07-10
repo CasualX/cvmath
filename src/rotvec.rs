@@ -10,6 +10,7 @@ pub struct RotationVector<T> {
 	pub v: Vec3<T>,
 }
 
+/// Rotation vector constructor.
 #[allow(non_snake_case)]
 #[inline]
 pub const fn RotationVector<T>(v: Vec3<T>) -> RotationVector<T> {
@@ -19,13 +20,13 @@ pub const fn RotationVector<T>(v: Vec3<T>) -> RotationVector<T> {
 impl<T: Float> RotationVector<T> {
 	#[inline]
 	pub fn mat3(self) -> Mat3<T> {
-		let (axis, len) = self.v.normalize_len();
-		Mat3::rotate(axis, Rad(len))
+		let (axis, radians) = self.v.normalize_len();
+		Mat3::rotate(axis, Angle { radians })
 	}
 	#[inline]
 	pub fn quat(self) -> Quat<T> {
-		let (axis, len) = self.v.normalize_len();
-		Quat::from_axis_angle(axis, Rad(len))
+		let (axis, radians) = self.v.normalize_len();
+		Quat::from_axis_angle(axis, Angle { radians })
 	}
 }
 
