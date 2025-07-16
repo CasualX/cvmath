@@ -13,7 +13,7 @@ use super::*;
 /// Stored in row-major order (fields appear in reading order),
 /// but interpreted as column-major: each column is a transformed basis vector,
 /// and matrices are applied to column vectors via `mat * vec`.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
 pub struct Mat2<T> {
 	pub a11: T, pub a12: T,
@@ -166,6 +166,10 @@ impl<T> Mat2<T> {
 }
 
 impl<T> Mat2<T> {
+	#[inline]
+	fn as_array(&self) -> &[T; 4] {
+		unsafe { mem::transmute(self)}
+	}
 	/// Imports the matrix from a row-major layout.
 	#[inline]
 	pub fn from_row_major(mat: [[T; 2]; 2]) -> Mat2<T> {
@@ -253,7 +257,7 @@ impl<T: Scalar> Mat2<T> {
 	#[inline]
 	pub fn try_invert(self) -> Option<Mat2<T>> where T: Float {
 		let det = self.determinant();
-		if det.abs() < T::EPSILON {
+		if det == T::ZERO {
 			return None;
 		}
 		Some(self.adjugate() * (T::ONE / det))
@@ -279,6 +283,16 @@ impl<T: Scalar> Mat2<T> {
 		Mat2 {
 			a11:  self.a22, a12: -self.a12,
 			a21: -self.a21, a22:  self.a11,
+		}
+	}
+	/// Linear interpolation between the matrix elements.
+	#[inline]
+	pub fn lerp(self, rhs: Mat2<T>, t: T) -> Mat2<T> where T: Float {
+		Mat2 {
+			a11: self.a11 + (rhs.a11 - self.a11) * t,
+			a12: self.a12 + (rhs.a12 - self.a12) * t,
+			a21: self.a21 + (rhs.a21 - self.a21) * t,
+			a22: self.a22 + (rhs.a22 - self.a22) * t,
 		}
 	}
 }
@@ -357,6 +371,27 @@ impl_mat_mul_scalar!(Mat2);
 impl_mat_mul_vec!(Mat2, Vec2);
 impl_mat_mul_mat!(Mat2);
 
+//----------------------------------------------------------------
+// Formatting
+
+impl<T: fmt::Display> fmt::Display for Mat2<T> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str("Mat2(")?;
+		print::print(&move |i| &self.as_array()[i], 0x22, f)?;
+		f.write_str(")")
+	}
+}
+impl<T: fmt::Debug> fmt::Debug for Mat2<T> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str("Mat2(")?;
+		print::print(&move |i| print::Debug(&self.as_array()[i]), 0x22, f)?;
+		f.write_str(")")
+	}
+}
+
+//----------------------------------------------------------------
+// Tests
+
 #[test]
 fn test_inverse() {
 	let mut rng = urandom::seeded(42);
@@ -380,4 +415,14 @@ fn test_inverse() {
 		let error = (unprojected - p).len();
 		assert!(error < 1e-6, "Failed for mat: {mat:?}, p: {p:?}, error: {error}");
 	}
+}
+
+#[test]
+fn test_fmt() {
+	let mat = Mat2(1.15, 2.0, 3.3, 4.4);
+	assert_eq!(format!("{mat}"), "Mat2([1.15, 2], [3.3, 4.4])");
+	assert_eq!(format!("{mat:#}"), "Mat2(\n [1.15,    2],\n [ 3.3,  4.4])");
+
+	let mat = Mat2(1.23456789, 2.3456789, 3.45678901, 4.56789012);
+	assert_eq!(format!("{mat}"), "Mat2([1.23456789, 2.3456789], [3.45678901, 4.56789012])");
 }

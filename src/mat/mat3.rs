@@ -13,7 +13,7 @@ use super::*;
 /// Stored in row-major order (fields appear in reading order),
 /// but interpreted as column-major: each column is a transformed basis vector,
 /// and matrices are applied to column vectors via `mat * vec`.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
 pub struct Mat3<T> {
 	pub a11: T, pub a12: T, pub a13: T,
@@ -139,6 +139,10 @@ impl<T> Mat3<T> {
 }
 
 impl<T> Mat3<T> {
+	#[inline]
+	fn as_array(&self) -> &[T; 9] {
+		unsafe { mem::transmute(self) }
+	}
 	/// Imports the matrix from a row-major layout.
 	#[inline]
 	pub fn from_row_major(mat: [[T; 3]; 3]) -> Mat3<T> {
@@ -239,7 +243,7 @@ impl<T: Scalar> Mat3<T> {
 	#[inline]
 	pub fn try_invert(self) -> Option<Mat3<T>> where T: Float {
 		let det = self.determinant();
-		if det.abs() < T::EPSILON {
+		if det == T::ZERO {
 			return None;
 		}
 		Some(self.adjugate() * (T::ONE / det))
@@ -275,6 +279,21 @@ impl<T: Scalar> Mat3<T> {
 			a31: self.a21 * self.a32 - self.a22 * self.a31,
 			a32: self.a12 * self.a31 - self.a11 * self.a32,
 			a33: self.a11 * self.a22 - self.a12 * self.a21,
+		}
+	}
+	/// Linear interpolation between the matrix elements.
+	#[inline]
+	pub fn lerp(self, rhs: Mat3<T>, t: T) -> Mat3<T> where T: Float {
+		Mat3 {
+			a11: self.a11 + (rhs.a11 - self.a11) * t,
+			a12: self.a12 + (rhs.a12 - self.a12) * t,
+			a13: self.a13 + (rhs.a13 - self.a13) * t,
+			a21: self.a21 + (rhs.a21 - self.a21) * t,
+			a22: self.a22 + (rhs.a22 - self.a22) * t,
+			a23: self.a23 + (rhs.a23 - self.a23) * t,
+			a31: self.a31 + (rhs.a31 - self.a31) * t,
+			a32: self.a32 + (rhs.a32 - self.a32) * t,
+			a33: self.a33 + (rhs.a33 - self.a33) * t,
 		}
 	}
 }
@@ -369,6 +388,27 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Trans
 impl_mat_mul_scalar!(Mat3);
 impl_mat_mul_vec!(Mat3, Vec3);
 impl_mat_mul_mat!(Mat3);
+
+//----------------------------------------------------------------
+// Formatting
+
+impl<T: fmt::Display> fmt::Display for Mat3<T> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str("Mat3(")?;
+		print::print(&move |i| &self.as_array()[i], 0x33, f)?;
+		f.write_str(")")
+	}
+}
+impl<T: fmt::Debug> fmt::Debug for Mat3<T> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str("Mat3(")?;
+		print::print(&move |i| print::Debug(&self.as_array()[i]), 0x33, f)?;
+		f.write_str(")")
+	}
+}
+
+//----------------------------------------------------------------
+// Tests
 
 #[test]
 fn test_inverse() {

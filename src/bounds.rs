@@ -48,19 +48,20 @@ impl<T> Bounds<T> {
 			maxs: vec,
 		}
 	}
-	/// Creates a bounds at the given point.
+	/// Creates a bounds at the given point with size.
 	///
 	/// ```
 	/// use cvmath::{Bounds, Point2};
 	///
 	/// let p = Point2(3, -4);
-	/// let bounds = Bounds::point(p);
-	/// assert_eq!(bounds.mins, p);
-	/// assert_eq!(bounds.maxs, p);
+	/// let size = Point2(1, 1);
+	/// let bounds = Bounds::point(p, size);
+	/// assert_eq!(bounds.mins, p - size);
+	/// assert_eq!(bounds.maxs, p + size);
 	/// ```
 	#[inline]
-	pub const fn point(point: T) -> Bounds<T> where T: Copy {
-		Bounds { mins: point, maxs: point }
+	pub fn point(point: T, size: T) -> Bounds<T> where T: Copy + ops::Add<Output = T> + ops::Sub<Output = T> {
+		Bounds { mins: point - size, maxs: point + size }
 	}
 	/// Normalizes the min and max values ensuring that `self.mins <= self.maxs`.
 	///

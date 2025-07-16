@@ -14,6 +14,8 @@ mod mat4;
 mod transform2;
 mod transform3;
 
+mod print;
+
 pub use self::mat2::Mat2;
 pub use self::mat3::Mat3;
 pub use self::mat4::Mat4;

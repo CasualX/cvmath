@@ -13,7 +13,7 @@ use super::*;
 /// Stored in row-major order (fields appear in reading order),
 /// but interpreted as column-major: each column is a transformed basis vector,
 /// and matrices are applied to column vectors via `mat * vec`.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
 pub struct Mat4<T> {
 	pub a11: T, pub a12: T, pub a13: T, pub a14: T,
@@ -121,6 +121,31 @@ impl<T: Float> Mat4<T> {
 		Transform3::ortho(Bounds { mins, maxs }, (hand, clip)).into()
 	}
 
+	/// Orthographic projection matrix matching the framing of a perspective camera.
+	///
+	/// Produces an orthographic projection that preserves the screen-space framing
+	/// of a perspective projection at a given `focus_depth`.
+	///
+	/// Useful for matching zoom level or composition when switching from
+	/// perspective to orthographic rendering modes.
+	///
+	/// # Parameters
+	/// - `focus_depth`: Distance from the camera to the subject being framed.
+	/// - `fov_y`: Vertical field of view in radians (for the perspective camera).
+	/// - `aspect_ratio`: Width over height of the viewport.
+	/// - `near`, `far`: Depth clipping planes.
+	/// - `flags`: Projection handedness and clip space settings.
+	#[inline]
+	pub fn ortho_perspective(focus_depth: T, fov_y: Angle<T>, aspect_ratio: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
+		debug_assert!(fov_y > Angle::ZERO && fov_y < Angle::HALF, "fov_y must be in (0, 180)");
+		debug_assert!(aspect_ratio > T::ZERO, "aspect_ratio must be strictly positive");
+		debug_assert!(T::ZERO < near && near < far);
+
+		let half_height = (fov_y / T::TWO).tan() * focus_depth;
+		let half_width = half_height * aspect_ratio;
+		Mat4::ortho(-half_width, half_width, -half_height, half_height, near, far, flags)
+	}
+
 	/// Frustum matrix.
 	#[inline]
 	pub fn frustum(left: T, right: T, bottom: T, top: T, near: T, far: T, (hand, clip): (Hand, Clip)) -> Mat4<T> {
@@ -158,10 +183,16 @@ impl<T: Float> Mat4<T> {
 	}
 
 	/// Perspective projection matrix.
+	///
+	/// # Parameters
+	/// - `fov_y`: Vertical field of view in radians (for the perspective camera).
+	/// - `aspect_ratio`: Width over height of the viewport.
+	/// - `near`, `far`: Depth clipping planes.
+	/// - `flags`: Projection handedness and clip space settings.
 	#[inline]
 	pub fn perspective(fov_y: Angle<T>, aspect_ratio: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
-		debug_assert!(fov_y > Angle::ZERO && fov_y < Angle::HALF);
-		debug_assert!(aspect_ratio > T::ZERO);
+		debug_assert!(fov_y > Angle::ZERO && fov_y < Angle::HALF, "fov_y must be in (0, 180)");
+		debug_assert!(aspect_ratio > T::ZERO, "aspect_ratio must be strictly positive");
 		debug_assert!(T::ZERO < near && near < far);
 
 		let half_fov_y = fov_y / T::TWO;
@@ -176,20 +207,21 @@ impl<T: Float> Mat4<T> {
 		Mat4::frustum(left, right, bottom, top, near, far, flags)
 	}
 
-	/// Perspective FOV projection matrix.
-	#[inline]
-	pub fn perspective_fov(fov_y: Angle<T>, width: T, height: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
-		debug_assert!(width > T::ZERO && height > T::ZERO);
-		Mat4::perspective(fov_y, width / height, near, far, flags)
-	}
-
-
 	/// Projection matrix blending orthographic and perspective.
 	///
+	/// # Parameters
 	/// * `blend` controls the mix between ortho (0.0) and perspective (1.0).
 	/// * `focus_depth` is the distance to the subject kept stable in the transition.
+	/// - `fov_y`: Vertical field of view in radians (for the perspective camera).
+	/// - `aspect_ratio`: Width over height of the viewport.
+	/// - `near`, `far`: Depth clipping planes.
+	/// - `flags`: Projection handedness and clip space settings.
 	pub fn blend_ortho_perspective(blend: T, focus_depth: T, fov_y: Angle<T>, aspect_ratio: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
+		debug_assert!(fov_y > Angle::ZERO && fov_y < Angle::HALF, "fov_y must be in (0, 180)");
+		debug_assert!(aspect_ratio > T::ZERO, "aspect_ratio must be strictly positive");
+		debug_assert!(T::ZERO < near && near < far);
 		debug_assert!(blend >= T::ZERO && blend <= T::ONE, "fraction must be in [0, 1]");
+
 		let blend = blend.clamp(T::ZERO, T::ONE);
 		let blend = blend * blend;
 		let blend = blend * blend;
@@ -227,6 +259,10 @@ impl<T> Mat4<T> {
 }
 
 impl<T> Mat4<T> {
+	#[inline]
+	fn as_array(&self) -> &[T; 16] {
+		unsafe { mem::transmute(self)}
+	}
 	/// Imports the matrix from a row-major layout.
 	#[inline]
 	pub fn from_row_major(mat: [[T; 4]; 4]) -> Mat4<T> {
@@ -367,6 +403,31 @@ impl<T: Scalar> Mat4<T> {
 			a21: self.a12, a22: self.a22, a23: self.a32, a24: self.a42,
 			a31: self.a13, a32: self.a23, a33: self.a33, a34: self.a43,
 			a41: self.a14, a42: self.a24, a43: self.a34, a44: self.a44,
+		}
+	}
+	/// Linear interpolation between the matrix elements.
+	#[inline]
+	pub fn lerp(self, rhs: Mat4<T>, t: T) -> Mat4<T> where T: Float {
+		Mat4 {
+			a11: self.a11 + (rhs.a11 - self.a11) * t,
+			a12: self.a12 + (rhs.a12 - self.a12) * t,
+			a13: self.a13 + (rhs.a13 - self.a13) * t,
+			a14: self.a14 + (rhs.a14 - self.a14) * t,
+
+			a21: self.a21 + (rhs.a21 - self.a21) * t,
+			a22: self.a22 + (rhs.a22 - self.a22) * t,
+			a23: self.a23 + (rhs.a23 - self.a23) * t,
+			a24: self.a24 + (rhs.a24 - self.a24) * t,
+
+			a31: self.a31 + (rhs.a31 - self.a31) * t,
+			a32: self.a32 + (rhs.a32 - self.a32) * t,
+			a33: self.a33 + (rhs.a33 - self.a33) * t,
+			a34: self.a34 + (rhs.a34 - self.a34) * t,
+
+			a41: self.a41 + (rhs.a41 - self.a41) * t,
+			a42: self.a42 + (rhs.a42 - self.a42) * t,
+			a43: self.a43 + (rhs.a43 - self.a43) * t,
+			a44: self.a44 + (rhs.a44 - self.a44) * t,
 		}
 	}
 }
@@ -539,7 +600,7 @@ fn glu_invert<T: Float>(this: &Mat4<T>) -> Option<Mat4<T>> {
 	         + m[4]  * m[2]  * m[9]  + m[8]  * m[1]  * m[6]  - m[8]  * m[2]  * m[5];
 
 	let det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
-	if det.abs() < T::EPSILON {
+	if det == T::ZERO {
 		return None; // Not invertible
 	}
 
@@ -556,6 +617,27 @@ fn glu_invert<T: Float>(this: &Mat4<T>) -> Option<Mat4<T>> {
 impl_mat_mul_scalar!(Mat4);
 impl_mat_mul_vec!(Mat4, Vec4);
 impl_mat_mul_mat!(Mat4);
+
+//----------------------------------------------------------------
+// Formatting
+
+impl<T: fmt::Display> fmt::Display for Mat4<T> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str("Mat4(")?;
+		print::print(&move |i| &self.as_array()[i], 0x44, f)?;
+		f.write_str(")")
+	}
+}
+impl<T: fmt::Debug> fmt::Debug for Mat4<T> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str("Mat4(")?;
+		print::print(&move |i| print::Debug(&self.as_array()[i]), 0x44, f)?;
+		f.write_str(")")
+	}
+}
+
+//----------------------------------------------------------------
+// Tests
 
 #[test]
 fn test_inverse() {
@@ -589,4 +671,28 @@ fn test_inverse() {
 		let error = (unprojected - p).len();
 		assert!(error < 1e-6, "Failed for fov_y: {fov_y}, aspect: {aspect}, near: {near}, far: {far}, hand: {hand:?}, clip: {clip:?}, p: {p:?}, error: {error}");
 	}
+}
+
+#[test]
+fn test_ortho_inverse() {
+	let near = 10.0;
+	let far = 2000.0;
+	let half_width = 400.0;
+	let half_height = 300.0;
+	let projection = Mat4f::ortho(
+		-half_width, half_width,
+		-half_height, half_height,
+		near, far,
+		(Hand::LH, Clip::NO)
+	);
+
+	dbg!(projection.determinant());
+
+	let inv_proj = projection.inverse();
+	let identity = projection * inv_proj;
+
+	dbg!(identity);
+
+	let error = (identity.flat_norm_sqr() - 4.0).abs();
+	assert!(error.abs() < 1e-6, "Inverse projection matrix does not yield identity: error = {error}");
 }

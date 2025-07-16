@@ -20,10 +20,10 @@ An overview of their implementations:
 ```
 use cvmath::{Vec2, Vec3};
 
-assert_eq!("[2, 3, 4]", format!("{}", Vec3(2, 3, 4)));
-assert_eq!("[2.300, 2.142]", format!("{:.3}", Vec2(2.3, 2.14159278)));
-assert_eq!("[16, 25]", format!("{:?}", Vec2(16, 25)));
-assert_eq!("[  2,   3,  14]", format!("{:>3}", Vec3(2, 3, 14)));
+assert_eq!("Vec3(2, 3, 4)", format!("{}", Vec3(2, 3, 4)));
+assert_eq!("Vec2(2.300, 2.142)", format!("{:.3}", Vec2(2.3, 2.14159278)));
+assert_eq!("Vec2(16, 25)", format!("{:?}", Vec2(16, 25)));
+assert_eq!("Vec3(  2,   3,  14)", format!("{:>3}", Vec3(2, 3, 14)));
 
 assert_eq!(Vec2 { x: -5, y: 9 }, Vec2(-5, 9));
 assert!(Vec2(1, 9) > Vec2(1, -2));
@@ -478,9 +478,9 @@ macro_rules! fmt {
 	($ty:ident { $($field:ident),+ } $fmt:path) => {
 		impl<T: $fmt> $fmt for $ty<T> {
 			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-				f.write_str("[")?;
+				f.write_str(concat!(stringify!($ty), "("))?;
 				instmt!(f.write_str(", ")?; $(self.$field.fmt(f)?;)+);
-				f.write_str("]")
+				f.write_str(")")
 			}
 		}
 	};
@@ -1268,34 +1268,6 @@ macro_rules! vec {
 			}
 		}
 
-		// Vector addition, subtraction and negation (tuple)
-		impl<U, T: ops::Add<U>> ops::Add<($($U,)+)> for $vec<T> {
-			type Output = $vec<T::Output>;
-			#[inline]
-			fn add(self, rhs: ($($U,)+)) -> $vec<T::Output> {
-				$vec { $($field: self.$field + rhs.$I),+ }
-			}
-		}
-		impl<U, T: ops::Sub<U>> ops::Sub<($($U,)+)> for $vec<T> {
-			type Output = $vec<T::Output>;
-			#[inline]
-			fn sub(self, rhs: ($($U,)+)) -> $vec<T::Output> {
-				$vec { $($field: self.$field - rhs.$I),+ }
-			}
-		}
-		impl<U, T: ops::AddAssign<U>> ops::AddAssign<($($U,)+)> for $vec<T> {
-			#[inline]
-			fn add_assign(&mut self, rhs: ($($U,)+)) {
-				$(self.$field += rhs.$I;)+
-			}
-		}
-		impl<U, T: ops::SubAssign<U>> ops::SubAssign<($($U,)+)> for $vec<T> {
-			#[inline]
-			fn sub_assign(&mut self, rhs: ($($U,)+)) {
-				$(self.$field -= rhs.$I;)+
-			}
-		}
-
 		// Scalar multiplication, division and remainder
 		impl<U: Scalar, T: ops::Mul<U>> ops::Mul<U> for $vec<T> {
 			type Output = $vec<T::Output>;
@@ -1375,47 +1347,6 @@ macro_rules! vec {
 			#[inline]
 			fn rem_assign(&mut self, rhs: $vec<U>) {
 				$(self.$field %= rhs.$field;)+
-			}
-		}
-
-		// Vector multiplication, division and remainder (tuple)
-		impl<U, T: ops::Mul<U>> ops::Mul<($($U,)+)> for $vec<T> {
-			type Output = $vec<T::Output>;
-			#[inline]
-			fn mul(self, rhs: ($($U,)+)) -> $vec<T::Output> {
-				$vec { $($field: self.$field * rhs.$I),+ }
-			}
-		}
-		impl<U, T: ops::Div<U>> ops::Div<($($U,)+)> for $vec<T> {
-			type Output = $vec<T::Output>;
-			#[inline]
-			fn div(self, rhs: ($($U,)+)) -> $vec<T::Output> {
-				$vec { $($field: self.$field / rhs.$I),+ }
-			}
-		}
-		impl<U, T: ops::Rem<U>> ops::Rem<($($U,)+)> for $vec<T> {
-			type Output = $vec<T::Output>;
-			#[inline]
-			fn rem(self, rhs: ($($U,)+)) -> $vec<T::Output> {
-				$vec { $($field: self.$field % rhs.$I),+ }
-			}
-		}
-		impl<U, T: ops::MulAssign<U>> ops::MulAssign<($($U,)+)> for $vec<T> {
-			#[inline]
-			fn mul_assign(&mut self, rhs: ($($U,)+)) {
-				$(self.$field *= rhs.$I;)+
-			}
-		}
-		impl<U, T: ops::DivAssign<U>> ops::DivAssign<($($U,)+)> for $vec<T> {
-			#[inline]
-			fn div_assign(&mut self, rhs: ($($U,)+)) {
-				$(self.$field /= rhs.$I;)+
-			}
-		}
-		impl<U, T: ops::RemAssign<U>> ops::RemAssign<($($U,)+)> for $vec<T> {
-			#[inline]
-			fn rem_assign(&mut self, rhs: ($($U,)+)) {
-				$(self.$field %= rhs.$I;)+
 			}
 		}
 

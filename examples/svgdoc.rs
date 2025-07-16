@@ -60,9 +60,9 @@ fn len_hat() -> String {
 	svg.arrow(origin, vhat, ARROW_SIZE).stroke("grey").stroke_width(0.5);
 	svg.arrow(vhat, this, ARROW_SIZE).stroke("grey").stroke_width(0.5);
 	svg.circle(origin, 2.0);
-	svg.text(this + (5.0, 0.0), "this");
-	svg.text((origin + vhat) * 0.5 + (0.0, 15.0), "x").fill("grey");
-	svg.text((vhat + this) * 0.5 + (5.0, 0.0), "y").fill("grey");
+	svg.text(this + Vec2(5.0, 0.0), "this");
+	svg.text((origin + vhat) * 0.5 + Vec2(0.0, 15.0), "x").fill("grey");
+	svg.text((vhat + this) * 0.5 + Vec2(5.0, 0.0), "y").fill("grey");
 	svg.close()
 }
 
@@ -81,10 +81,10 @@ fn distance_hat() -> String {
 	svg.arrow(vhat, to, ARROW_SIZE).stroke("grey").stroke_width(0.5);
 	svg.circle(this, 2.0);
 	svg.circle(to, 2.0);
-	svg.text(this + (-20.0, -10.0), "this");
-	svg.text(to + (5.0, 0.0), "to");
-	svg.text((this + vhat) * 0.5 + (0.0, 15.0), "x").fill("grey");
-	svg.text((vhat + to) * 0.5 + (5.0, 0.0), "y").fill("grey");
+	svg.text(this + Vec2(-20.0, -10.0), "this");
+	svg.text(to + Vec2(5.0, 0.0), "to");
+	svg.text((this + vhat) * 0.5 + Vec2(0.0, 15.0), "x").fill("grey");
+	svg.text((vhat + to) * 0.5 + Vec2(5.0, 0.0), "y").fill("grey");
 	svg.close()
 }
 
@@ -109,10 +109,10 @@ fn lerp() -> String {
 	svg.circle(v2, 2.0).fill("black");
 	svg.circle(vgreen, 2.0).fill("green");
 	svg.circle(vblue, 2.0).fill("blue");
-	svg.text(v1 - (20.0, 10.0), "self").fill("black");
-	svg.text(v2 - (15.0, -20.0), "rhs").fill("black");
-	svg.text(vgreen - (20.0, -20.0), "t = 0.2").fill("green");
-	svg.text(vblue - (20.0, -20.0), "t = 0.5").fill("blue");
+	svg.text(v1 - Vec2(20.0, 10.0), "self").fill("black");
+	svg.text(v2 - Vec2(15.0, -20.0), "rhs").fill("black");
+	svg.text(vgreen - Vec2(20.0, -20.0), "t = 0.2").fill("green");
+	svg.text(vblue - Vec2(20.0, -20.0), "t = 0.5").fill("blue");
 	svg.close()
 }
 
@@ -158,13 +158,13 @@ fn slerp_nlerp<F: Fn(Point2<f32>, Point2<f32>, f32) -> Point2<f32>>(f: F, name: 
 	svg.circle(v2, 2.0).fill("black");
 	svg.circle(lerp, 2.0).fill("blue");
 	svg.circle(slerp, 2.0).fill("green");
-	svg.text(p1 - (45.0, 5.0), "t = 0.25").fill("green").font_size(10.0);
-	svg.text(p2 - (20.0, 5.0), "t = 0.50").fill("green").font_size(10.0);
-	svg.text(slerp - (0.0, 5.0), "t = 0.75").fill("green").font_size(10.0);
-	svg.text(lerp - (20.0, -20.0), "lerp").fill("blue");
-	svg.text(slerp - (60.0, -10.0), name).fill("green");
-	svg.text(v1 - (50.0, 0.0), "self").fill("black");
-	svg.text(v2 - (-10.0, 0.0), "rhs").fill("black");
+	svg.text(p1 - Vec2(45.0, 5.0), "t = 0.25").fill("green").font_size(10.0);
+	svg.text(p2 - Vec2(20.0, 5.0), "t = 0.50").fill("green").font_size(10.0);
+	svg.text(slerp - Vec2(0.0, 5.0), "t = 0.75").fill("green").font_size(10.0);
+	svg.text(lerp - Vec2(20.0, -20.0), "lerp").fill("blue");
+	svg.text(slerp - Vec2(60.0, -10.0), name).fill("green");
+	svg.text(v1 - Vec2(50.0, 0.0), "self").fill("black");
+	svg.text(v2 - Vec2(-10.0, 0.0), "rhs").fill("black");
 	svg.close()
 }
 

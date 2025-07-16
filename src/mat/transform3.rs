@@ -15,7 +15,7 @@ use super::*;
 /// Stored in row-major order (fields appear in reading order),
 /// but interpreted as column-major: each column is a transformed basis vector,
 /// and matrices are applied to column vectors via `mat * vec`.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
 pub struct Transform3<T> {
 	pub a11: T, pub a12: T, pub a13: T, pub a14: T,
@@ -162,6 +162,10 @@ impl<T: Zero + One> Transform3<T> {
 }
 
 impl<T> Transform3<T> {
+	#[inline]
+	fn as_array(&self) -> &[T; 12] {
+		unsafe { mem::transmute(self)}
+	}
 	/// Imports the matrix from a row-major layout.
 	#[inline]
 	pub fn from_row_major(mat: [[T; 4]; 3]) -> Transform3<T> {
@@ -277,7 +281,7 @@ impl<T: Scalar> Transform3<T> {
 	#[inline]
 	pub fn try_invert(self) -> Option<Transform3<T>> where T: Float {
 		let det = self.determinant();
-		if det.abs() < T::EPSILON {
+		if det == T::ZERO {
 			return None;
 		}
 
@@ -309,6 +313,26 @@ impl<T: Scalar> Transform3<T> {
 	#[inline]
 	pub fn inverse(self) -> Transform3<T> where T: Float {
 		self.try_invert().unwrap_or(Transform3::ZERO)
+	}
+	/// Linear interpolation between the matrix elements.
+	#[inline]
+	pub fn lerp(self, rhs: Transform3<T>, t: T) -> Transform3<T> where T: Float {
+		Transform3 {
+			a11: self.a11 + (rhs.a11 - self.a11) * t,
+			a12: self.a12 + (rhs.a12 - self.a12) * t,
+			a13: self.a13 + (rhs.a13 - self.a13) * t,
+			a14: self.a14 + (rhs.a14 - self.a14) * t,
+
+			a21: self.a21 + (rhs.a21 - self.a21) * t,
+			a22: self.a22 + (rhs.a22 - self.a22) * t,
+			a23: self.a23 + (rhs.a23 - self.a23) * t,
+			a24: self.a24 + (rhs.a24 - self.a24) * t,
+
+			a31: self.a31 + (rhs.a31 - self.a31) * t,
+			a32: self.a32 + (rhs.a32 - self.a32) * t,
+			a33: self.a33 + (rhs.a33 - self.a33) * t,
+			a34: self.a34 + (rhs.a34 - self.a34) * t,
+		}
 	}
 }
 
@@ -400,6 +424,27 @@ impl_mat_mul_scalar!(Transform3);
 impl_mat_mul_vec!(Transform3, Vec3);
 impl_mat_mul_vec!(Transform3, Vec4);
 impl_mat_mul_mat!(Transform3);
+
+//----------------------------------------------------------------
+// Formatting
+
+impl<T: fmt::Display> fmt::Display for Transform3<T> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str("Transform3(")?;
+		print::print(&move |i| &self.as_array()[i], 0x23, f)?;
+		f.write_str(")")
+	}
+}
+impl<T: fmt::Debug> fmt::Debug for Transform3<T> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str("Transform3(")?;
+		print::print(&move |i| print::Debug(&self.as_array()[i]), 0x23, f)?;
+		f.write_str(")")
+	}
+}
+
+//----------------------------------------------------------------
+// Tests
 
 #[test]
 fn test_inverse() {

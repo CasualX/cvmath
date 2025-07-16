@@ -15,7 +15,7 @@ use super::*;
 /// Stored in row-major order (fields appear in reading order),
 /// but interpreted as column-major: each column is a transformed basis vector,
 /// and matrices are applied to column vectors via `mat * vec`.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Default, Eq, PartialEq, Hash)]
 #[repr(C)]
 pub struct Transform2<T> {
 	pub a11: T, pub a12: T, pub a13: T,
@@ -175,6 +175,10 @@ impl<T: Zero + One> Transform2<T> {
 }
 
 impl<T> Transform2<T> {
+	#[inline]
+	fn as_array(&self) -> &[T; 6] {
+		unsafe { mem::transmute(self)}
+	}
 	/// Imports the matrix from a row-major layout.
 	#[inline]
 	pub fn from_row_major(mat: [[T; 3]; 2]) -> Transform2<T> {
@@ -276,7 +280,7 @@ impl<T: Scalar> Transform2<T> {
 	#[inline]
 	pub fn try_invert(self) -> Option<Transform2<T>> where T: Float {
 		let det = self.determinant();
-		if det.abs() < T::EPSILON {
+		if det == T::ZERO {
 			return None;
 		}
 
@@ -296,6 +300,18 @@ impl<T: Scalar> Transform2<T> {
 	#[inline]
 	pub fn inverse(self) -> Transform2<T> where T: Float {
 		self.try_invert().unwrap_or(Transform2::ZERO)
+	}
+	/// Linear interpolation between the matrix elements.
+	#[inline]
+	pub fn lerp(self, other: Transform2<T>, t: T) -> Transform2<T> where T: Float {
+		Transform2 {
+			a11: self.a11 + (other.a11 - self.a11) * t,
+			a12: self.a12 + (other.a12 - self.a12) * t,
+			a13: self.a13 + (other.a13 - self.a13) * t,
+			a21: self.a21 + (other.a21 - self.a21) * t,
+			a22: self.a22 + (other.a22 - self.a22) * t,
+			a23: self.a23 + (other.a23 - self.a23) * t,
+		}
 	}
 }
 
@@ -371,6 +387,27 @@ impl_mat_mul_scalar!(Transform2);
 impl_mat_mul_vec!(Transform2, Vec2);
 impl_mat_mul_vec!(Transform2, Vec3);
 impl_mat_mul_mat!(Transform2);
+
+//----------------------------------------------------------------
+// Formatting
+
+impl<T: fmt::Display> fmt::Display for Transform2<T> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str("Transform2(")?;
+		print::print(&move |i| &self.as_array()[i], 0x23, f)?;
+		f.write_str(")")
+	}
+}
+impl<T: fmt::Debug> fmt::Debug for Transform2<T> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str("Transform2(")?;
+		print::print(&move |i| print::Debug(&self.as_array()[i]), 0x23, f)?;
+		f.write_str(")")
+	}
+}
+
+//----------------------------------------------------------------
+// Tests
 
 #[test]
 fn test_inverse() {

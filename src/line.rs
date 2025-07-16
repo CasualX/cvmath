@@ -29,6 +29,13 @@ impl<T> Line<T> {
 	pub const fn new(start: T, end: T) -> Line<T> {
 		Line { start, end }
 	}
+
+	/// Pinches the line at the given point.
+	#[inline]
+	pub const fn pinch(self, pt: T) -> (Line<T>, Line<T>) where T: Copy {
+		let Line { start, end } = self;
+		(Line::new(start, pt), Line::new(pt, end))
+	}
 }
 
 impl<T: ops::Sub<Output = T>> Line<T> {
