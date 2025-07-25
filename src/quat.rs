@@ -1,7 +1,7 @@
 use super::*;
 
 /// Quaternion number.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[repr(C)]
 pub struct Quat<T> {
 	pub a: T,
@@ -28,7 +28,7 @@ impl<T> Quat<T> {
 	}
 	/// Returns the imaginary part of the quaternion.
 	#[inline]
-	pub fn vec3(self) -> Vec3<T> {
+	pub fn imag(self) -> Vec3<T> {
 		Vec3 { x: self.b, y: self.c, z: self.d }
 	}
 }
@@ -101,30 +101,28 @@ impl<T: Float> Quat<T> {
 	}
 	/// Computes the normalized quaternion.
 	#[inline]
-	pub fn normalize(self) -> Quat<T> {
+	pub fn norm(self) -> Quat<T> {
 		let len = self.len();
-		if len < T::EPSILON {
-			Quat::ZERO
+		if len == T::ZERO {
+			return self;
 		}
-		else {
-			self * (T::ONE / len)
-		}
+		self * (T::ONE / len)
 	}
 	/// Computes the squared length (determinant) of the quaternion.
 	#[inline]
-	pub fn determinant(self) -> T {
+	pub fn det(self) -> T {
 		let x = self.len();
 		x * x
 	}
 	/// Computes the conjugate of the quaternion.
 	#[inline]
-	pub fn conjugate(self) -> Quat<T> {
+	pub fn conj(self) -> Quat<T> {
 		Quat { a: self.a, b: -self.b, c: -self.c, d: -self.d }
 	}
 	/// Computes the inverse of the quaternion.
 	#[inline]
 	pub fn inverse(self) -> Quat<T> {
-		self.conjugate().normalize()
+		self.conj().norm()
 	}
 }
 
@@ -140,7 +138,7 @@ impl<T: Float> Quat<T> {
 	}
 	#[inline]
 	pub fn to_axis_angle(self) -> (Vec3<T>, Angle<T>) {
-		let q = self.normalize();
+		let q = self.norm();
 
 		let half_angle = Angle::acos(q.a);
 		let angle = half_angle + half_angle;
@@ -150,15 +148,15 @@ impl<T: Float> Quat<T> {
 			Vec3::ZERO
 		}
 		else {
-			q.vec3() * (T::ONE / s)
+			q.imag() * (T::ONE / s)
 		};
 
 		(axis, angle)
 	}
 	/// Constructs a quaternion that represents the rotation from one vector to another.
 	pub fn rotation(from: Vec3<T>, to: Vec3<T>) -> Quat<T> {
-		let from = from.normalize();
-		let to = to.normalize();
+		let from = from.norm();
+		let to = to.norm();
 		let dot = from.dot(to);
 		if dot >= T::ONE - T::EPSILON {
 			Quat::UNIT
@@ -168,7 +166,7 @@ impl<T: Float> Quat<T> {
 			Quat::from_axis_angle(axis, Angle::HALF)
 		}
 		else {
-			let axis = from.cross(to).normalize();
+			let axis = from.cross(to).norm();
 			let angle = Angle::acos(dot);
 			Quat::from_axis_angle(axis, angle)
 		}
@@ -195,9 +193,9 @@ impl<T: Float> Quat<T> {
 		// Nearly opposite quaternions: choose an orthogonal quaternion for interpolation
 		// Find an orthogonal axis to self's vector part
 		if cos_theta <= -(T::ONE - T::EPSILON) {
-			let axis = self.vec3().any_perp();
+			let axis = self.imag().any_perp();
 			let orthogonal = Quat::from_axis_angle(axis, Angle::HALF);
-			return (self * (Quat::UNIT + (orthogonal - Quat::UNIT) * t)).normalize();
+			return (self * (Quat::UNIT + (orthogonal - Quat::UNIT) * t)).norm();
 		}
 
 		let theta = cos_theta.acos();
@@ -206,7 +204,7 @@ impl<T: Float> Quat<T> {
 		let w1 = ((T::ONE - t) * theta).sin() / sin_theta;
 		let w2 = (t * theta).sin() / sin_theta;
 
-		(self * w1 + end * w2).normalize()
+		(self * w1 + end * w2).norm()
 	}
 	/// Performs normalized linear interpolation (nlerp) between two quaternions.
 	pub fn nlerp(self, mut end: Quat<T>, t: T) -> Quat<T> {
@@ -215,7 +213,7 @@ impl<T: Float> Quat<T> {
 			end = -end;
 		}
 
-		(self + (end - self) * t).normalize()
+		(self + (end - self) * t).norm()
 	}
 }
 
@@ -344,7 +342,7 @@ impl<T: Float> ops::Mul<Vec3<T>> for Quat<T> {
 	#[inline]
 	fn mul(self, v: Vec3<T>) -> Vec3<T> {
 		let s = self.a;
-		let u = self.vec3();
+		let u = self.imag();
 		u * (u.dot(v) + u.dot(v)) + v * (s * s - u.dot(u)) + u.cross(v) * (s + s)
 	}
 }

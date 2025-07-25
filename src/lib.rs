@@ -4,6 +4,7 @@ Computer Vector Graphics Math Library
 */
 
 use std::{fmt, mem, ops, slice};
+use std::error::Error;
 use std::str::FromStr;
 
 mod macros;

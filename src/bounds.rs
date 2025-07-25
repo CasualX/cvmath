@@ -7,7 +7,7 @@ use super::*;
 //----------------------------------------------------------------
 
 /// Bounds shape.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]
 pub struct Bounds<T> {
@@ -71,11 +71,11 @@ impl<T> Bounds<T> {
 	/// ```
 	/// use cvmath::{Bounds, Point2};
 	///
-	/// let bounds = Bounds(Point2(1, 0), Point2(-2, 3)).normalize();
+	/// let bounds = Bounds(Point2(1, 0), Point2(-2, 3)).norm();
 	/// assert_eq!(Bounds(Point2(-2, 0), Point2(1, 3)), bounds);
 	/// ```
 	#[inline]
-	pub fn normalize(self) -> Bounds<T> where T: Extrema {
+	pub fn norm(self) -> Bounds<T> where T: Extrema {
 		let (mins, maxs) = self.mins.min_max(self.maxs);
 		Bounds { mins, maxs }
 	}

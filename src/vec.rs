@@ -143,7 +143,7 @@ assert_eq!(Vec2::<i32>::from((2, 3)), Vec2::from([2, 3]));
 
 `distance(self, to)` where T: `Float`: Calculates the euclidean distance to another vector.
 
-`normalize(self)` where T: `Float`: Normalizes the vector. The vector with length zero stays zero.
+`norm(self)` where T: `Float`: Normalizes the vector. The vector with length zero stays zero.
 
 `resize(self, len)` where T: `Float`: Scales the vector such that its length equals the given value. The vector with length zero remains zero.
 
@@ -208,8 +208,8 @@ assert_eq!(5.0, Vec2(3.0, 4.0).len());
 assert_eq!(2, Vec2::distance_sqr(Vec2(1, 1), Vec2(2, 2)));
 assert_eq!(5.0, Vec2::distance(Vec2(10.0, 10.0), Vec2(13.0, 14.0)));
 
-assert_eq!(Vec2 { x: 0.6, y: 0.8 }, Vec2(3.0, 4.0).normalize());
-assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2(0.0, 0.0).normalize());
+assert_eq!(Vec2 { x: 0.6, y: 0.8 }, Vec2(3.0, 4.0).norm());
+assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2(0.0, 0.0).norm());
 
 assert_eq!(Vec2 { x: 1.5, y: 2.0 }, Vec2(3.0, 4.0).resize(2.5));
 assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2(0.0, 0.0).resize(2.0));
@@ -492,7 +492,7 @@ macro_rules! parse_vec_elems {
 			let start = $next;
 			let end = $iter.next().ok_or(ParseVecError::DimMismatch)?;
 			$next = end + 1;
-			$s[start..end].trim().parse()?
+			$s[start..end].trim_ascii().parse()?
 		};
 		parse_vec_elems!($s, $iter, $next; $($tail),+);
 	}};
@@ -501,7 +501,7 @@ macro_rules! parse_vec_elems {
 			if $iter.next().is_some() {
 				return Err(ParseVecError::DimMismatch);
 			}
-			$s[$next..$s.len() - 1].trim().parse()?
+			$s[$next..$s.len() - 1].trim_ascii().parse()?
 		};
 	}};
 }
@@ -840,15 +840,15 @@ macro_rules! vec {
 			/// use cvmath::{Vec2, Vec3};
 			///
 			/// let this = Vec2 { x: 3.0, y: -4.0 };
-			/// assert_eq!(Vec2(0.6, -0.8), this.normalize());
+			/// assert_eq!(Vec2(0.6, -0.8), this.norm());
 			///
 			/// let this = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
-			/// assert_eq!(this, this.normalize());
+			/// assert_eq!(this, this.norm());
 			/// ```
 			#[inline]
 			#[must_use]
-			pub fn normalize(self) -> $vec<T> where T: Float {
-				self.normalize_len().0
+			pub fn norm(self) -> $vec<T> where T: Float {
+				self.norm_len().0
 			}
 			/// Calculates the normalized vector and its length.
 			///
@@ -857,18 +857,18 @@ macro_rules! vec {
 			/// ```
 			/// use cvmath::{Vec2, Vec3};
 			///
-			/// let this = Vec2 { x: 3.0, y: -4.0 };
-			/// assert_eq!((Vec2(0.6, -0.8), 5.0), this.normalize_len());
+			/// let this: Vec2<f32> = Vec2 { x: 3.0, y: -4.0 };
+			/// assert_eq!((Vec2(0.6, -0.8), 5.0), this.norm_len());
 			///
 			/// let this = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
-			/// assert_eq!((this, 0.0), this.normalize_len());
+			/// assert_eq!((this, 0.0), this.norm_len());
 			/// ```
 			#[inline]
 			#[must_use]
-			pub fn normalize_len(self) -> ($vec<T>, T) where T: Float {
+			pub fn norm_len(self) -> ($vec<T>, T) where T: Float {
 				let self_len = self.len();
-				if self_len > T::EPSILON {
-					(self / self_len, self_len)
+				if self_len != T::ZERO {
+					(self * (T::ONE / self_len), self_len)
 				}
 				else {
 					(self, self_len)
@@ -891,10 +891,10 @@ macro_rules! vec {
 			#[must_use]
 			pub fn resize(self, len: T) -> $vec<T> where T: Float {
 				let self_len = self.len();
-				if self_len > T::EPSILON {
-					self * (len / self_len)
+				if self_len == T::ZERO {
+					return self;
 				}
-				else { self }
+				self * (len / self_len)
 			}
 			/// Calculates the length of `self` projected onto `v`.
 			///
@@ -915,10 +915,10 @@ macro_rules! vec {
 			#[must_use]
 			pub fn project_scalar(self, v: $vec<T>) -> T where T: Float {
 				let len = v.len();
-				if len > T::EPSILON {
-					v.dot(self) / len
+				if len == T::ZERO {
+					return len;
 				}
-				else { len }
+				v.dot(self) / len
 			}
 			/// Projection of `self` onto `v`.
 			///
@@ -939,10 +939,10 @@ macro_rules! vec {
 			#[must_use]
 			pub fn project(self, v: $vec<T>) -> $vec<T> where T: Float {
 				let len_sqr = v.len_sqr();
-				if len_sqr > T::EPSILON {
-					v * (v.dot(self) / len_sqr)
+				if len_sqr == T::ZERO {
+					return v;
 				}
-				else { v }
+				v * (v.dot(self) / len_sqr)
 			}
 			/// Projection of `self` onto `v` clamped to `v`.
 			///
@@ -1132,15 +1132,15 @@ macro_rules! vec {
 			#[inline]
 			#[must_use]
 			pub fn slerp(self, rhs: $vec<T>, t: T) -> $vec<T> where T: Float {
-				let (v0, len0) = self.normalize_len();
-				let (v1, len1) = rhs.normalize_len();
+				let (v0, len0) = self.norm_len();
+				let (v1, len1) = rhs.norm_len();
 				let len = len0 + (len1 - len0) * t;
 
 				let dot = v0.dot(v1);
 				let theta = Angle::acos(dot) * t;
 				let (sin, cos) = theta.sin_cos();
 
-				let v2 = (v1 - v0 * dot).normalize();
+				let v2 = (v1 - v0 * dot).norm();
 				(v0 * cos + v2 * sin) * len
 			}
 			/// Cheap spherical interpolation between the vectors without constant velocity.
@@ -1551,7 +1551,7 @@ vec!(Vec3 3 { x 0 T U X, y 1 T U Y, z 2 T U Z } {
 	pub fn any_perp(self) -> Vec3<T> where T: Float {
 		let v = if self.x != T::ZERO || self.y != T::ZERO { Vec3::new(-self.y, self.x, T::ZERO) }
 		else { Vec3::new(T::ZERO, -self.z, self.y) };
-		v.normalize()
+		v.norm()
 	}
 	/// Homogeneous divide.
 	#[inline]
@@ -1645,10 +1645,7 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Vec4<T> {
 
 //----------------------------------------------------------------
 
-use std::str::FromStr;
-use std::error::Error;
-
-/// An error which can be returned when parsing a vec.
+/// An error which can be returned when parsing a VecN<T>.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ParseVecError<E> {
 	/// Missing parentheses surrounding the vector elements.

@@ -2,7 +2,7 @@
 use super::*;
 
 /// Complex number.
-#[derive(Copy, Clone, Default, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Default, PartialEq)]
 #[repr(C)]
 pub struct Complex<T> {
 	pub re: T,
@@ -87,12 +87,10 @@ impl<T: Float> Complex<T> {
 	#[inline]
 	pub fn norm(self) -> Complex<T> {
 		let len = self.abs();
-		if len < T::EPSILON {
-			Complex::ZERO
+		if len == T::ZERO {
+			return self;
 		}
-		else {
-			self * (T::ONE / len)
-		}
+		self * (T::ONE / len)
 	}
 	/// Converts to polar coordinates.
 	#[inline]
@@ -106,8 +104,8 @@ impl<T: Float> Complex<T> {
 	#[inline]
 	pub fn recip(self) -> Complex<T> {
 		let denom = self.re * self.re + self.im * self.im;
-		if denom < T::EPSILON {
-			return Complex::ZERO;
+		if denom == T::ZERO {
+			return self;
 		}
 		let denom_recip = T::ONE / denom;
 		Complex {
@@ -161,8 +159,8 @@ impl<T: Float> Complex<T> {
 	#[inline]
 	pub fn ln(self) -> Complex<T> {
 		let radius = self.abs();
-		if radius < T::EPSILON {
-			return Complex::ZERO;
+		if radius == T::ZERO {
+			return self;
 		}
 		let theta = self.arg();
 		Complex {
@@ -373,12 +371,15 @@ impl<T: Copy + ops::Mul<Output = T> + ops::Add<Output = T> + ops::Sub<Output = T
 	}
 }
 
+//----------------------------------------------------------------
+// Formatting
+
 macro_rules! impl_fmt {
 	($fmt:path) => {
 		impl<T: $fmt> $fmt for Complex<T> {
 			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 				self.re.fmt(f)?;
-				f.write_str(" + ")?;
+				f.write_str(if f.alternate() { " + " } else { "+" })?;
 				self.im.fmt(f)?;
 				f.write_str("i")
 			}
@@ -395,8 +396,67 @@ impl_fmt!(fmt::UpperHex);
 impl_fmt!(fmt::LowerExp);
 impl_fmt!(fmt::UpperExp);
 
+//----------------------------------------------------------------
+// Parsing
+
+impl<T: FromStr + Default> FromStr for Complex<T> {
+	type Err = ParseComplexError<T::Err>;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		let s = s.trim_ascii();
+		let (re, im) = if let Some((lhs, rhs)) = s.split_once("+") {
+			let Some(rhs) = rhs.trim_ascii_start().strip_suffix("i") else { return Err(ParseComplexError::InvalidFormat) };
+			(lhs.trim_ascii_end().parse::<T>()?, rhs.parse::<T>()?)
+		}
+		else {
+			(s.parse::<T>()?, T::default())
+		};
+		Ok(Complex { re, im })
+	}
+}
+
+/// An error which can be returned when parsing a Complex<T>.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum ParseComplexError<E> {
+	InvalidFormat,
+	ParseValue(E),
+}
+
+impl<E> From<E> for ParseComplexError<E> {
+	#[inline]
+	fn from(err: E) -> ParseComplexError<E> {
+		ParseComplexError::ParseValue(err)
+	}
+}
+
+impl<E: Error + 'static> fmt::Display for ParseComplexError<E> {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		#[allow(deprecated)]
+		self.description().fmt(f)
+	}
+}
+
+impl<E: Error + 'static> Error for ParseComplexError<E> {
+	fn description(&self) -> &str {
+		#[allow(deprecated)]
+		match *self {
+			ParseComplexError::InvalidFormat => "invalid format",
+			ParseComplexError::ParseValue(ref inner) => inner.description(),
+		}
+	}
+	fn source(&self) -> Option<&(dyn Error + 'static)> {
+		match *self {
+			ParseComplexError::InvalidFormat => None,
+			ParseComplexError::ParseValue(ref inner) => Some(inner),
+		}
+	}
+}
+
 specialized_type!(Complex, Complexf, f32, re, im);
 specialized_type!(Complex, Complexd, f64, re, im);
+
+//----------------------------------------------------------------
+// Serialization
 
 #[cfg(feature = "serde")]
 impl<T: serde::Serialize> serde::Serialize for Complex<T> {
@@ -411,5 +471,15 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Complex<T> {
 	fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
 		let [re, im]: [T; 2] = serde::Deserialize::deserialize(deserializer)?;
 		Ok(Complex { re, im })
+	}
+}
+
+#[test]
+fn test_fmt() {
+	let mut rng = urandom::new();
+	for _ in 0..100 {
+		let complex = Complexf::new(rng.next_f32(), rng.next_f32());
+		let parsed: Complex<f32> = format!("{complex:E}").parse().unwrap();
+		assert_eq!(complex, parsed);
 	}
 }

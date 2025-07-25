@@ -15,7 +15,7 @@ use super::*;
 /// Stored in row-major order (fields appear in reading order),
 /// but interpreted as column-major: each column is a transformed basis vector,
 /// and matrices are applied to column vectors via `mat * vec`.
-#[derive(Copy, Clone, Default, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Default, PartialEq)]
 #[repr(C)]
 pub struct Transform2<T> {
 	pub a11: T, pub a12: T, pub a13: T,
@@ -259,7 +259,7 @@ impl<T> Transform2<T> {
 impl<T: Scalar> Transform2<T> {
 	/// Computes the determinant.
 	#[inline]
-	pub fn determinant(self) -> T {
+	pub fn det(self) -> T {
 		self.a11 * self.a22 - self.a21 * self.a12
 	}
 	/// Computes the trace.
@@ -279,7 +279,7 @@ impl<T: Scalar> Transform2<T> {
 	}
 	#[inline]
 	pub fn try_invert(self) -> Option<Transform2<T>> where T: Float {
-		let det = self.determinant();
+		let det = self.det();
 		if det == T::ZERO {
 			return None;
 		}

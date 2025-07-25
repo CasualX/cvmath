@@ -4,7 +4,7 @@ Angles.
 use super::*;
 
 /// Angle in radians.
-#[derive(Copy, Clone, Default, PartialEq, PartialOrd, Hash)]
+#[derive(Copy, Clone, Default, PartialEq, PartialOrd)]
 #[repr(transparent)]
 pub struct Angle<T> {
 	pub radians: T,
@@ -44,14 +44,14 @@ impl<T: Float> Angle<T> {
 
 	/// Normalizes the angle to range -180°, 180° or -π rad, π rad.
 	#[inline]
-	pub fn normalize(self) -> Self {
+	pub fn norm(self) -> Self {
 		let div = self.radians / T::TAU;
 		Angle(self.radians - div.round() * T::TAU)
 	}
 
 	/// Normalizes the angle to range 0°, 360° or 0 rad, 2π rad.
 	#[inline]
-	pub fn normalize_abs(self) -> Self {
+	pub fn norm_abs(self) -> Self {
 		let div = self.radians / T::TAU;
 		Angle(self.radians - div.floor() * T::TAU)
 	}
@@ -251,10 +251,10 @@ impl<T: Float + FromStr> FromStr for Angle<T> {
 	type Err = T::Err;
 	fn from_str(s: &str) -> Result<Angle<T>, T::Err> {
 		let (s, degrees) = if let Some(s) = s.strip_suffix("°").or_else(|| s.strip_suffix("deg")) {
-			(s.trim_end(), true)
+			(s.trim_ascii_end(), true)
 		}
 		else if let Some(s) = s.strip_suffix("rad") {
-			(s.trim_end(), false)
+			(s.trim_ascii_end(), false)
 		}
 		else {
 			(s, false)
@@ -298,20 +298,20 @@ mod tests {
 
 	#[test]
 	fn normalize() {
-		assert_eq(Deg(179.0), Deg(-181.0).normalize());
-		assert_eq(Deg(-179.0), Deg(181.0).normalize());
-		assert_eq(Deg(0.125), Deg(360.125).normalize());
-		assert_eq(Deg(180.0), Deg(-180.0).normalize());
-		assert_eq(Deg(-180.0), Deg(180.0).normalize());
+		assert_eq(Deg(179.0), Deg(-181.0).norm());
+		assert_eq(Deg(-179.0), Deg(181.0).norm());
+		assert_eq(Deg(0.125), Deg(360.125).norm());
+		assert_eq(Deg(180.0), Deg(-180.0).norm());
+		assert_eq(Deg(-180.0), Deg(180.0).norm());
 	}
 
 	#[test]
 	fn normalize_abs() {
-		assert_eq(Deg(179.0), Deg(-181.0).normalize_abs());
-		assert_eq(Deg(181.0), Deg(181.0).normalize_abs());
-		assert_eq(Deg(1.0), Deg(361.0).normalize_abs());
-		assert_eq(Deg(180.0), Deg(-180.0).normalize_abs());
-		assert_eq(Deg(359.0), Deg(359.0).normalize_abs());
+		assert_eq(Deg(179.0), Deg(-181.0).norm_abs());
+		assert_eq(Deg(181.0), Deg(181.0).norm_abs());
+		assert_eq(Deg(1.0), Deg(361.0).norm_abs());
+		assert_eq(Deg(180.0), Deg(-180.0).norm_abs());
+		assert_eq(Deg(359.0), Deg(359.0).norm_abs());
 	}
 
 	#[test]
