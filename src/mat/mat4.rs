@@ -13,7 +13,7 @@ use super::*;
 /// Stored in row-major order (fields appear in reading order),
 /// but interpreted as column-major: each column is a transformed basis vector,
 /// and matrices are applied to column vectors via `mat * vec`.
-#[derive(Copy, Clone, Default, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Default, PartialEq)]
 #[repr(C)]
 pub struct Mat4<T> {
 	pub a11: T, pub a12: T, pub a13: T, pub a14: T,
@@ -349,7 +349,7 @@ impl<T> Mat4<T> {
 impl<T: Scalar> Mat4<T> {
 	/// Computes the determinant.
 	#[inline]
-	pub fn determinant(self) -> T {
+	pub fn det(self) -> T {
 		// 2×2 subfactors
 		let s0 = self.a33 * self.a44 - self.a34 * self.a43;
 		let s1 = self.a32 * self.a44 - self.a34 * self.a42;
@@ -686,7 +686,7 @@ fn test_ortho_inverse() {
 		(Hand::LH, Clip::NO)
 	);
 
-	dbg!(projection.determinant());
+	dbg!(projection.det());
 
 	let inv_proj = projection.inverse();
 	let identity = projection * inv_proj;

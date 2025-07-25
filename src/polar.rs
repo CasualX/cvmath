@@ -1,7 +1,7 @@
 use super::*;
 
 /// Polar coordinates.
-#[derive(Copy, Clone, Default, PartialEq, Hash)]
+#[derive(Copy, Clone, Default, PartialEq)]
 #[repr(C)]
 pub struct Polar<T> {
 	pub radius: T,

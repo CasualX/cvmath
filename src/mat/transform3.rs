@@ -15,7 +15,7 @@ use super::*;
 /// Stored in row-major order (fields appear in reading order),
 /// but interpreted as column-major: each column is a transformed basis vector,
 /// and matrices are applied to column vectors via `mat * vec`.
-#[derive(Copy, Clone, Default, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Default, PartialEq)]
 #[repr(C)]
 pub struct Transform3<T> {
 	pub a11: T, pub a12: T, pub a13: T, pub a14: T,
@@ -105,9 +105,9 @@ impl<T: Float> Transform3<T> {
 		let forward = match hand {
 			Hand::LH => target - position,
 			Hand::RH => position - target,
-		}.normalize();
+		}.norm();
 
-		let side = ref_up.cross(forward).normalize();
+		let side = ref_up.cross(forward).norm();
 		let up = forward.cross(side);
 
 		let Vec3 { x: a11, y: a12, z: a13 } = side;
@@ -257,7 +257,7 @@ impl<T> Transform3<T> {
 impl<T: Scalar> Transform3<T> {
 	/// Computes the determinant.
 	#[inline]
-	pub fn determinant(self) -> T {
+	pub fn det(self) -> T {
 		self.a11 * (self.a22 * self.a33 - self.a23 * self.a32) +
 		self.a12 * (self.a23 * self.a31 - self.a21 * self.a33) +
 		self.a13 * (self.a21 * self.a32 - self.a22 * self.a31)
@@ -280,7 +280,7 @@ impl<T: Scalar> Transform3<T> {
 	}
 	#[inline]
 	pub fn try_invert(self) -> Option<Transform3<T>> where T: Float {
-		let det = self.determinant();
+		let det = self.det();
 		if det == T::ZERO {
 			return None;
 		}

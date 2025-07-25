@@ -1,7 +1,7 @@
 use super::*;
 
 /// Plane shape.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]
 pub struct Plane<T> {
@@ -40,7 +40,7 @@ impl<T> Plane<T> {
 	/// If the points are collinear, the plane normal is zero.
 	#[inline]
 	pub fn from_points(pt1: Point3<T>, pt2: Point3<T>, pt3: Point3<T>) -> Plane<T> where T: Float {
-		let normal = (pt2 - pt1).cross(pt3 - pt1).normalize();
+		let normal = (pt2 - pt1).cross(pt3 - pt1).norm();
 		let distance = -normal.dot(pt1);
 		Plane { normal, distance }
 	}
@@ -61,7 +61,7 @@ impl<T: Float> Plane<T> {
 		pt - self.normal * self.distance_to_point(pt)
 	}
 
-	/// Returns the distance from the plane to a point.
+	/// Returns the signed distance from the plane to a point.
 	///
 	/// ```
 	/// use cvmath::{Plane, Point3, Vec3};
@@ -80,7 +80,7 @@ impl<T: Float> Plane<T> {
 
 impl<T: Float> TraceRay<T> for Plane<T> {
 	fn inside(&self, ray: &Ray<T>) -> bool {
-		self.normal.dot(ray.origin) + self.distance <= T::ZERO
+		self.distance_to_point(ray.origin) <= T::ZERO
 	}
 
 	fn trace(&self, ray: &Ray<T>, hits: &mut [TraceHit<T>]) -> usize {

@@ -20,13 +20,28 @@ pub const fn RotationVector<T>(v: Vec3<T>) -> RotationVector<T> {
 impl<T: Float> RotationVector<T> {
 	#[inline]
 	pub fn mat3(self) -> Mat3<T> {
-		let (axis, radians) = self.v.normalize_len();
+		let (axis, radians) = self.v.norm_len();
 		Mat3::rotate(axis, Angle { radians })
 	}
 	#[inline]
 	pub fn quat(self) -> Quat<T> {
-		let (axis, radians) = self.v.normalize_len();
+		let (axis, radians) = self.v.norm_len();
 		Quat::from_axis_angle(axis, Angle { radians })
+	}
+}
+
+impl<T: Float> From<(Vec3<T>, Angle<T>)> for RotationVector<T> {
+	#[inline]
+	fn from((axis, angle): (Vec3<T>, Angle<T>)) -> Self {
+		let v = axis * angle.radians;
+		RotationVector { v }
+	}
+}
+impl<T: Float> From<RotationVector<T>> for (Vec3<T>, Angle<T>) {
+	#[inline]
+	fn from(rotvec: RotationVector<T>) -> Self {
+		let (axis, radians) = rotvec.v.norm_len();
+		(axis, Angle { radians })
 	}
 }
 

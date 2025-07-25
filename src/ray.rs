@@ -4,7 +4,7 @@ use super::*;
 ///
 /// Rays are typically used to trace shapes for intersection tests.
 /// See [`Ray::trace`] for more information.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]
 pub struct Ray<T> {
@@ -33,7 +33,7 @@ impl<T> Ray<T> {
 	/// The direction is normalized. Zero directions may result in unexpected behavior.
 	#[inline]
 	pub fn new(origin: Point3<T>, direction: Vec3<T>) -> Ray<T> where T: Float {
-		let direction = direction.normalize();
+		let direction = direction.norm();
 		Ray { origin, direction }
 	}
 }
@@ -42,13 +42,13 @@ impl<T> Ray<T> {
 ///
 /// This allows transforming rays through space using standard linear transforms.
 /// Assumes the transform preserves ray semantics (e.g., no non-uniform scaling for normals).
-impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Ray<T>> for Transform3<T> {
+impl<T: Float> ops::Mul<Ray<T>> for Transform3<T> {
 	type Output = Ray<T>;
 	#[inline]
 	fn mul(self, ray: Ray<T>) -> Ray<T> {
 		Ray {
 			origin: self * ray.origin,
-			direction: self * ray.direction,
+			direction: (self.mat3() * ray.direction).norm(),
 		}
 	}
 }
@@ -56,7 +56,7 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Ray<T>> for
 /// Trace hit structure.
 ///
 /// Represents an intersection point between a ray and a shape.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct TraceHit<T> {
 	/// The distance from the ray's origin to the intersection point.
 	pub distance: T,

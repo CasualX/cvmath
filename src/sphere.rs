@@ -1,7 +1,7 @@
 use super::*;
 
 /// Sphere shape.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]
 pub struct Sphere<T> {
@@ -66,14 +66,14 @@ impl<T: Float> TraceRay<T> for Sphere<T> {
 		let mut count = 0;
 		if t1 >= T::ZERO {
 			if count < hits.len() {
-				let normal = (ray.at(t1) - self.center).normalize();
+				let normal = (ray.at(t1) - self.center).norm();
 				hits[count] = TraceHit { distance: t1, normal };
 			}
 			count += 1;
 		}
 		if t2 >= T::ZERO && t1 != t2 {
 			if count < hits.len() {
-				let normal = (ray.at(t2) - self.center).normalize();
+				let normal = (ray.at(t2) - self.center).norm();
 				hits[count] = TraceHit { distance: t2, normal };
 			}
 			count += 1;

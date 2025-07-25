@@ -2,7 +2,7 @@
 use super::*;
 
 /// Complex number.
-#[derive(Copy, Clone, Default, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Default, PartialEq)]
 #[repr(C)]
 pub struct Complex<T> {
 	pub re: T,
@@ -87,12 +87,10 @@ impl<T: Float> Complex<T> {
 	#[inline]
 	pub fn norm(self) -> Complex<T> {
 		let len = self.abs();
-		if len < T::EPSILON {
-			Complex::ZERO
+		if len == T::ZERO {
+			return self;
 		}
-		else {
-			self * (T::ONE / len)
-		}
+		self * (T::ONE / len)
 	}
 	/// Converts to polar coordinates.
 	#[inline]
@@ -106,8 +104,8 @@ impl<T: Float> Complex<T> {
 	#[inline]
 	pub fn recip(self) -> Complex<T> {
 		let denom = self.re * self.re + self.im * self.im;
-		if denom < T::EPSILON {
-			return Complex::ZERO;
+		if denom == T::ZERO {
+			return self;
 		}
 		let denom_recip = T::ONE / denom;
 		Complex {
@@ -161,8 +159,8 @@ impl<T: Float> Complex<T> {
 	#[inline]
 	pub fn ln(self) -> Complex<T> {
 		let radius = self.abs();
-		if radius < T::EPSILON {
-			return Complex::ZERO;
+		if radius == T::ZERO {
+			return self;
 		}
 		let theta = self.arg();
 		Complex {
