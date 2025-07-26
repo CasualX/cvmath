@@ -94,7 +94,7 @@ impl<T: Float> Ray<T> {
 	///
 	/// This method delegates to the [`TraceRay::inside`] implementation of the shape.
 	#[inline]
-	pub fn inside<U: TraceRay<T>>(&self, shape: &U) -> bool {
+	pub fn inside<U: TraceRay<T> + ?Sized>(&self, shape: &U) -> bool {
 		shape.inside(self)
 	}
 
@@ -107,7 +107,7 @@ impl<T: Float> Ray<T> {
 	///
 	/// Note: Hits are not sorted. Use the surface normal to determine entry/exit.
 	#[inline]
-	pub fn trace<U: TraceRay<T>>(&self, shape: &U, hits: &mut [TraceHit<T>]) -> usize {
+	pub fn trace<U: TraceRay<T> + ?Sized>(&self, shape: &U, hits: &mut [TraceHit<T>]) -> usize {
 		shape.trace(self, hits)
 	}
 }
