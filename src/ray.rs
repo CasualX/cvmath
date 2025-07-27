@@ -65,6 +65,9 @@ pub struct TraceHit<T> {
 	///
 	/// This vector can be assumed to be normalized.
 	pub normal: Vec3<T>,
+
+	/// Index of the shape that was hit, if applicable.
+	pub index: usize,
 }
 
 /// Shapes that support ray intersection tests.

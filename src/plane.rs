@@ -44,6 +44,25 @@ impl<T> Plane<T> {
 		let distance = -normal.dot(pt1);
 		Plane { normal, distance }
 	}
+
+	#[inline]
+	pub fn triangle(p: Point3<T>, u: Point3<T>, v: Point3<T>) -> Plane<T> where T: Float {
+		let normal = u.cross(v).norm();
+		let distance = -normal.dot(p);
+		Plane { normal, distance }
+	}
+}
+
+impl<T: ops::Neg> ops::Neg for Plane<T> {
+	type Output = Plane<T::Output>;
+
+	#[inline]
+	fn neg(self) -> Plane<T::Output> {
+		Plane {
+			normal: -self.normal,
+			distance: -self.distance,
+		}
+	}
 }
 
 impl<T: Float> Plane<T> {
@@ -95,7 +114,7 @@ impl<T: Float> TraceRay<T> for Plane<T> {
 		}
 
 		if let Some(hit) = hits.get_mut(0) {
-			*hit = TraceHit { distance, normal: self.normal };
+			*hit = TraceHit { distance, normal: self.normal, index: 0 };
 		}
 
 		return 1;
