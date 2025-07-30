@@ -149,7 +149,7 @@ fn trace_ray(ray: Ray<f32>, scene: &Scene, depth: u32) -> Vec3<f32> {
 
 fn scene_render(buffer: &mut PixelBuffer) {
 	let scene = {
-		let ground_shape = Plane::from_point(Vec3::new(0.0, 1.0, 0.0), Point3::new(0.0, -1.0, 0.0));
+		let ground_shape = Plane::point(Vec3::new(0.0, 1.0, 0.0), Point3::new(0.0, -1.0, 0.0));
 		let sphere1_shape = Sphere { center: Point3::new(-1.5, 1.0, -5.0), radius: 1.0 };
 		let sphere2_shape = Sphere { center: Point3::new(1.5, 2.0, -4.0), radius: 1.5 };
 		let box_shape = Bounds3::point(
@@ -228,7 +228,7 @@ fn scene_save(path: &str, buffer: &PixelBuffer) -> std::io::Result<()> {
 }
 
 fn main() {
-	let mut buffer = PixelBuffer::new(800, 600);
+	let mut buffer = PixelBuffer::new(1600, 1200);
 	scene_render(&mut buffer);
 	scene_save("scene.ppm", &buffer).expect("Failed to save image");
 	println!("Image written to scene.ppm");

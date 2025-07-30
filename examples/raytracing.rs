@@ -1,7 +1,17 @@
 use cvmath::*;
 
+#[derive(Copy, Clone, Debug)]
 struct Material {
 	color: Vec3<f32>,
+	reflectivity: f32,
+}
+impl Default for Material {
+	fn default() -> Self {
+		Material {
+			color: Vec3::dup(1.0),
+			reflectivity: 1.0,
+		}
+	}
 }
 
 struct Object {
@@ -101,24 +111,41 @@ fn scene_render(image: &mut Image, scene: &Scene) {
 				Ray { origin, direction }
 			};
 
-			let mut color = Vec3::new(0.0, 0.0, 0.0);
+			let mut final_color = Vec3::new(0.0, 0.0, 0.0);
+			let mut ray_energy_left = 1.0;
 
-			for _ in 0..5 {
+			for i in 0..100 {
+				let mut material = Material::default();
+
 				let n_hits = ray.trace(scene, &mut hits);
 				if n_hits > 0 {
 					let hit = hits[..n_hits].iter().min_by(|a, b| a.distance.total_cmp(&b.distance)).unwrap();
 					let index = hit.index;
-					color = scene.objects[index].material.color;
-					ray.origin = ray.at(hit.distance);
+					material = scene.objects[index].material;
+					ray.origin = ray.at(hit.distance) + hit.normal * 0.001;
 					ray.direction = hit.normal; // Reflect the ray
+
+					if x == image.width / 2 && y == image.height / 2 {
+						dbg!(&hit);
+					}
 				}
 				else {
-					color = trace_ray(&ray);
+					material.color = trace_ray(&ray);
+					material.reflectivity = 0.0;
+				}
+
+				if x == image.width / 2 && y == image.height / 2 {
+					dbg!(i, &material);
+				}
+
+				final_color = final_color + (material.color * (ray_energy_left * (1.0 - material.reflectivity)));
+				ray_energy_left *= material.reflectivity;
+				if ray_energy_left <= 0.0 {
 					break;
-				};
+				}
 			}
 
-			image.put(x, y, color);
+			image.put(x, y, final_color);
 		}
 	}
 }
@@ -153,16 +180,101 @@ fn main() {
 			// 	shape: Shape3::Triangle(Triangle::points(Vec3(-0.25, 0.75, -1.0), Vec3(0.75, 0.75, -1.0), Vec3(0.25, 2.0, -1.0))),
 			// 	material: Material { color: Vec3(1.0, 0.0, 0.0) },
 			// },
+
+			// Object {
+			// 	shape: Shape3::Triangle(Triangle::points(Vec3(-2.0, 0.0, -1.0), Vec3(2.0, 0.0, -1.0), Vec3(0.0, 3.0, -1.1))),
+			// 	material: Material { color: Vec3(0.0, 0.0, 1.0) },
+			// },
+			// Object {
+			// 	shape: Shape3::Triangle(Triangle::points(Vec3(2.0, 0.0, -5.0), Vec3(-2.0, 0.0, -5.0), Vec3(0.0, 3.0, -4.9))),
+			// 	material: Material { color: Vec3(0.0, 1.0, 0.0) },
+			// },
+
 			Object {
-				shape: Shape3::Triangle(Triangle::points(Vec3(-2.0, 0.0, -1.0), Vec3(2.0, 0.0, -1.0), Vec3(0.0, 3.0, -1.1))),
-				material: Material { color: Vec3(0.0, 0.0, 1.0) },
+				shape: Shape3::Sphere(Sphere(Vec3(1.0, 2.0, 3.0), 0.5)),
+				material: Material {
+					color: Vec3(0.0, 0.0, 0.0),
+					reflectivity: 0.95,
+				},
 			},
 			Object {
-				shape: Shape3::Triangle(Triangle::points(Vec3(2.0, 0.0, -5.0), Vec3(-2.0, 0.0, -5.0), Vec3(0.0, 3.0, -4.9))),
-				material: Material { color: Vec3(0.0, 1.0, 0.0) },
+				shape: Shape3::Sphere(Sphere(Vec3(-1.25, 0.8, 0.0), 0.25)),
+				material: Material {
+					color: Vec3f(255.0, 165.0, 0.0) / 255.0,
+					reflectivity: 0.05,
+				},
+			},
+
+			// Octahedron — Bottom half
+			Object {
+				shape: Shape3::Triangle(Triangle::points(
+					Vec3(0.0, 0.0, 0.0),
+					Vec3(0.0, 1.0, 1.0),
+					Vec3(-1.0, 1.0, 0.0),
+				)),
+				material: Material::default(),
+			},
+			Object {
+				shape: Shape3::Triangle(Triangle::points(
+					Vec3(0.0, 0.0, 0.0),
+					Vec3(-1.0, 1.0, 0.0),
+					Vec3(0.0, 1.0, -1.0),
+				)),
+				material: Material::default(),
+			},
+			Object {
+				shape: Shape3::Triangle(Triangle::points(
+					Vec3(0.0, 0.0, 0.0),
+					Vec3(0.0, 1.0, -1.0),
+					Vec3(1.0, 1.0, 0.0),
+				)),
+				material: Material::default(),
+			},
+			Object {
+				shape: Shape3::Triangle(Triangle::points(
+					Vec3(0.0, 0.0, 0.0),
+					Vec3(1.0, 1.0, 0.0),
+					Vec3(0.0, 1.0, 1.0),
+				)),
+				material: Material::default(),
+			},
+
+			// Octahedron — Top half
+			Object {
+				shape: Shape3::Triangle(Triangle::points(
+					Vec3(0.0, 2.0, 0.0),
+					Vec3(-1.0, 1.0, 0.0),
+					Vec3(0.0, 1.0, 1.0),
+				)),
+				material: Material::default(),
+			},
+			Object {
+				shape: Shape3::Triangle(Triangle::points(
+					Vec3(0.0, 2.0, 0.0),
+					Vec3(0.0, 1.0, 1.0),
+					Vec3(1.0, 1.0, 0.0),
+				)),
+				material: Material::default(),
+			},
+			Object {
+				shape: Shape3::Triangle(Triangle::points(
+					Vec3(0.0, 2.0, 0.0),
+					Vec3(1.0, 1.0, 0.0),
+					Vec3(0.0, 1.0, -1.0),
+				)),
+				material: Material::default(),
+			},
+			Object {
+				shape: Shape3::Triangle(Triangle::points(
+					Vec3(0.0, 2.0, 0.0),
+					Vec3(0.0, 1.0, -1.0),
+					Vec3(-1.0, 1.0, 0.0),
+				)),
+				material: Material::default(),
 			},
 		]
 	};
+
 	let mut image = Image::new(1600, 1200);
 	scene_render(&mut image, &scene);
 	scene_save("raytracing.ppm", &image).expect("Failed to save image");

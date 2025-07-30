@@ -30,7 +30,7 @@ impl<T> Plane<T> {
 
 	/// Constructs a new plane from a normal and a point.
 	#[inline]
-	pub fn from_point(normal: Vec3<T>, pt: Point3<T>) -> Plane<T> where T: Float {
+	pub fn point(normal: Vec3<T>, pt: Point3<T>) -> Plane<T> where T: Float {
 		let distance = -normal.dot(pt);
 		Plane { normal, distance }
 	}
@@ -39,7 +39,7 @@ impl<T> Plane<T> {
 	///
 	/// If the points are collinear, the plane normal is zero.
 	#[inline]
-	pub fn from_points(pt1: Point3<T>, pt2: Point3<T>, pt3: Point3<T>) -> Plane<T> where T: Float {
+	pub fn points(pt1: Point3<T>, pt2: Point3<T>, pt3: Point3<T>) -> Plane<T> where T: Float {
 		let normal = (pt2 - pt1).cross(pt3 - pt1).norm();
 		let distance = -normal.dot(pt1);
 		Plane { normal, distance }
