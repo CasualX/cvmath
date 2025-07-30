@@ -95,21 +95,28 @@ fn scene_render(image: &mut Image, scene: &Scene) {
 
 	for y in 0..image.height {
 		for x in 0..image.width {
-			let ray = {
+			let mut ray = {
 				let origin = Point3(0.0, 1.0, -4.0);
 				let direction = (X * ((x - image.width / 2) as f32 - 0.5) + Y * (-(y - image.height / 2) as f32 - 0.5) + Z).norm();
 				Ray { origin, direction }
 			};
 
-			let n_hits = ray.trace(scene, &mut hits);
-			let color = if n_hits > 0 {
-				let hit = hits[..n_hits].iter().min_by(|a, b| a.distance.total_cmp(&b.distance)).unwrap();
-				let index = hit.index;
-				scene.objects[index].material.color
+			let mut color = Vec3::new(0.0, 0.0, 0.0);
+
+			for _ in 0..5 {
+				let n_hits = ray.trace(scene, &mut hits);
+				if n_hits > 0 {
+					let hit = hits[..n_hits].iter().min_by(|a, b| a.distance.total_cmp(&b.distance)).unwrap();
+					let index = hit.index;
+					color = scene.objects[index].material.color;
+					ray.origin = ray.at(hit.distance);
+					ray.direction = hit.normal; // Reflect the ray
+				}
+				else {
+					color = trace_ray(&ray);
+					break;
+				};
 			}
-			else {
-				trace_ray(&ray)
-			};
 
 			image.put(x, y, color);
 		}
@@ -134,18 +141,26 @@ fn scene_save(path: &str, image: &Image) -> std::io::Result<()> {
 fn main() {
 	let scene = Scene {
 		objects: vec![
+			// Object {
+			// 	shape: Shape3::Triangle(Triangle::points(Vec3(-1.0, 0.0, 0.0), Vec3(1.0, 0.0, 0.0), Vec3(0.0, 1.73, 0.0))),
+			// 	material: Material { color: Vec3(0.0, 0.0, 1.0) },
+			// },
+			// Object {
+			// 	shape: Shape3::Triangle(Triangle::points(Vec3(2.0, 0.0, 2.0), Vec3(1.0, 1.73, 2.0), Vec3(0.0, 0.0, 2.0))),
+			// 	material: Material { color: Vec3(0.0, 1.0, 0.0) },
+			// },
+			// Object {
+			// 	shape: Shape3::Triangle(Triangle::points(Vec3(-0.25, 0.75, -1.0), Vec3(0.75, 0.75, -1.0), Vec3(0.25, 2.0, -1.0))),
+			// 	material: Material { color: Vec3(1.0, 0.0, 0.0) },
+			// },
 			Object {
-				shape: Shape3::Triangle(Triangle::points(Vec3(-1.0, 0.0, 0.0), Vec3(1.0, 0.0, 0.0), Vec3(0.0, 1.73, 0.0))),
+				shape: Shape3::Triangle(Triangle::points(Vec3(-2.0, 0.0, -1.0), Vec3(2.0, 0.0, -1.0), Vec3(0.0, 3.0, -1.1))),
 				material: Material { color: Vec3(0.0, 0.0, 1.0) },
 			},
 			Object {
-				shape: Shape3::Triangle(Triangle::points(Vec3(2.0, 0.0, 2.0), Vec3(1.0, 1.73, 2.0), Vec3(0.0, 0.0, 2.0))),
+				shape: Shape3::Triangle(Triangle::points(Vec3(2.0, 0.0, -5.0), Vec3(-2.0, 0.0, -5.0), Vec3(0.0, 3.0, -4.9))),
 				material: Material { color: Vec3(0.0, 1.0, 0.0) },
 			},
-			Object {
-				shape: Shape3::Triangle(Triangle::points(Vec3(-0.25, 0.75, -1.0), Vec3(0.75, 0.75, -1.0), Vec3(0.25, 2.0, -1.0))),
-				material: Material { color: Vec3(1.0, 0.0, 0.0) },
-			}
 		]
 	};
 	let mut image = Image::new(1600, 1200);
