@@ -44,6 +44,7 @@ impl<T> Ray<T> {
 /// Assumes the transform preserves ray semantics (e.g., no non-uniform scaling for normals).
 impl<T: Float> ops::Mul<Ray<T>> for Transform3<T> {
 	type Output = Ray<T>;
+
 	#[inline]
 	fn mul(self, ray: Ray<T>) -> Ray<T> {
 		Ray {
