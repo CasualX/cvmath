@@ -535,6 +535,7 @@ specialized_type!(Bounds, Bounds3i, Vec3i, mins, maxs);
 //----------------------------------------------------------------
 
 impl<T: Float> TraceRay<T> for Bounds3<T> {
+	#[inline]
 	fn inside(&self, ray: &Ray<T>) -> bool {
 		self.contains(ray.origin)
 	}
@@ -565,6 +566,7 @@ impl<T: Float> TraceRay<T> for Bounds3<T> {
 					if t0 == tmin.y { -T::ONE } else { if t0 == tmax.y { T::ONE } else { T::ZERO } },
 					if t0 == tmin.z { -T::ONE } else { if t0 == tmax.z { T::ONE } else { T::ZERO } },
 				),
+				index: 0,
 			};
 			return 1;
 		}

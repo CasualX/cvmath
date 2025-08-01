@@ -25,3 +25,4 @@ default = []
 
 [dev-dependencies]
 urandom = "0.2"
+rayon = "1.10"

@@ -44,6 +44,7 @@ impl<T> Ray<T> {
 /// Assumes the transform preserves ray semantics (e.g., no non-uniform scaling for normals).
 impl<T: Float> ops::Mul<Ray<T>> for Transform3<T> {
 	type Output = Ray<T>;
+
 	#[inline]
 	fn mul(self, ray: Ray<T>) -> Ray<T> {
 		Ray {
@@ -65,6 +66,9 @@ pub struct TraceHit<T> {
 	///
 	/// This vector can be assumed to be normalized.
 	pub normal: Vec3<T>,
+
+	/// Index of the shape that was hit, if applicable.
+	pub index: usize,
 }
 
 /// Shapes that support ray intersection tests.

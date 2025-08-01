@@ -26,7 +26,9 @@ mod bounds;
 mod line;
 mod plane;
 mod sphere;
+mod triangle;
 mod ray;
+mod shape;
 
 #[cfg(test)]
 mod tests;
@@ -47,7 +49,9 @@ pub use crate::bounds::{Bounds, Bounds2, Bounds3};
 pub use crate::line::{Line, Line2, Line3};
 pub use crate::plane::Plane;
 pub use crate::sphere::Sphere;
+pub use crate::triangle::{Triangle, Triangle2, Triangle3};
 pub use crate::ray::{Ray, TraceHit, TraceRay};
+pub use crate::shape::Shape3;
 
 #[doc(hidden)]
 pub use crate::angle::{Anglef, Angled};

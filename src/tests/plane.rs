@@ -6,7 +6,7 @@ fn test_collinear_points() {
 	let pt2 = Point3(1.0, 1.0, 1.0);
 	let pt3 = Point3(2.0, 2.0, 2.0);
 
-	let plane = Plane::from_points(pt1, pt2, pt3);
+	let plane = Plane::points(pt1, pt2, pt3);
 	assert_eq!(plane.normal, Vec3(0.0, 0.0, 0.0));
 	assert_eq!(plane.distance, 0.0);
 }

@@ -43,6 +43,7 @@ impl<T: Scalar> Sphere<T> {
 //----------------------------------------------------------------
 
 impl<T: Float> TraceRay<T> for Sphere<T> {
+	#[inline]
 	fn inside(&self, ray: &Ray<T>) -> bool {
 		ray.origin.distance_sqr(self.center) < self.radius * self.radius
 	}
@@ -67,14 +68,14 @@ impl<T: Float> TraceRay<T> for Sphere<T> {
 		if t1 >= T::ZERO {
 			if count < hits.len() {
 				let normal = (ray.at(t1) - self.center).norm();
-				hits[count] = TraceHit { distance: t1, normal };
+				hits[count] = TraceHit { distance: t1, normal, index: 0 };
 			}
 			count += 1;
 		}
 		if t2 >= T::ZERO && t1 != t2 {
 			if count < hits.len() {
 				let normal = (ray.at(t2) - self.center).norm();
-				hits[count] = TraceHit { distance: t2, normal };
+				hits[count] = TraceHit { distance: t2, normal, index: 0 };
 			}
 			count += 1;
 		}
