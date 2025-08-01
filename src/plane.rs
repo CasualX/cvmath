@@ -66,7 +66,7 @@ impl<T: Float> Plane<T> {
 	///
 	/// let plane = Plane(Vec3(0.0, 0.0, 1.0), 0.0);
 	/// let pt = Point3(20.0, 10.0, 4.0);
-	/// assert_eq!(plane.project_point(pt), Point3(20.0, 10.0, 0.0));
+	/// assert_eq!(plane.project(pt), Point3(20.0, 10.0, 0.0));
 	/// ```
 	#[inline]
 	pub fn project(&self, pt: Point3<T>) -> Point3<T> {
@@ -80,7 +80,7 @@ impl<T: Float> Plane<T> {
 	///
 	/// let plane = Plane(Vec3(0.0, 0.0, 1.0), 0.0);
 	/// let pt = Point3(20.0, 10.0, 4.0);
-	/// assert_eq!(plane.distance_to_point(pt), 4.0);
+	/// assert_eq!(plane.distance(pt), 4.0);
 	/// ```
 	#[inline]
 	pub fn distance(&self, pt: Point3<T>) -> T {

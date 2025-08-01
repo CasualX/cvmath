@@ -208,7 +208,7 @@ assert_eq!(5.0, Vec2(3.0, 4.0).len());
 assert_eq!(2, Vec2::distance_sqr(Vec2(1, 1), Vec2(2, 2)));
 assert_eq!(5.0, Vec2::distance(Vec2(10.0, 10.0), Vec2(13.0, 14.0)));
 
-assert_eq!(Vec2 { x: 0.6, y: 0.8 }, Vec2(3.0, 4.0).norm());
+assert_eq!(Vec2 { x: 0.6, y: 0.8 }, Vec2(3.0_f32, 4.0_f32).norm());
 assert_eq!(Vec2 { x: 0.0, y: 0.0 }, Vec2(0.0, 0.0).norm());
 
 assert_eq!(Vec2 { x: 1.5, y: 2.0 }, Vec2(3.0, 4.0).resize(2.5));
@@ -839,7 +839,7 @@ macro_rules! vec {
 			/// ```
 			/// use cvmath::{Vec2, Vec3};
 			///
-			/// let this = Vec2 { x: 3.0, y: -4.0 };
+			/// let this: Vec2<f32> = Vec2 { x: 3.0, y: -4.0 };
 			/// assert_eq!(Vec2(0.6, -0.8), this.norm());
 			///
 			/// let this = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
