@@ -145,7 +145,7 @@ fn scene_render(image: &mut Image, scene: &Scene) {
 
 				let n_hits = ray.trace(scene, &mut hits);
 				if n_hits > 0 {
-					let hit = hits[..n_hits].iter().min_by(|a, b| a.distance.total_cmp(&b.distance)).unwrap();
+					let hit = hits[..n_hits].iter().min_by(|a, b| a.distance.total_cmp(&b.distance)).unwrap().clone();
 					let index = hit.index;
 					material = scene.objects[index].material;
 					color = (material.color)(&ray);
@@ -158,13 +158,20 @@ fn scene_render(image: &mut Image, scene: &Scene) {
 					// 	dbg!(&hit);
 					// }
 
+					let is_lit = Ray(ray.origin, (scene.light_at - ray.origin).norm()).trace(scene, &mut hits) == 0;
+
 					let ambient_light = 0.3;
-					let diffuse_light = hit.normal.dot((scene.light_at - ray.origin).norm()).max(0.0);
-					let specular_factor = (scene.light_at - ray.origin).norm().dot(ray.direction);
-					color =
-						color * ambient_light +
-						color * diffuse_light * material.diffuse_f +
-						scene.light_color * specular_factor.powf(material.hardness) * material.specular_f;
+					if is_lit {
+						let diffuse_light = hit.normal.dot((scene.light_at - ray.origin).norm()).max(0.0);
+						let specular_factor = (scene.light_at - ray.origin).norm().dot(ray.direction);
+						color =
+							color * ambient_light +
+							color * diffuse_light * material.diffuse_f +
+							scene.light_color * specular_factor.powf(material.hardness) * material.specular_f;
+					}
+					else {
+						color = color * ambient_light;
+					}
 				}
 				else {
 					material = get_sky_color(&ray);
