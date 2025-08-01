@@ -126,70 +126,83 @@ fn scene_render(image: &mut Image, scene: &Scene) {
 	const Y: Vec3<f32> = Vec3(0.0,   0.001, 0.0); // Y = up
 	const Z: Vec3<f32> = Vec3(0.0,   0.0,   1.0); // Z = forward
 
+	const NSAMPLES: usize = 16;
+
 	let mut hits = [TraceHit::default(); 16];
+	let mut rng = urandom::new();
 
 	for y in 0..image.height {
 		for x in 0..image.width {
-			let mut ray = {
-				let origin = Point3(0.0, 1.0, -4.0);
-				let direction = (X * ((x - image.width / 2) as f32 - 0.5) + Y * (-(y - image.height / 2) as f32 - 0.5) + Z).norm();
-				Ray { origin, direction }
-			};
 
-			let mut final_color = Vec3::new(0.0, 0.0, 0.0);
-			let mut ray_energy_left = 1.0;
+			let mut aa_color = Vec3f::ZERO;
+			for _ in 0..NSAMPLES {
 
-			for i in 0..100 {
-				let material;
-				let mut color;
+				let mut ray = {
+					let origin = Point3(0.0, 1.0, -4.0);
+					let direction = (
+						X * ((x - image.width / 2) as f32 - 0.5 + rng.range(-0.5..0.5)) +
+						Y * (-(y - image.height / 2) as f32 - 0.5 + rng.range(-0.5..0.5)) +
+						Z).norm();
+					Ray { origin, direction }
+				};
 
-				let n_hits = ray.trace(scene, &mut hits);
-				if n_hits > 0 {
-					let hit = hits[..n_hits].iter().min_by(|a, b| a.distance.total_cmp(&b.distance)).unwrap().clone();
-					let index = hit.index;
-					material = scene.objects[index].material;
-					color = (material.color)(&ray);
+				let mut final_color = Vec3::new(0.0, 0.0, 0.0);
+				let mut ray_energy_left = 1.0;
 
-					// Reflect the ray
-					ray.origin = ray.at(hit.distance) + hit.normal * 0.001;
-					ray.direction = (-ray.direction).reflect(hit.normal);
+				for i in 0..100 {
+					let material;
+					let mut color;
 
-					// if x == image.width / 2 && y == image.height / 2 {
-					// 	dbg!(&hit);
-					// }
+					let n_hits = ray.trace(scene, &mut hits);
+					if n_hits > 0 {
+						let hit = hits[..n_hits].iter().min_by(|a, b| a.distance.total_cmp(&b.distance)).unwrap().clone();
+						let index = hit.index;
+						material = scene.objects[index].material;
+						color = (material.color)(&ray);
 
-					let is_lit = Ray(ray.origin, (scene.light_at - ray.origin).norm()).trace(scene, &mut hits) == 0;
+						// Reflect the ray
+						ray.origin = ray.at(hit.distance) + hit.normal * 0.001;
+						ray.direction = (-ray.direction).reflect(hit.normal);
 
-					let ambient_light = 0.3;
-					if is_lit {
-						let diffuse_light = hit.normal.dot((scene.light_at - ray.origin).norm()).max(0.0);
-						let specular_factor = (scene.light_at - ray.origin).norm().dot(ray.direction);
-						color =
-							color * ambient_light +
-							color * diffuse_light * material.diffuse_f +
-							scene.light_color * specular_factor.powf(material.hardness) * material.specular_f;
+						// if x == image.width / 2 && y == image.height / 2 {
+						// 	dbg!(&hit);
+						// }
+
+						let is_lit = Ray(ray.origin, (scene.light_at - ray.origin).norm()).trace(scene, &mut hits) == 0;
+
+						let ambient_light = 0.3;
+						if is_lit {
+							let diffuse_light = hit.normal.dot((scene.light_at - ray.origin).norm()).max(0.0);
+							let specular_factor = (scene.light_at - ray.origin).norm().dot(ray.direction);
+							color =
+								color * ambient_light +
+								color * diffuse_light * material.diffuse_f +
+								scene.light_color * specular_factor.powf(material.hardness) * material.specular_f;
+						}
+						else {
+							color = color * ambient_light;
+						}
 					}
 					else {
-						color = color * ambient_light;
+						material = get_sky_color(&ray);
+						color = (material.color)(&ray);
+					}
+
+					// if x == image.width / 2 && y == image.height / 2 {
+					// 	dbg!(i, &material);
+					// }
+
+					final_color = final_color + (color * (ray_energy_left * (1.0 - material.reflectivity)));
+					ray_energy_left *= material.reflectivity;
+					if ray_energy_left <= 0.0 {
+						break;
 					}
 				}
-				else {
-					material = get_sky_color(&ray);
-					color = (material.color)(&ray);
-				}
 
-				// if x == image.width / 2 && y == image.height / 2 {
-				// 	dbg!(i, &material);
-				// }
-
-				final_color = final_color + (color * (ray_energy_left * (1.0 - material.reflectivity)));
-				ray_energy_left *= material.reflectivity;
-				if ray_energy_left <= 0.0 {
-					break;
-				}
+				aa_color += final_color * (1.0 / NSAMPLES as f32);
 			}
 
-			image.put(x, y, final_color);
+			image.put(x, y, aa_color);
 		}
 	}
 }
