@@ -2,22 +2,65 @@ use std::sync::mpsc;
 use cvmath::*;
 use rayon::prelude::*;
 
-// Left-handed coordinate system
-const X: Vec3<f32> = Vec3(0.001, 0.0,   0.0); // X = right
-const Y: Vec3<f32> = Vec3(0.0,   0.001, 0.0); // Y = up
-const Z: Vec3<f32> = Vec3(0.0,   0.0,   1.0); // Z = forward
 
-// Number of antialiasing samples per pixel
-const NSAMPLES: usize = 1024;
+// Image setup
+const WIDTH: i32 = 800;
+const HEIGHT: i32 = 1200;
 
-fn white(_: &Ray<f32>) -> Vec3<f32> {
-	Vec3::dup(1.0)
+// Camera setup
+const ORIGIN: Point3<f32> = Point3(0.0, 1.0, -4.0);
+const TARGET: Point3<f32> = Point3(0.0, 1.0, 0.0);
+const UP: Vec3<f32> = Vec3(0.0, 1.0, 0.0);
+const FOV_Y: f32 = 60.0;
+
+// Quality setup
+const DOF: bool = true; // Enable depth-of-field
+const AA: bool = true; // Enable anti-aliasing
+const AA_SAMPLES: usize = 512; // Number of anti-aliasing samples per pixel
+const MAX_BOUNCES: u32 = 6; // Maximum reflection bounce depth
+
+// Light setup
+const LIGHT: Light = Light {
+	pos: Point3(0.0, 100.0, 0.0),
+	color: Vec3(1.0, 1.0, 1.0),
+	radius: 5.0,
+};
+
+
+#[derive(Copy, Clone, Debug)]
+enum Texture {
+	None,
+	Color(Vec3<f32>),
+	Ground,
+	Sky,
+}
+impl Texture {
+	fn sample(&self, ray: &Ray<f32>) -> Vec3<f32> {
+		match self {
+			Texture::None => Vec3::ZERO,
+			&Texture::Color(color) => color,
+			Texture::Ground => {
+				let distance = -ray.origin.y / ray.direction.y;
+				let i = ray.at(distance).map(f32::floor).hadd() as i32;
+				if i % 2 == 0 {
+					Vec3::new(1.0, 0.0, 0.0) // Red
+				}
+				else {
+					Vec3::new(1.0, 1.0, 1.0) // White
+				}
+			}
+			Texture::Sky => {
+				let intensity = 1.0 - ray.direction.y;
+				Vec3::new(0.7, 0.6, 1.0) * intensity
+			}
+		}
+	}
 }
 
 #[derive(Copy, Clone, Debug)]
 #[allow(dead_code)]
 struct Material {
-	color: fn(&Ray<f32>) -> Vec3<f32>,
+	texture: Texture,
 	reflectivity: f32,
 	hardness: f32,
 	diffuse_f: f32,
@@ -27,7 +70,7 @@ struct Material {
 impl Default for Material {
 	fn default() -> Self {
 		Material {
-			color: white,
+			texture: Texture::Color(Vec3::ONE),
 			reflectivity: 1.0,
 			hardness: 1.0,
 			diffuse_f: 1.0,
@@ -43,13 +86,18 @@ struct Object {
 	material: Material,
 }
 
+#[derive(Copy, Clone, Debug)]
+struct Light {
+	pos: Point3<f32>,
+	color: Vec3<f32>,
+	radius: f32,
+}
+
 #[derive(Clone, Debug)]
 struct Scene {
 	objects: Vec<Object>,
-	light_at: Vec3<f32>,
-	light_color: Vec3<f32>,
+	light: Light,
 }
-
 impl TraceRay<f32> for Scene {
 	fn inside(&self, ray: &Ray<f32>) -> bool {
 		self.objects.iter().any(|object| object.shape.inside(ray))
@@ -89,37 +137,63 @@ impl Image {
 		}
 		let index = (y * self.width + x) as usize * 3;
 		let Some(buf) = self.pixels.get_mut(index..index + 3) else { return };
-		buf[0] = (color.x * 255.0) as u8;
-		buf[1] = (color.y * 255.0) as u8;
-		buf[2] = (color.z * 255.0) as u8;
+		buf[0] = encode(color.x);
+		buf[1] = encode(color.y);
+		buf[2] = encode(color.z);
 	}
 }
 
-fn get_ground_color(ray: &Ray<f32>) -> Vec3<f32> {
-	let distance = -ray.origin.y / ray.direction.y;
-	let x = ray.origin.x + ray.direction.x * distance;
-	let z = ray.origin.z + ray.direction.z * distance;
+fn encode(v: f32) -> u8 {
+	let v = v.clamp(0.0, 1.0);
 
-	if (x.abs().floor() as i32 % 2) == (z.abs().floor() as i32 % 2) {
-		Vec3::new(1.0, 0.0, 0.0) // Red
-	}
-	else {
-		Vec3::new(1.0, 1.0, 1.0) // White
-	}
-}
-
-fn get_sky_color(_ray: &Ray<f32>) -> Material {
-	return Material {
-		color: |ray| {
-			let intensity = 1.0 - ray.direction.y;
-			let color = Vec3::new(0.7, 0.6, 1.0) * intensity;
-			return color;
-		},
-		reflectivity: 0.0,
-		hardness: 0.0,
-		specular_f: 0.0,
-		..Default::default()
+	let gamma_corrected = if v <= 0.0031308 {
+		12.92 * v
+	} else {
+		1.055 * v.powf(1.0 / 2.4) - 0.055
 	};
+
+	(gamma_corrected * 255.0 + 0.5).floor() as u8
+}
+
+const SKY_MATERIAL: Material = Material {
+	texture: Texture::Sky,
+	reflectivity: 0.0,
+	hardness: 0.0,
+	diffuse_f: 1.0,
+	specular_f: 0.0,
+	roughness: 0.0,
+};
+
+fn ray_setup(
+	image_width: i32,
+	image_height: i32,
+	x: i32,
+	y: i32,
+	fov_y: Angle<f32>,
+	origin: Vec3<f32>,
+	target: Vec3<f32>,
+	ref_up: Vec3<f32>,
+	jitter_x: f32,
+	jitter_y: f32,
+) -> Ray<f32> {
+	let forward = (target - origin).norm();
+	let right = ref_up.cross(forward).norm();
+	let up = right.cross(forward).norm();
+
+	let aspect_ratio = image_width as f32 / image_height as f32;
+	let viewport_height = 2.0 * (fov_y * 0.5).tan();
+	let viewport_width = aspect_ratio * viewport_height;
+
+	// Subpixel jitter
+	let u = (x as f32 + 0.5 + jitter_x) / image_width as f32;
+	let v = (y as f32 + 0.5 + jitter_y) / image_height as f32;
+
+	let px = (u - 0.5) * viewport_width;
+	let py = (v - 0.5) * viewport_height;
+
+	let direction = (forward + right * px + up * py).norm();
+
+	Ray { origin, direction }
 }
 
 fn trace_ray(image_width: i32, image_height: i32, scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
@@ -127,26 +201,23 @@ fn trace_ray(image_width: i32, image_height: i32, scene: &Scene, x: i32, y: i32)
 	let mut rng = urandom::new();
 
 	let mut aa_color = Vec3f::ZERO;
-	for _ in 0..NSAMPLES {
-
-		let mut ray = {
-			let origin = Point3(0.0, 1.0, -4.0);
-			let direction = (
-				X * ((x - image_width / 2) as f32 - 0.5 + rng.range(-0.5..0.5)) +
-				Y * (-(y - image_height / 2) as f32 - 0.5 + rng.range(-0.5..0.5)) +
-				Z).norm();
-			Ray { origin, direction }
-		};
+	for _ in 0..if AA { AA_SAMPLES } else { 1 } {
+		// Compute the ray setup
+		let jitter_x: f32 = if AA { rng.range(-0.5..0.5) } else { 0.0 };
+		let jitter_y: f32 = if AA { rng.range(-0.5..0.5) } else { 0.0 };
+		let mut ray = ray_setup(image_width, image_height, x, y, Angle::deg(FOV_Y), ORIGIN, TARGET, UP, jitter_x, jitter_y);
 
 		// Depth-of-field
-		let sensor_shift = Vec3(rng.range(-0.05..0.05), rng.range(-0.05..0.05), 0.0);
-		ray.origin += sensor_shift;
-		ray.direction = (ray.direction - sensor_shift * (1.0 / 4.0)).norm();
+		if DOF {
+			let sensor_shift = Vec3(rng.range(-0.05..0.05), rng.range(-0.05..0.05), 0.0);
+			ray.origin += sensor_shift;
+			ray.direction = (ray.direction - sensor_shift * (1.0 / 4.0)).norm();
+		}
 
 		let mut final_color = Vec3::new(0.0, 0.0, 0.0);
 		let mut ray_energy_left = 1.0;
 
-		for _ in 0..100 {
+		for _ in 0..MAX_BOUNCES {
 			let material;
 			let mut color;
 
@@ -155,15 +226,17 @@ fn trace_ray(image_width: i32, image_height: i32, scene: &Scene, x: i32, y: i32)
 				let hit = hits[..n_hits].iter().min_by(|a, b| a.distance.total_cmp(&b.distance)).unwrap().clone();
 				let index = hit.index;
 				material = scene.objects[index].material;
-				color = (material.color)(&ray);
+				color = material.texture.sample(&ray);
 
 				// Reflect the ray
 				ray.origin = ray.at(hit.distance) + hit.normal * 0.001;
 				ray.direction = (-ray.direction).reflect(hit.normal);
 
-				let light_at = scene.light_at + Vec3(rng.range(-0.5..0.5) * 30.0, 100.0, rng.range(-0.5..0.5) * 30.0);
+				// Check if the hit point is lit by the light source
+				let light_at = if AA { scene.light.pos + Vec3::from([(); 3].map(|_| rng.range(-scene.light.radius..scene.light.radius))) } else { scene.light.pos };
 				let is_lit = Ray(ray.origin, (light_at - ray.origin).norm()).trace(scene, &mut hits) == 0;
 
+				// Calculate lighting
 				let ambient_light = 0.3;
 				if is_lit {
 					let diffuse_light = hit.normal.dot((light_at - ray.origin).norm()).max(0.0);
@@ -171,17 +244,18 @@ fn trace_ray(image_width: i32, image_height: i32, scene: &Scene, x: i32, y: i32)
 					color =
 						color * ambient_light +
 						color * diffuse_light * material.diffuse_f +
-						scene.light_color * specular_factor.powf(material.hardness) * material.specular_f;
+						scene.light.color * specular_factor.powf(material.hardness) * material.specular_f;
 				}
 				else {
 					color = color * ambient_light;
 				}
 			}
 			else {
-				material = get_sky_color(&ray);
-				color = (material.color)(&ray);
+				material = SKY_MATERIAL;
+				color = material.texture.sample(&ray);
 			}
 
+			// Accumulate color
 			final_color = final_color + (color * (ray_energy_left * (1.0 - material.reflectivity)));
 			ray_energy_left *= material.reflectivity;
 			if ray_energy_left <= 0.0 {
@@ -192,7 +266,12 @@ fn trace_ray(image_width: i32, image_height: i32, scene: &Scene, x: i32, y: i32)
 		aa_color += final_color;
 	}
 
-	return aa_color * (1.0 / NSAMPLES as f32);
+	if AA {
+		aa_color * (1.0 / AA_SAMPLES as f32)
+	}
+	else {
+		aa_color
+	}
 }
 
 // fn scene_render(image: &mut Image, scene: &Scene) {
@@ -247,35 +326,35 @@ fn scene_save(path: &str, image: &Image) -> std::io::Result<()> {
 	Ok(())
 }
 
-fn main() {
-	let scene = Scene {
+fn scene_create() -> Scene {
+	Scene {
 		objects: vec![
 			// Object {
 			// 	shape: Shape3::Triangle(Triangle::points(Vec3(-1.0, 0.0, 0.0), Vec3(1.0, 0.0, 0.0), Vec3(0.0, 1.73, 0.0))),
-			// 	material: Material { color: Vec3(0.0, 0.0, 1.0), reflectivity: 0.5 },
+			// 	material: Material { color: |_| Vec3(0.0, 0.0, 1.0), reflectivity: 0.5, ..Default::default() },
 			// },
 			// Object {
 			// 	shape: Shape3::Triangle(Triangle::points(Vec3(2.0, 0.0, 2.0), Vec3(1.0, 1.73, 2.0), Vec3(0.0, 0.0, 2.0))),
-			// 	material: Material { color: Vec3(0.0, 1.0, 0.0), reflectivity: 0.5 },
+			// 	material: Material { color: |_| Vec3(0.0, 1.0, 0.0), reflectivity: 0.5, ..Default::default() },
 			// },
 			// Object {
 			// 	shape: Shape3::Triangle(Triangle::points(Vec3(-0.25, 0.75, -1.0), Vec3(0.75, 0.75, -1.0), Vec3(0.25, 2.0, -1.0))),
-			// 	material: Material { color: Vec3(1.0, 0.0, 0.0), reflectivity: 0.5 },
+			// 	material: Material { color: |_| Vec3(1.0, 0.0, 0.0), reflectivity: 0.5, ..Default::default() },
 			// },
 
 			// Object {
 			// 	shape: Shape3::Triangle(Triangle::points(Vec3(-2.0, 0.0, -1.0), Vec3(2.0, 0.0, -1.0), Vec3(0.0, 3.0, -1.1))),
-			// 	material: Material { color: Vec3(0.0, 0.0, 1.0), reflectivity: 0.5 },
+			// 	material: Material { color: |_| Vec3(0.0, 0.0, 1.0), reflectivity: 0.5, ..Default::default() },
 			// },
 			// Object {
 			// 	shape: Shape3::Triangle(Triangle::points(Vec3(2.0, 0.0, -5.0), Vec3(-2.0, 0.0, -5.0), Vec3(0.0, 3.0, -4.9))),
-			// 	material: Material { color: Vec3(0.0, 1.0, 0.0), reflectivity: 0.5 },
+			// 	material: Material { color: |_| Vec3(0.0, 1.0, 0.0), reflectivity: 0.5, ..Default::default() },
 			// },
 
 			Object {
 				shape: Shape3::Plane(Plane(Vec3(0.0, 1.0, 0.0), 0.0)),
 				material: Material {
-					color: get_ground_color,
+					texture: Texture::Ground,
 					reflectivity: 0.0,
 					diffuse_f: 0.8,
 					specular_f: 0.0,
@@ -287,7 +366,7 @@ fn main() {
 			Object {
 				shape: Shape3::Sphere(Sphere(Vec3(1.0, 2.0, 3.0), 0.5)),
 				material: Material {
-					color: |_| Vec3(0.0, 0.0, 0.0),
+					texture: Texture::None,
 					reflectivity: 0.95,
 					diffuse_f: 0.0,
 					roughness: 0.75,
@@ -297,7 +376,7 @@ fn main() {
 			Object {
 				shape: Shape3::Sphere(Sphere(Vec3(-1.25, 0.8, 0.0), 0.25)),
 				material: Material {
-					color: |_| Vec3f(255.0, 165.0, 0.0) / 255.0,
+					texture: Texture::Color(Vec3f(255.0, 165.0, 0.0) / 255.0),
 					reflectivity: 0.05,
 					diffuse_f: 0.9,
 					specular_f: 1.0,
@@ -308,7 +387,7 @@ fn main() {
 
 			// Octahedron — Bottom half
 			Object {
-				shape: Shape3::Triangle(Triangle::points(
+				shape: Shape3::Triangle(Triangle3::points(
 					Vec3(0.0, 0.0, 0.0),
 					Vec3(0.0, 1.0, 1.0),
 					Vec3(-1.0, 1.0, 0.0),
@@ -316,7 +395,7 @@ fn main() {
 				material: Material { diffuse_f: 0.0, ..Material::default() },
 			},
 			Object {
-				shape: Shape3::Triangle(Triangle::points(
+				shape: Shape3::Triangle(Triangle3::points(
 					Vec3(0.0, 0.0, 0.0),
 					Vec3(-1.0, 1.0, 0.0),
 					Vec3(0.0, 1.0, -1.0),
@@ -324,7 +403,7 @@ fn main() {
 				material: Material { diffuse_f: 0.0, ..Material::default() },
 			},
 			Object {
-				shape: Shape3::Triangle(Triangle::points(
+				shape: Shape3::Triangle(Triangle3::points(
 					Vec3(0.0, 0.0, 0.0),
 					Vec3(0.0, 1.0, -1.0),
 					Vec3(1.0, 1.0, 0.0),
@@ -332,7 +411,7 @@ fn main() {
 				material: Material { diffuse_f: 0.0, ..Material::default() },
 			},
 			Object {
-				shape: Shape3::Triangle(Triangle::points(
+				shape: Shape3::Triangle(Triangle3::points(
 					Vec3(0.0, 0.0, 0.0),
 					Vec3(1.0, 1.0, 0.0),
 					Vec3(0.0, 1.0, 1.0),
@@ -342,7 +421,7 @@ fn main() {
 
 			// Octahedron — Top half
 			Object {
-				shape: Shape3::Triangle(Triangle::points(
+				shape: Shape3::Triangle(Triangle3::points(
 					Vec3(0.0, 2.0, 0.0),
 					Vec3(-1.0, 1.0, 0.0),
 					Vec3(0.0, 1.0, 1.0),
@@ -350,7 +429,7 @@ fn main() {
 				material: Material { diffuse_f: 0.0, ..Material::default() },
 			},
 			Object {
-				shape: Shape3::Triangle(Triangle::points(
+				shape: Shape3::Triangle(Triangle3::points(
 					Vec3(0.0, 2.0, 0.0),
 					Vec3(0.0, 1.0, 1.0),
 					Vec3(1.0, 1.0, 0.0),
@@ -358,7 +437,7 @@ fn main() {
 				material: Material { diffuse_f: 0.0, ..Material::default() },
 			},
 			Object {
-				shape: Shape3::Triangle(Triangle::points(
+				shape: Shape3::Triangle(Triangle3::points(
 					Vec3(0.0, 2.0, 0.0),
 					Vec3(1.0, 1.0, 0.0),
 					Vec3(0.0, 1.0, -1.0),
@@ -366,7 +445,7 @@ fn main() {
 				material: Material { diffuse_f: 0.0, ..Material::default() },
 			},
 			Object {
-				shape: Shape3::Triangle(Triangle::points(
+				shape: Shape3::Triangle(Triangle3::points(
 					Vec3(0.0, 2.0, 0.0),
 					Vec3(0.0, 1.0, -1.0),
 					Vec3(-1.0, 1.0, 0.0),
@@ -374,11 +453,13 @@ fn main() {
 				material: Material { diffuse_f: 0.0, ..Material::default() },
 			},
 		],
-		light_at: Vec3(0.0, 100.0, 0.0),
-		light_color: Vec3(1.0, 1.0, 1.0),
-	};
+		light: LIGHT,
+	}
+}
 
-	let mut image = Image::new(1600, 1200);
+fn main() {
+	let mut image = Image::new(WIDTH, HEIGHT);
+	let scene = scene_create();
 	scene_render(&mut image, &scene);
 	scene_save("raytracing.ppm", &image).expect("Failed to save image");
 }

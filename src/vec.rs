@@ -1111,7 +1111,8 @@ macro_rules! vec {
 			#[inline]
 			#[must_use]
 			pub fn mul_add(self, vec: $vec<T>, scale: T) -> $vec<T> {
-				$vec { $($field: T::mul_add(vec.$field, scale, self.$field)),+ }
+				// $vec { $($field: T::mul_add(vec.$field, scale, self.$field)),+ }
+				$vec { $($field: self.$field + (vec.$field * scale)),+ }
 			}
 			/// Linear interpolation between the vectors.
 			///
