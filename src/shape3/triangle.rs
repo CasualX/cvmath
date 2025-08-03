@@ -1,30 +1,30 @@
 use super::*;
 
-/// Triangle shape.
+/// Triangle3 shape.
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]
-pub struct Triangle<T> {
+pub struct Triangle3<T> {
 	/// Base point of the triangle.
-	pub p: T,
+	pub p: Point3<T>,
 	/// First edge vector of the triangle.
-	pub u: T,
+	pub u: Vec3<T>,
 	/// Second edge vector of the triangle.
-	pub v: T,
+	pub v: Vec3<T>,
 }
 
-/// Triangle constructor.
+/// Triangle3 constructor.
 #[allow(non_snake_case)]
 #[inline]
-pub const fn Triangle<T>(p: T, u: T, v: T) -> Triangle<T> {
-	Triangle { p, u, v }
+pub const fn Triangle3<T>(p: Point3<T>, u: Vec3<T>, v: Vec3<T>) -> Triangle3<T> {
+	Triangle3 { p, u, v }
 }
 
-impl<T: Copy> Triangle<T> {
+impl<T: Copy> Triangle3<T> {
 	/// Constructs a new triangle.
 	#[inline]
-	pub const fn new(p: T, u: T, v: T) -> Triangle<T> {
-		Triangle { p, u, v }
+	pub const fn new(p: Point3<T>, u: Vec3<T>, v: Vec3<T>) -> Triangle3<T> {
+		Triangle3 { p, u, v }
 	}
 
 	/// Constructs a triangle from three points.
@@ -32,34 +32,28 @@ impl<T: Copy> Triangle<T> {
 	/// `p1` is the base point. The edges are computed as:
 	/// - `u = p2 - p1`
 	/// - `v = p3 - p1`
-	pub fn points(p1: T, p2: T, p3: T) -> Triangle<T> where T: ops::Sub<Output = T>{
+	pub fn points(p1: Point3<T>, p2: Point3<T>, p3: Point3<T>) -> Triangle3<T> where T: ops::Sub<Output = T>{
 		let u = p2 - p1;
 		let v = p3 - p1;
-		Triangle { p: p1, u, v }
+		Triangle3 { p: p1, u, v }
 	}
 
 	/// Returns the first point of the triangle.
 	#[inline]
-	pub fn p1(&self) -> T {
+	pub fn p1(&self) -> Point3<T> {
 		self.p
 	}
 	/// Returns the second point: `p + u`.
 	#[inline]
-	pub fn p2(&self) -> T where T: ops::Add<T, Output = T> {
+	pub fn p2(&self) -> Point3<T> where T: ops::Add<T, Output = T> {
 		self.p + self.u
 	}
 	/// Returns the third point: `p + v`.
 	#[inline]
-	pub fn p3(&self) -> T where T: ops::Add<T, Output = T> {
+	pub fn p3(&self) -> Point3<T> where T: ops::Add<T, Output = T> {
 		self.p + self.v
 	}
 }
-
-/// Triangle2 shape.
-pub type Triangle2<T> = Triangle<Point2<T>>;
-
-/// Triangle3 shape.
-pub type Triangle3<T> = Triangle<Point3<T>>;
 
 impl<T: Float> Triangle3<T> {
 	/// Returns the plane defined by the triangle.

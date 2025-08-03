@@ -37,4 +37,18 @@ macro_rules! specialized_type {
 		#[inline]
 		pub const fn $id($($c: $ty),+) -> $id { $base { $($c),+ } }
 	};
+
+	($base:ident, $id:ident, $ty:ty, $($c:ident: $cty:ty),+) => {
+		#[doc = stringify!($base)]
+		#[doc = "with"]
+		#[doc = stringify!($ty)]
+		#[doc = "components."]
+		pub type $id = $base<$ty>;
+
+		#[doc = stringify!($id)]
+		#[doc = "constructor."]
+		#[allow(non_snake_case)]
+		#[inline]
+		pub const fn $id($($c: $cty),+) -> $id { $base { $($c),+ } }
+	};
 }

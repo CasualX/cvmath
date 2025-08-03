@@ -21,14 +21,8 @@ mod mat;
 mod quat;
 mod rotvec;
 
-mod point;
-mod bounds;
-mod line;
-mod plane;
-mod sphere;
-mod triangle;
-mod ray;
-mod shape;
+mod shape2;
+mod shape3;
 
 #[cfg(test)]
 mod tests;
@@ -44,21 +38,13 @@ pub use crate::mat::{Mat2, Mat3, Mat4, Transform2, Transform3, Hand, Clip};
 pub use crate::quat::Quat;
 pub use crate::rotvec::RotationVector;
 
-pub use crate::point::{Point2, Point3};
-pub use crate::bounds::{Bounds, Bounds2, Bounds3};
-pub use crate::line::{Line, Line2, Line3};
-pub use crate::plane::Plane;
-pub use crate::sphere::Sphere;
-pub use crate::triangle::{Triangle, Triangle2, Triangle3};
-pub use crate::ray::{Ray, TraceHit, TraceRay};
-pub use crate::shape::Shape3;
+pub use crate::shape2::*;
+pub use crate::shape3::*;
 
 #[doc(hidden)]
 pub use crate::angle::{Anglef, Angled};
 #[doc(hidden)]
 pub use crate::vec::{Vec2f, Vec3f, Vec4f, Vec2d, Vec3d, Vec4d, Vec2i, Vec3i, Vec4i};
-#[doc(hidden)]
-pub use crate::point::{Point2f, Point3f, Point2d, Point3d, Point2i, Point3i};
 #[doc(hidden)]
 pub use crate::complex::{Complexf, Complexd};
 #[doc(hidden)]
@@ -66,5 +52,3 @@ pub use crate::mat::{Mat2f, Mat3f, Mat4f, Transform2f, Transform3f, Mat2d, Mat3d
 #[doc(hidden)]
 pub use crate::quat::{Quatf, Quatd};
 
-#[doc(hidden)]
-pub use crate::bounds::{Bounds2f, Bounds3f, Bounds2d, Bounds3d, Bounds2i, Bounds3i};

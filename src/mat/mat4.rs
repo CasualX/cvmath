@@ -118,7 +118,7 @@ impl<T: Float> Mat4<T> {
 	pub fn ortho(left: T, right: T, bottom: T, top: T, near: T, far: T, (hand, clip): (Hand, Clip)) -> Mat4<T> {
 		let mins = Vec3(left, bottom, near);
 		let maxs = Vec3(right, top, far);
-		Transform3::ortho(Bounds { mins, maxs }, (hand, clip)).into()
+		Transform3::ortho(Bounds3 { mins, maxs }, (hand, clip)).into()
 	}
 
 	/// Orthographic projection matrix matching the framing of a perspective camera.

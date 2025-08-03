@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn test_ray_hits_triangle_from_outside() {
-	let triangle = Triangle {
+	let triangle = Triangle3 {
 		p: Point3(0.0, 0.0, 0.0),
 		u: Vec3(1.0, 0.0, 0.0),
 		v: Vec3(0.0, 1.0, 0.0),
@@ -23,7 +23,7 @@ fn test_ray_hits_triangle_from_outside() {
 
 #[test]
 fn test_ray_misses_triangle() {
-	let triangle = Triangle {
+	let triangle = Triangle3 {
 		p: Point3(0.0, 0.0, 0.0),
 		u: Vec3(1.0, 0.0, 0.0),
 		v: Vec3(0.0, 1.0, 0.0),
@@ -42,7 +42,7 @@ fn test_ray_misses_triangle() {
 
 #[test]
 fn test_ray_originates_inside_triangle() {
-	let triangle = Triangle {
+	let triangle = Triangle3 {
 		p: Point3(0.0, 0.0, 0.0),
 		u: Vec3(1.0, 0.0, 0.0),
 		v: Vec3(0.0, 1.0, 0.0),
@@ -63,7 +63,7 @@ fn test_ray_originates_inside_triangle() {
 
 #[test]
 fn test_inside_method() {
-	let triangle = Triangle {
+	let triangle = Triangle3 {
 		p: Point3(0.0, 0.0, 0.0),
 		u: Vec3(1.0, 0.0, 0.0),
 		v: Vec3(0.0, 1.0, 0.0),

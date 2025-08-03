@@ -1,47 +1,43 @@
-/*!
-Line 2D segment.
-*/
-
 use super::*;
 
-/// Line shape.
+/// Line2 shape.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]
-pub struct Line<T> {
-	pub start: T,
-	pub end: T,
+pub struct Line2<T> {
+	pub start: Point2<T>,
+	pub end: Point2<T>,
 }
 
-/// Line constructor.
+/// Line2 constructor.
 #[allow(non_snake_case)]
 #[inline]
-pub fn Line<T>(start: T, end: T) -> Line<T> {
-	Line { start, end }
+pub fn Line2<T>(start: Point2<T>, end: Point2<T>) -> Line2<T> {
+	Line2 { start, end }
 }
 
 #[cfg(feature = "dataview")]
-unsafe impl<T: dataview::Pod> dataview::Pod for Line<T> {}
+unsafe impl<T: dataview::Pod> dataview::Pod for Line2<T> {}
 
-impl<T> Line<T> {
+impl<T> Line2<T> {
 	/// Constructs a new line.
 	#[inline]
-	pub const fn new(start: T, end: T) -> Line<T> {
-		Line { start, end }
+	pub const fn new(start: Point2<T>, end: Point2<T>) -> Line2<T> {
+		Line2 { start, end }
 	}
 
 	/// Pinches the line at the given point.
 	#[inline]
-	pub const fn pinch(self, pt: T) -> (Line<T>, Line<T>) where T: Copy {
-		let Line { start, end } = self;
-		(Line::new(start, pt), Line::new(pt, end))
+	pub const fn pinch(self, pt: Point2<T>) -> (Line2<T>, Line2<T>) where T: Copy {
+		let Line2 { start, end } = self;
+		(Line2::new(start, pt), Line2::new(pt, end))
 	}
 }
 
-impl<T: ops::Sub<Output = T>> Line<T> {
+impl<T: ops::Sub<Output = T>> Line2<T> {
 	/// Line direction.
 	#[inline]
-	pub fn direction(self) -> T {
+	pub fn direction(self) -> Vec2<T> {
 		self.end - self.start
 	}
 }
@@ -55,7 +51,7 @@ impl<T: Float> Line2<T> {
 
 	/// Point to line distance.
 	#[inline]
-	pub fn dist_pt(self, pt: Point2<T>) -> T {
+	pub fn distance(self, pt: Point2<T>) -> T {
 		self.project(pt).distance(pt)
 	}
 
@@ -124,11 +120,12 @@ impl<T: Float> Line2<T> {
 	/// Returns none if the line is parallel with the Y axis.
 	#[inline]
 	pub fn y_intercept(self) -> Option<T> {
-		if self.direction().x == T::ZERO {
+		let dir = self.direction();
+		if dir.x == T::ZERO {
 			return None;
 		}
-		let f = self.start.x / self.direction().x;
-		let y = self.start.y + self.direction().y * f;
+		let slope = self.start.x / dir.x;
+		let y = self.start.y + dir.y * slope;
 		Some(y)
 	}
 	/// Calculates the x coordinate where the line intercepts the X axis.
@@ -136,13 +133,15 @@ impl<T: Float> Line2<T> {
 	/// Returns none if the line is parallel with the X axis.
 	#[inline]
 	pub fn x_intercept(self) -> Option<T> {
-		if self.direction().y == T::ZERO {
+		let dir = self.direction();
+		if dir.y == T::ZERO {
 			return None;
 		}
-		let f = self.start.y / self.direction().y;
-		let x = self.start.x + self.direction().x * f;
+		let slope = self.start.y / dir.y;
+		let x = self.start.x + dir.x * slope;
 		Some(x)
 	}
+
 	/// Linear interpolation between the shapes.
 	#[inline]
 	pub fn lerp(self, target: Line2<T>, t: T) -> Line2<T> {
@@ -153,43 +152,6 @@ impl<T: Float> Line2<T> {
 	}
 }
 
-impl<T: Float> Line3<T> {
-	/// Projects the point onto the line.
-	#[inline]
-	pub fn project(self, pt: Point3<T>) -> Point3<T> {
-		self.start + (pt - self.start).project(self.direction())
-	}
-	/// Point to line distance.
-	#[inline]
-	pub fn dist_pt(self, pt: Point3<T>) -> T {
-		self.project(pt).distance(pt)
-	}
-	/// Linear interpolation between the shapes.
-	#[inline]
-	pub fn lerp(self, target: Line3<T>, t: T) -> Line3<T> {
-		Line3 {
-			start: self.start.lerp(target.start, t),
-			end: self.end.lerp(target.end, t),
-		}
-	}
-}
-
-/// Line2 shape.
-pub type Line2<T> = Line<Point2<T>>;
-
-/// Line3 shape.
-pub type Line3<T> = Line<Point3<T>>;
-
-/// Line2 constructor.
-#[allow(non_snake_case)]
-#[inline]
-pub fn Line2<T>(start: Point2<T>, end: Point2<T>) -> Line2<T> {
-	Line2 { start, end }
-}
-
-/// Line3 constructor.
-#[allow(non_snake_case)]
-#[inline]
-pub fn Line3<T>(start: Point3<T>, end: Point3<T>) -> Line3<T> {
-	Line3 { start, end }
-}
+specialized_type!(Line2, Line2f, f32, start: Point2f, end: Point2f);
+specialized_type!(Line2, Line2d, f64, start: Point2d, end: Point2d);
+specialized_type!(Line2, Line2i, i32, start: Point2i, end: Point2i);
