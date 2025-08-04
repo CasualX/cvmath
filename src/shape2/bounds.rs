@@ -102,7 +102,7 @@ impl<T> Bounds2<T> {
 	/// assert!(!bounds.contains(Point2(0, 0)));
 	/// ```
 	#[inline]
-	pub fn contains(&self, rhs: Point2<T>) -> bool where Point2<T>: SpatialOrd {
+	pub fn contains(&self, rhs: Point2<T>) -> bool where T: PartialOrd {
 		rhs.spatial_ge(&self.mins) && rhs.spatial_le(&self.maxs)
 	}
 	/// Returns whether the bounds `rhs` is fully contained within `self`.
@@ -122,7 +122,7 @@ impl<T> Bounds2<T> {
 	/// assert!(!overlap.encloses(bounds));
 	/// ```
 	#[inline]
-	pub fn encloses(&self, rhs: Bounds2<T>) -> bool where Point2<T>: SpatialOrd {
+	pub fn encloses(&self, rhs: Bounds2<T>) -> bool where T: PartialOrd + fmt::Debug {
 		rhs.mins.spatial_ge(&self.mins) && rhs.maxs.spatial_le(&self.maxs)
 	}
 	/// Returns whether `rhs` is overlapped with `self`.
@@ -138,11 +138,11 @@ impl<T> Bounds2<T> {
 	/// assert!(overlap.overlaps(bounds));
 	/// ```
 	#[inline]
-	pub fn overlaps(&self, rhs: Bounds2<T>) -> bool where Point2<T>: SpatialOrd {
+	pub fn overlaps(&self, rhs: Bounds2<T>) -> bool where T: PartialOrd {
 		rhs.maxs.spatial_ge(&self.mins) && rhs.mins.spatial_le(&self.maxs)
 	}
 	/// Includes the point in the bounds.
-	pub fn include(self, pt: Point2<T>) -> Bounds2<T> where Point2<T>: Copy + Extrema {
+	pub fn include(self, pt: Point2<T>) -> Bounds2<T> where T: Copy + Extrema {
 		let mins = self.mins.min(pt);
 		let maxs = self.maxs.max(pt);
 		Bounds2 { mins, maxs }
@@ -162,7 +162,7 @@ impl<T> Bounds2<T> {
 	/// assert_eq!(result, other.union(bounds));
 	/// ```
 	#[inline]
-	pub fn union(self, rhs: Bounds2<T>) -> Bounds2<T> where Point2<T>: Extrema {
+	pub fn union(self, rhs: Bounds2<T>) -> Bounds2<T> where T: Extrema {
 		let mins = self.mins.min(rhs.mins);
 		let maxs = self.maxs.max(rhs.maxs);
 		Bounds2 { mins, maxs }
@@ -192,7 +192,7 @@ impl<T> Bounds2<T> {
 	/// assert_eq!(None, negative.intersect(bounds));
 	/// ```
 	#[inline]
-	pub fn intersect(self, rhs: Bounds2<T>) -> Option<Bounds2<T>> where Point2<T>: Extrema + SpatialOrd {
+	pub fn intersect(self, rhs: Bounds2<T>) -> Option<Bounds2<T>> where T: PartialOrd + Extrema {
 		let mins = self.mins.max(rhs.mins);
 		let maxs = self.maxs.min(rhs.maxs);
 		if mins.spatial_le(&maxs) {
@@ -208,28 +208,28 @@ impl<T> Bounds2<T> {
 	///
 	/// <!--STRICTLY_CONTAINS-->
 	#[inline]
-	pub fn strictly_contains(&self, rhs: Point2<T>) -> bool where Point2<T>: SpatialOrd {
-		rhs.spatial_ge(&self.mins) && rhs.spatial_lt(&self.maxs)
+	pub fn strictly_contains(&self, rhs: Point2<T>) -> bool where T: PartialOrd {
+		rhs.spatial_gt(&self.mins) && rhs.spatial_lt(&self.maxs)
 	}
 	/// Returns whether `rhs` is strictly contained within `self`.
 	///
 	/// <!--STRICTLY_ENCLOSES-->
 	#[inline]
-	pub fn strictly_encloses(&self, rhs: Bounds2<T>) -> bool where Point2<T>: SpatialOrd {
+	pub fn strictly_encloses(&self, rhs: Bounds2<T>) -> bool where T: PartialOrd {
 		rhs.mins.spatial_gt(&self.mins) && rhs.maxs.spatial_lt(&self.maxs)
 	}
 	/// Returns whether `rhs` is strictly overlapped with `self`.
 	///
 	/// <!--STRICTLY_OVERLAPS-->
 	#[inline]
-	pub fn strictly_overlaps(&self, rhs: Bounds2<T>) -> bool where Point2<T>: SpatialOrd {
+	pub fn strictly_overlaps(&self, rhs: Bounds2<T>) -> bool where T: PartialOrd {
 		rhs.maxs.spatial_gt(&self.mins) && rhs.mins.spatial_lt(&self.maxs)
 	}
 	/// Returns the overlapping area (not empty) between `rhs` and `self`.
 	///
 	/// <!--STRICTLY_INTERSECT-->
 	#[inline]
-	pub fn strictly_intersect(self, rhs: Bounds2<T>) -> Option<Bounds2<T>> where Point2<T>: Extrema + SpatialOrd {
+	pub fn strictly_intersect(self, rhs: Bounds2<T>) -> Option<Bounds2<T>> where T: PartialOrd + Extrema {
 		let mins = self.mins.max(rhs.mins);
 		let maxs = self.maxs.min(rhs.maxs);
 		if mins.spatial_lt(&maxs) {

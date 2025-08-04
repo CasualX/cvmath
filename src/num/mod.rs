@@ -9,7 +9,6 @@ mod one;
 mod cast;
 mod extrema;
 mod abs;
-mod spatial_ord;
 mod float_ops;
 
 pub use self::zero::Zero;
@@ -17,7 +16,6 @@ pub use self::one::One;
 pub use self::cast::{CastFrom, CastTo};
 pub use self::extrema::Extrema;
 pub use self::abs::Abs;
-pub use self::spatial_ord::SpatialOrd;
 pub use self::float_ops::FloatOps;
 
 pub trait Scalar where Self

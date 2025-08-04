@@ -1227,11 +1227,23 @@ macro_rules! vec {
 				($vec { $($field: temp.$field.0),+ }, $vec { $($field: temp.$field.1),+ })
 			}
 		}
-		impl<T: PartialOrd> SpatialOrd<$vec<T>> for $vec<T> {
-			#[inline] fn spatial_lt(&self, rhs: &$vec<T>) -> bool { $(self.$field < rhs.$field &&)+ true }
-			#[inline] fn spatial_le(&self, rhs: &$vec<T>) -> bool { $(self.$field <= rhs.$field &&)+ true }
-			#[inline] fn spatial_gt(&self, rhs: &$vec<T>) -> bool { $(self.$field > rhs.$field &&)+ true }
-			#[inline] fn spatial_ge(&self, rhs: &$vec<T>) -> bool { $(self.$field >= rhs.$field &&)+ true }
+		impl<T: PartialOrd> $vec<T> {
+			#[inline]
+			pub fn spatial_lt(&self, rhs: &$vec<T>) -> bool {
+				$(self.$field < rhs.$field &&)+ true
+			}
+			#[inline]
+			pub fn spatial_le(&self, rhs: &$vec<T>) -> bool {
+				$(self.$field <= rhs.$field &&)+ true
+			}
+			#[inline]
+			pub fn spatial_gt(&self, rhs: &$vec<T>) -> bool {
+				$(self.$field > rhs.$field &&)+ true
+			}
+			#[inline]
+			pub fn spatial_ge(&self, rhs: &$vec<T>) -> bool {
+				$(self.$field >= rhs.$field &&)+ true
+			}
 		}
 
 		// Vector addition, subtraction and negation
