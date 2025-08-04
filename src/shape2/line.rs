@@ -12,9 +12,13 @@ pub struct Line2<T> {
 /// Line2 constructor.
 #[allow(non_snake_case)]
 #[inline]
-pub fn Line2<T>(start: Point2<T>, end: Point2<T>) -> Line2<T> {
+pub const fn Line2<T>(start: Point2<T>, end: Point2<T>) -> Line2<T> {
 	Line2 { start, end }
 }
+
+specialized_type!(Line2, Line2f, f32, start: Point2f, end: Point2f);
+specialized_type!(Line2, Line2d, f64, start: Point2d, end: Point2d);
+specialized_type!(Line2, Line2i, i32, start: Point2i, end: Point2i);
 
 #[cfg(feature = "dataview")]
 unsafe impl<T: dataview::Pod> dataview::Pod for Line2<T> {}
@@ -32,12 +36,10 @@ impl<T> Line2<T> {
 		let Line2 { start, end } = self;
 		(Line2::new(start, pt), Line2::new(pt, end))
 	}
-}
 
-impl<T: ops::Sub<Output = T>> Line2<T> {
 	/// Line direction.
 	#[inline]
-	pub fn direction(self) -> Vec2<T> {
+	pub fn delta(self) -> Vec2<T> where T: ops::Sub<Output = T> {
 		self.end - self.start
 	}
 }
@@ -46,7 +48,7 @@ impl<T: Float> Line2<T> {
 	/// Projects the point onto the line.
 	#[inline]
 	pub fn project(self, pt: Point2<T>) -> Point2<T> {
-		self.start + (pt - self.start).project(self.direction())
+		self.start + (pt - self.start).project(self.end - self.start)
 	}
 
 	/// Point to line distance.
@@ -76,9 +78,7 @@ impl<T: Float> Line2<T> {
 	/// ```
 	#[inline]
 	pub fn segment_x(self, rhs: Line2<T>) -> Option<T> {
-		let p = self.start;
 		let r = self.end - self.start;
-		let q = rhs.start;
 		let s = rhs.end - rhs.start;
 
 		let denom = r.cross(s);
@@ -86,7 +86,7 @@ impl<T: Float> Line2<T> {
 			return None;
 		}
 
-		let u = (q - p).cross(r) / denom;
+		let u = (rhs.start - self.start).cross(r) / denom;
 		Some(u)
 	}
 
@@ -106,40 +106,13 @@ impl<T: Float> Line2<T> {
 	/// ```
 	#[inline]
 	pub fn intersect_pt(self, rhs: Line2<T>) -> Option<Point2<T>> {
-		let denom = self.direction().cross(rhs.direction());
+		let denom = self.delta().cross(rhs.delta());
 		if denom == T::ZERO {
 			return None;
 		}
 
-		let p = rhs.direction() * self.start.cross(self.start + self.direction()) - self.direction() * rhs.start.cross(rhs.start + rhs.direction());
+		let p = rhs.delta() * self.start.cross(self.start + self.delta()) - self.delta() * rhs.start.cross(rhs.start + rhs.delta());
 		Some(p / denom)
-	}
-
-	/// Calculates the y coordinate where the line intercepts the Y axis.
-	///
-	/// Returns none if the line is parallel with the Y axis.
-	#[inline]
-	pub fn y_intercept(self) -> Option<T> {
-		let dir = self.direction();
-		if dir.x == T::ZERO {
-			return None;
-		}
-		let slope = self.start.x / dir.x;
-		let y = self.start.y + dir.y * slope;
-		Some(y)
-	}
-	/// Calculates the x coordinate where the line intercepts the X axis.
-	///
-	/// Returns none if the line is parallel with the X axis.
-	#[inline]
-	pub fn x_intercept(self) -> Option<T> {
-		let dir = self.direction();
-		if dir.y == T::ZERO {
-			return None;
-		}
-		let slope = self.start.y / dir.y;
-		let x = self.start.x + dir.x * slope;
-		Some(x)
 	}
 
 	/// Linear interpolation between the shapes.
@@ -152,6 +125,37 @@ impl<T: Float> Line2<T> {
 	}
 }
 
-specialized_type!(Line2, Line2f, f32, start: Point2f, end: Point2f);
-specialized_type!(Line2, Line2d, f64, start: Point2d, end: Point2d);
-specialized_type!(Line2, Line2i, i32, start: Point2i, end: Point2i);
+//----------------------------------------------------------------
+
+impl<T: Float> Trace2<T> for Line2<T> {
+	// Line has no inherent orientation
+	fn inside(&self, _pt: Point2<T>) -> bool {
+		false
+	}
+
+	fn trace(&self, ray: &Ray2<T>) -> Option<Hit2<T>> {
+		let delta = self.end - self.start;
+		let denom = ray.direction.cross(delta);
+
+		// Parallel => no intersection
+		if denom == T::ZERO {
+			return None;
+		}
+
+		let qp = self.start - ray.origin;
+		let distance = qp.cross(delta) / denom;
+		let u = qp.cross(ray.direction) / denom;
+
+		if !(distance > T::EPSILON && distance <= ray.distance && u >= T::ZERO && u <= T::ONE) {
+			return None;
+		}
+
+		// Line has no inherent orientation, flip normal to always face ray.origin
+		let mut normal = delta.norm().ccw();
+		if normal.dot(ray.direction) < T::ZERO {
+			normal = -normal;
+		}
+
+		Some(Hit2 { distance, normal, index: 0 })
+	}
+}

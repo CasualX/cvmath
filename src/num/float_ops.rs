@@ -1,9 +1,14 @@
+use std::cmp;
 
 pub trait FloatOps: Copy {
+	#[must_use]
+	fn total_cmp(&self, rhs: &Self) -> cmp::Ordering;
 	#[must_use]
 	fn is_finite(self) -> bool;
 	#[must_use]
 	fn is_infinite(self) -> bool;
+	#[must_use]
+	fn signum(self) -> Self;
 	#[must_use]
 	fn sqrt(self) -> Self;
 	#[must_use]
@@ -51,12 +56,21 @@ macro_rules! impl_float_ops {
 	($ty:ty) => {
 		impl FloatOps for $ty {
 			#[inline]
+			fn total_cmp(&self, rhs: &Self) -> cmp::Ordering {
+				<$ty>::total_cmp(self, rhs)
+			}
+
+			#[inline]
 			fn is_finite(self) -> bool {
 				self.is_finite()
 			}
 			#[inline]
 			fn is_infinite(self) -> bool {
 				self.is_infinite()
+			}
+			#[inline]
+			fn signum(self) -> $ty {
+				self.signum()
 			}
 			#[inline]
 			fn sqrt(self) -> $ty {

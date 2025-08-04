@@ -6,45 +6,62 @@ Computer Vector Graphics Math Library
 [![docs.rs](https://docs.rs/cvmath/badge.svg)](https://docs.rs/cvmath)
 [![Build status](https://github.com/CasualX/cvmath/workflows/CI/badge.svg)](https://github.com/CasualX/cvmath/actions)
 
-Because everyone should at least attempt to write one.
+> Because reinventing the wheel is half the fun.
 
-What is supported
------------------
+![Ray Tracing Example](images/raytracing.png)  
+*A ray tracing scene using `cvmath`. See [raytracing.rs](examples/raytracing.rs).*
 
-All types are exported at the crate root. While many operations are implemented on generic types, their generic traits are not exported.
+🔍 What is this?
+---------------
 
-### Vectors and points
+`cvmath` is a lightweight, graphics-oriented math library written in Rust. It focuses on **vector math and geometric primitives** commonly used in computer graphics. It is not a general-purpose numerical library.
 
-`Vec2<T>`, `Vec3<T>`, `Vec4<T>`, `Point2<T>`, `Point3<T>`
+If you're building 2D/3D renderers, ray tracers, or similar tools and want something compact and to the point, this might be a good fit.
 
-The vector types are versatile and have many uses. They can be used to represent points, directions, colors, masks and more.
+The API is lean, clear, and practical.
 
-The point types are simply aliases for their respective vector types. The types are interchangeable and are for visual clarity only.
 
-### Matrices and transformations
+✨ Features Overview
+--------------------
 
-`Mat2<T>`, `Mat3<T>`, `Mat4<T>`, `Transform2<T>`, `Transform3<T>`
+All types are available at the crate root.
 
-Square and affine transformation matrices.
+### General Types
 
-### Shapes
+- `Vec2<T>`, `Vec3<T>`, `Vec4<T>` — 2D, 3D, and 4D vectors
+- `Bool2`, `Bool3`, `Bool4` — Boolean vector masks
+- `Angle<T>` — Angles in radians
+- `Complex<T>`, `Polar<T>`, `Quat<T>` — Complex numbers, polar coordinates, and quaternions
 
-`Bounds<V>`, `Bounds2<T>`, `Bounds3<T>`, `Line<V>`, `Line2<T>`, `Line3<T>`, `Sphere<T>`, `Plane<T>`, `Ray<T>`
+### Matrices and Transformations
 
-Bounds2 and Bounds3 are 2D and 3D specialized cases of Bounds. Bounds are defined by their minimum and maximum points. They are axis-aligned and can be used to represent any shape that can be enclosed in a bounding box.
+- `Mat2<T>`, `Mat3<T>`, `Mat4<T>` — General-purpose matrices
+- `Transform2<T>`, `Transform3<T>` — Affine transformations
 
-Line2 and Line3 are 2D and 3D specialized cases of Line. Lines are defined by two points.
+### Shapes and Geometry
 
-Sphere is defined by a center point and a radius.
+Shapes are available in 2D and 3D variants.
 
-Plane is defined by a normal vector and a distance from the origin.
+- `Point2<T>`, `Point3<T>` — 2D and 3D points
+- `Bounds2<T>`, `Bounds3<T>` — Axis-aligned bounding boxes
+- `Plane2<T>`, `Plane3<T>` — Infinite planes
+- `Circle<T>`, `Sphere<T>` — Defined by a center point and radius
+- `Line2<T>`, `Line3<T>` — Line segments defined by two points
+- `Triangle2<T>`, `Triangle3<T>` — Triangles defined by three points
+- `Shape2<T>`, `Shape3<T>` — Generic shape enums for flexible composition
 
-Ray is defined by an origin point and a direction vector. Rays are used to compute intersections with other shapes.
+### Ray Tracing
 
-License
--------
+Types involved in ray casting and intersection:
 
-Licensed under [MIT License](https://opensource.org/licenses/MIT), see [license.txt](license.txt).
+- `Ray2<T>`, `Ray3<T>` — Rays defined by origin, direction, and max distance
+- `Hit2<T>`, `Hit3<T>` — Intersection results (distance, normal, index)
+- `Trace2<T>`, `Trace3<T>` — Traits for types that support ray tracing
+
+🔓 License
+----------
+
+Licensed under the [MIT License](https://opensource.org/licenses/MIT), see [license.txt](license.txt) for details.
 
 ### Contribution
 

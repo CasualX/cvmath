@@ -13,3 +13,18 @@ pub const fn Point3<T>(x: T, y: T, z: T) -> Point3<T> {
 specialized_type!(Point3, Point3f, f32, x, y, z);
 specialized_type!(Point3, Point3d, f64, x, y, z);
 specialized_type!(Point3, Point3i, i32, x, y, z);
+
+//----------------------------------------------------------------
+
+// Points are not solid
+impl<T: Float> Trace3<T> for Point3<T> {
+	#[inline]
+	fn inside(&self, _pt: Point3<T>) -> bool {
+		false
+	}
+
+	#[inline]
+	fn trace(&self, _ray: &Ray3<T>) -> Option<Hit3<T>> {
+		None
+	}
+}

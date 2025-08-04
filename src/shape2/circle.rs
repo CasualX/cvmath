@@ -1,40 +1,40 @@
 use super::*;
 
-/// Sphere shape.
-#[derive(Copy, Clone, Debug, PartialEq)]
+/// Circle shape.
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]
-pub struct Sphere<T> {
+pub struct Circle<T> {
 	/// The center of the sphere.
-	pub center: Point3<T>,
+	pub center: Point2<T>,
 
 	/// The radius of the sphere.
 	pub radius: T,
 }
 
-/// Sphere constructor.
+/// Circle constructor.
 #[allow(non_snake_case)]
 #[inline]
-pub const fn Sphere<T>(center: Point3<T>, radius: T) -> Sphere<T> {
-	Sphere { center, radius }
+pub const fn Circle<T>(center: Point2<T>, radius: T) -> Circle<T> {
+	Circle { center, radius }
 }
 
 #[cfg(feature = "dataview")]
-unsafe impl<T: dataview::Pod> dataview::Pod for Sphere<T> {}
+unsafe impl<T: dataview::Pod> dataview::Pod for Circle<T> {}
 
-impl<T> Sphere<T> {
-	/// Constructs a new sphere.
+impl<T> Circle<T> {
+	/// Constructs a new circle.
 	#[inline]
-	pub const fn new(center: Point3<T>, radius: T) -> Sphere<T> {
-		Sphere { center, radius }
+	pub const fn new(center: Point2<T>, radius: T) -> Circle<T> {
+		Circle { center, radius }
 	}
 }
 
-impl<T: Scalar> Sphere<T> {
+impl<T: Scalar> Circle<T> {
 	/// Linear interpolation between the shapes.
 	#[inline]
-	pub fn lerp(self, target: Sphere<T>, t: T) -> Sphere<T> {
-		Sphere {
+	pub fn lerp(self, target: Circle<T>, t: T) -> Circle<T> {
+		Circle {
 			center: self.center.lerp(target.center, t),
 			radius: self.radius + (target.radius - self.radius) * t,
 		}
@@ -43,13 +43,13 @@ impl<T: Scalar> Sphere<T> {
 
 //----------------------------------------------------------------
 
-impl<T: Float> Trace3<T> for Sphere<T> {
+impl<T: Float> Trace2<T> for Circle<T> {
 	#[inline]
-	fn inside(&self, pt: Point3<T>) -> bool {
+	fn inside(&self, pt: Point2<T>) -> bool {
 		pt.distance_sqr(self.center) < self.radius * self.radius
 	}
 
-	fn trace(&self, ray: &Ray3<T>) -> Option<Hit3<T>> {
+	fn trace(&self, ray: &Ray2<T>) -> Option<Hit2<T>> {
 		let oc = self.center - ray.origin;
 		let tc = oc.dot(ray.direction);
 
@@ -67,11 +67,11 @@ impl<T: Float> Trace3<T> for Sphere<T> {
 
 		if t1 > T::EPSILON && t1 <= ray.distance {
 			let normal = (ray.at(t1) - self.center).norm();
-			return Some(Hit3 { distance: t1, normal, index: 0 });
+			return Some(Hit2 { distance: t1, normal, index: 0 });
 		}
 		if t2 > T::EPSILON && t2 <= ray.distance {
 			let normal = (ray.at(t2) - self.center).norm();
-			return Some(Hit3 { distance: t2, normal, index: 0 });
+			return Some(Hit2 { distance: t2, normal, index: 0 });
 		}
 		return None;
 	}

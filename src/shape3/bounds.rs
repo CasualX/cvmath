@@ -18,6 +18,10 @@ pub const fn Bounds3<T>(mins: Vec3<T>, maxs: Vec3<T>) -> Bounds3<T> {
 	Bounds3 { mins, maxs }
 }
 
+specialized_type!(Bounds3, Bounds3f, f32, mins: Point3f, maxs: Point3f);
+specialized_type!(Bounds3, Bounds3d, f64, mins: Point3d, maxs: Point3d);
+specialized_type!(Bounds3, Bounds3i, i32, mins: Point3i, maxs: Point3i);
+
 #[cfg(feature = "dataview")]
 unsafe impl<T: dataview::Pod> dataview::Pod for Bounds3<T> {}
 
@@ -270,50 +274,42 @@ impl<T: Scalar> Bounds3<T> {
 	}
 }
 
-specialized_type!(Bounds3, Bounds3f, f32, mins: Point3f, maxs: Point3f);
-specialized_type!(Bounds3, Bounds3d, f64, mins: Point3d, maxs: Point3d);
-specialized_type!(Bounds3, Bounds3i, i32, mins: Point3i, maxs: Point3i);
-
 //----------------------------------------------------------------
 
-impl<T: Float> TraceRay<T> for Bounds3<T> {
+impl<T: Float> Trace3<T> for Bounds3<T> {
 	#[inline]
-	fn inside(&self, ray: &Ray<T>) -> bool {
-		self.contains(ray.origin)
+	fn inside(&self, pt: Point3<T>) -> bool {
+		self.contains(pt)
 	}
 
-	fn trace(&self, ray: &Ray<T>, hits: &mut [TraceHit<T>]) -> usize {
-		let inv_dir = Vec3::new(T::ONE / ray.direction.x, T::ONE / ray.direction.y, T::ONE / ray.direction.z);
-		let mut tmin = (self.mins - ray.origin) * inv_dir;
-		let mut tmax = (self.maxs - ray.origin) * inv_dir;
-		if tmin.x > tmax.x {
-			tmin.x = tmax.x;
-			tmax.x = tmin.x;
-		}
-		if tmin.y > tmax.y {
-			tmin.y = tmax.y;
-			tmax.y = tmin.y;
-		}
-		if tmin.z > tmax.z {
-			tmin.z = tmax.z;
-			tmax.z = tmin.z;
-		}
+	fn trace(&self, ray: &Ray3<T>) -> Option<Hit3<T>> {
+		let inv_dir = ray.direction.map(|d| T::ONE / d);
+
+		let tmin = (self.mins - ray.origin) * inv_dir;
+		let tmax = (self.maxs - ray.origin) * inv_dir;
+		let (tmin, tmax) = tmin.min_max(tmax);
+
 		let t0 = tmin.vmax();
 		let t1 = tmax.vmin();
-		if t0 <= t1 {
-			hits[0] = TraceHit {
-				distance: t0,
-				normal: Vec3::new(
-					if t0 == tmin.x { -T::ONE } else { if t0 == tmax.x { T::ONE } else { T::ZERO } },
-					if t0 == tmin.y { -T::ONE } else { if t0 == tmax.y { T::ONE } else { T::ZERO } },
-					if t0 == tmin.z { -T::ONE } else { if t0 == tmax.z { T::ONE } else { T::ZERO } },
-				),
-				index: 0,
-			};
-			return 1;
-		}
-		else {
-			return 0;
-		}
+
+		let t = if !(t0 <= t1) { return None }
+		else if t0 > T::EPSILON && t0 <= ray.distance { t0 }
+		else if t1 > T::EPSILON && t1 <= ray.distance { t1 }
+		else { return None };
+
+		// Outward shape normal: use direction sign per axis
+		let sign = ray.direction.map(T::signum);
+
+		// Calculate the normal based on which axis was hit
+		let normal = (
+			Vec3::dup(t).eq(tmin).select(-sign, Vec3::ZERO) +
+			Vec3::dup(t).eq(tmax).select( sign, Vec3::ZERO)
+		).norm();
+
+		Some(Hit3 {
+			distance: t0,
+			normal,
+			index: 0,
+		})
 	}
 }

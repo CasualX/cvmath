@@ -20,13 +20,15 @@ pub const fn Triangle3<T>(p: Point3<T>, u: Vec3<T>, v: Vec3<T>) -> Triangle3<T> 
 	Triangle3 { p, u, v }
 }
 
-impl<T: Copy> Triangle3<T> {
+impl<T> Triangle3<T> {
 	/// Constructs a new triangle.
 	#[inline]
 	pub const fn new(p: Point3<T>, u: Vec3<T>, v: Vec3<T>) -> Triangle3<T> {
 		Triangle3 { p, u, v }
 	}
+}
 
+impl<T: Copy> Triangle3<T> {
 	/// Constructs a triangle from three points.
 	///
 	/// `p1` is the base point. The edges are computed as:
@@ -58,10 +60,10 @@ impl<T: Copy> Triangle3<T> {
 impl<T: Float> Triangle3<T> {
 	/// Returns the plane defined by the triangle.
 	#[inline]
-	pub fn plane(&self) -> Plane<T> {
+	pub fn plane(&self) -> Plane3<T> {
 		let normal = self.normal();
 		let distance = -normal.dot(self.p);
-		Plane { normal, distance }
+		Plane3 { normal, distance }
 	}
 
 	/// Returns the normal vector of the triangle.
@@ -116,51 +118,47 @@ impl<T: Float> ops::Mul<Triangle3<T>> for Transform3<T> {
 
 //----------------------------------------------------------------
 
-impl<T: Float> TraceRay<T> for Triangle3<T> {
+impl<T: Float> Trace3<T> for Triangle3<T> {
 	#[inline]
-	fn inside(&self, ray: &Ray<T>) -> bool {
-		self.plane().inside(ray)
+	fn inside(&self, _pt: Point3<T>) -> bool {
+		false
 	}
 
-	fn trace(&self, ray: &Ray<T>, hits: &mut [TraceHit<T>]) -> usize {
+	fn trace(&self, ray: &Ray3<T>) -> Option<Hit3<T>> {
 		let h = ray.direction.cross(self.v);
 		let a = self.u.dot(h);
 
 		// Ray is parallel to the triangle
-		if a.abs() < T::EPSILON {
-			return 0;
+		if a == T::ZERO {
+			return None;
 		}
 
 		let f = T::ONE / a;
 		let s = ray.origin - self.p;
 		let u = f * s.dot(h);
 
-		if u < T::ZERO || u > T::ONE {
-			return 0;
+		if !(u >= T::ZERO && u <= T::ONE) {
+			return None;
 		}
 
 		let q = s.cross(self.u);
 		let v = f * ray.direction.dot(q);
 
-		if v < T::ZERO || u + v > T::ONE {
-			return 0;
+		if !(v >= T::ZERO && u + v <= T::ONE) {
+			return None;
 		}
 
-		let distance = f * self.v.dot(q);
+		let t0 = f * self.v.dot(q);
 
-		if distance < T::EPSILON {
-			return 0;
+		if !(t0 > T::EPSILON && t0 <= ray.distance) {
+			return None;
 		}
 
-		if let Some(hit) = hits.get_mut(0) {
-			let normal = self.normal();
-			*hit = TraceHit {
-				distance,
-				normal,
-				index: 0,
-			};
-		}
-
-		return 1;
+		let normal = self.normal();
+		Some(Hit3 {
+			distance: t0,
+			normal,
+			index: 0,
+		})
 	}
 }

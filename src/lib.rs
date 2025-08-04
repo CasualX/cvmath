@@ -24,9 +24,6 @@ mod rotvec;
 mod shape2;
 mod shape3;
 
-#[cfg(test)]
-mod tests;
-
 use crate::num::*;
 
 pub use crate::angle::Angle;

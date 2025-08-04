@@ -8,17 +8,17 @@ fn test_ray_hits_triangle_from_outside() {
 		v: Vec3(0.0, 1.0, 0.0),
 	};
 
-	let ray = Ray {
+	let ray = Ray3 {
 		origin: Point3(0.25, 0.25, 1.0),
 		direction: Vec3(0.0, 0.0, -1.0),
+		distance: f64::INFINITY,
 	};
 
-	let mut hits = [TraceHit::default(); 1];
-	let hit_count = triangle.trace(&ray, &mut hits);
+	let result = triangle.trace(&ray);
 
-	assert_eq!(hit_count, 1);
-	assert!((hits[0].distance - 1.0).abs() < 1e-6);
-	assert_eq!(hits[0].normal, Vec3(0.0, 0.0, 1.0));
+	assert!(result.is_some());
+	assert!((result.unwrap().distance - 1.0).abs() < 1e-6);
+	assert_eq!(result.unwrap().normal, Vec3(0.0, 0.0, 1.0));
 }
 
 #[test]
@@ -29,15 +29,15 @@ fn test_ray_misses_triangle() {
 		v: Vec3(0.0, 1.0, 0.0),
 	};
 
-	let ray = Ray {
+	let ray = Ray3 {
 		origin: Point3(1.1, 1.1, 1.0),
 		direction: Vec3(0.0, 0.0, -1.0),
+		distance: f64::INFINITY,
 	};
 
-	let mut hits = [TraceHit::default(); 1];
-	let hit_count = triangle.trace(&ray, &mut hits);
+	let result = triangle.trace(&ray);
 
-	assert_eq!(hit_count, 0);
+	assert!(result.is_none());
 }
 
 #[test]
@@ -48,17 +48,17 @@ fn test_ray_originates_inside_triangle() {
 		v: Vec3(0.0, 1.0, 0.0),
 	};
 
-	let ray = Ray {
+	let ray = Ray3 {
 		origin: Point3(0.25, 0.25, -1.0),
 		direction: Vec3(0.0, 0.0, 1.0),
+		distance: f64::INFINITY,
 	};
 
-	let mut hits = [TraceHit::default(); 1];
-	let hit_count = triangle.trace(&ray, &mut hits);
+	let result = triangle.trace(&ray);
 
-	assert_eq!(hit_count, 1);
-	assert!((hits[0].distance - 1.0).abs() < 1e-6);
-	assert_eq!(hits[0].normal, Vec3(0.0, 0.0, 1.0));
+	assert!(result.is_some());
+	assert!((result.unwrap().distance - 1.0).abs() < 1e-6);
+	assert_eq!(result.unwrap().normal, Vec3(0.0, 0.0, 1.0));
 }
 
 #[test]
@@ -69,16 +69,18 @@ fn test_inside_method() {
 		v: Vec3(0.0, 1.0, 0.0),
 	};
 
-	let ray_above = Ray {
+	let ray_above = Ray3 {
 		origin: Point3(0.5, 0.5, 1.0),
 		direction: Vec3(0.0, 0.0, -1.0),
+		distance: f64::INFINITY,
 	};
 
-	let ray_below = Ray {
+	let ray_below = Ray3 {
 		origin: Point3(0.5, 0.5, -1.0),
 		direction: Vec3(0.0, 0.0, 1.0),
+		distance: f64::INFINITY,
 	};
 
-	assert_eq!(triangle.inside(&ray_above), false); // In front = outside
-	assert_eq!(triangle.inside(&ray_below), true);  // Behind = inside
+	assert_eq!(triangle.plane().inside(ray_above.origin), false); // In front = outside
+	assert_eq!(triangle.plane().inside(ray_below.origin), true);  // Behind = inside
 }

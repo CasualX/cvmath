@@ -12,7 +12,7 @@ pub struct Line3<T> {
 /// Line3 constructor.
 #[allow(non_snake_case)]
 #[inline]
-pub fn Line3<T>(start: Point3<T>, end: Point3<T>) -> Line3<T> {
+pub const fn Line3<T>(start: Point3<T>, end: Point3<T>) -> Line3<T> {
 	Line3 { start, end }
 }
 
@@ -62,5 +62,20 @@ impl<T: Float> Line3<T> {
 			start: self.start.lerp(target.start, t),
 			end: self.end.lerp(target.end, t),
 		}
+	}
+}
+
+//----------------------------------------------------------------
+
+// Lines are not solid
+impl<T: Float> Trace3<T> for Line3<T> {
+	#[inline]
+	fn inside(&self, _pt: Point3<T>) -> bool {
+		false
+	}
+
+	#[inline]
+	fn trace(&self, _ray: &Ray3<T>) -> Option<Hit3<T>> {
+		None
 	}
 }

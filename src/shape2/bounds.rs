@@ -16,6 +16,10 @@ pub const fn Bounds2<T>(mins: Point2<T>, maxs: Point2<T>) -> Bounds2<T> {
 	Bounds2 { mins, maxs }
 }
 
+specialized_type!(Bounds2, Bounds2f, f32, mins: Point2f, maxs: Point2f);
+specialized_type!(Bounds2, Bounds2d, f64, mins: Point2d, maxs: Point2d);
+specialized_type!(Bounds2, Bounds2i, i32, mins: Point2i, maxs: Point2i);
+
 #[cfg(feature = "dataview")]
 unsafe impl<T: dataview::Pod> dataview::Pod for Bounds2<T> {}
 
@@ -56,6 +60,21 @@ impl<T> Bounds2<T> {
 	#[inline]
 	pub fn point(point: Point2<T>, size: Vec2<T>) -> Bounds2<T> where T: Copy + ops::Add<Output = T> + ops::Sub<Output = T> {
 		Bounds2 { mins: point - size, maxs: point + size }
+	}
+	/// Bounds2 constructor from components.
+	#[inline]
+	pub const fn c(mins_x: T, mins_y: T, maxs_x: T, maxs_y: T) -> Bounds2<T> {
+		let mins = Point2 { x: mins_x, y: mins_y };
+		let maxs = Point2 { x: maxs_x, y: maxs_y };
+		Bounds2 { mins, maxs }
+	}
+	/// Casts the bounds to a different unit type.
+	#[inline]
+	pub fn cast<U>(self) -> Bounds2<U> where T: CastTo<U> {
+		Bounds2 {
+			mins: self.mins.cast(),
+			maxs: self.maxs.cast(),
+		}
 	}
 	/// Normalizes the min and max values ensuring that `self.mins <= self.maxs`.
 	///
@@ -303,24 +322,6 @@ impl<T> From<Bounds2<T>> for [Point2<T>; 2] {
 
 //----------------------------------------------------------------
 
-impl<T> Bounds2<T> {
-	/// Bounds2 constructor from components.
-	#[inline]
-	pub const fn c(mins_x: T, mins_y: T, maxs_x: T, maxs_y: T) -> Bounds2<T> {
-		let mins = Point2 { x: mins_x, y: mins_y };
-		let maxs = Point2 { x: maxs_x, y: maxs_y };
-		Bounds2 { mins, maxs }
-	}
-	/// Casts the bounds to a different unit type.
-	#[inline]
-	pub fn cast<U>(self) -> Bounds2<U> where T: CastTo<U> {
-		Bounds2 {
-			mins: self.mins.cast(),
-			maxs: self.maxs.cast(),
-		}
-	}
-}
-
 impl<T: Scalar> Bounds2<T> {
 	/// X coordinate of the left side.
 	#[inline]
@@ -433,6 +434,49 @@ impl<T: Scalar> Bounds2<T> {
 	}
 }
 
-specialized_type!(Bounds2, Bounds2f, f32, mins: Point2f, maxs: Point2f);
-specialized_type!(Bounds2, Bounds2d, f64, mins: Point2d, maxs: Point2d);
-specialized_type!(Bounds2, Bounds2i, i32, mins: Point2i, maxs: Point2i);
+//----------------------------------------------------------------
+
+impl<T: Float> Trace2<T> for Bounds2<T> {
+	#[inline]
+	fn inside(&self, pt: Point2<T>) -> bool {
+		self.contains(pt)
+	}
+
+	fn trace(&self, ray: &Ray2<T>) -> Option<Hit2<T>> {
+		let inv_dir = ray.direction.map(|d| T::ONE / d);
+
+		let tmin = (self.mins - ray.origin) * inv_dir;
+		let tmax = (self.maxs - ray.origin) * inv_dir;
+		let (tmin, tmax) = tmin.min_max(tmax);
+
+		let t0 = tmin.vmax();
+		let t1 = tmax.vmin();
+
+		if !(t0 <= t1 && t0 > T::EPSILON && t0 <= ray.distance) {
+			return None;
+		}
+
+		// Determine which face was hit
+		let normal = if t0 == tmin.x {
+			Vec2::new(-T::ONE, T::ZERO)
+		}
+		else if t0 == tmax.x {
+			Vec2::new(T::ONE, T::ZERO)
+		}
+		else if t0 == tmin.y {
+			Vec2::new(T::ZERO, -T::ONE)
+		}
+		else if t0 == tmax.y {
+			Vec2::new(T::ZERO, T::ONE)
+		}
+		else {
+			return None;
+		};
+
+		Some(Hit2 {
+			distance: t0,
+			normal,
+			index: 0,
+		})
+	}
+}

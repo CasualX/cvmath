@@ -4,19 +4,19 @@ use rayon::prelude::*;
 
 
 // Image setup
-const WIDTH: i32 = 800;
-const HEIGHT: i32 = 1200;
+const WIDTH: i32 = 1920 / 2;
+const HEIGHT: i32 = 1080 / 2;
 
 // Camera setup
-const ORIGIN: Point3<f32> = Point3(0.0, 1.0, -4.0);
+const ORIGIN: Point3<f32> = Point3(0.0, 1.25, -4.0);
 const TARGET: Point3<f32> = Point3(0.0, 1.0, 0.0);
-const UP: Vec3<f32> = Vec3(0.0, 1.0, 0.0);
-const FOV_Y: f32 = 60.0;
+const REF_UP: Vec3<f32> = Vec3(0.0, 1.0, 0.0);
+const FOV_Y: f32 = 40.0;
 
 // Quality setup
 const DOF: bool = true; // Enable depth-of-field
 const AA: bool = true; // Enable anti-aliasing
-const AA_SAMPLES: usize = 512; // Number of anti-aliasing samples per pixel
+const AA_SAMPLES: usize = 2048; // Number of anti-aliasing samples per pixel
 const MAX_BOUNCES: u32 = 6; // Maximum reflection bounce depth
 
 // Light setup
@@ -35,7 +35,7 @@ enum Texture {
 	Sky,
 }
 impl Texture {
-	fn sample(&self, ray: &Ray<f32>) -> Vec3<f32> {
+	fn sample(&self, ray: &Ray3<f32>) -> Vec3<f32> {
 		match self {
 			Texture::None => Vec3::ZERO,
 			&Texture::Color(color) => color,
@@ -98,21 +98,13 @@ struct Scene {
 	objects: Vec<Object>,
 	light: Light,
 }
-impl TraceRay<f32> for Scene {
-	fn inside(&self, ray: &Ray<f32>) -> bool {
-		self.objects.iter().any(|object| object.shape.inside(ray))
+impl Trace3<f32> for Scene {
+	fn inside(&self, pt: Point3<f32>) -> bool {
+		self.objects.iter().any(|object| object.shape.inside(pt))
 	}
 
-	fn trace(&self, ray: &Ray<f32>, hits: &mut [TraceHit<f32>]) -> usize {
-		let mut count = 0;
-		for (index, object) in self.objects.iter().enumerate() {
-			let n = object.shape.trace(ray, &mut hits[count..]);
-			for hit in &mut hits[count..count + n] {
-				hit.index = index;
-			}
-			count += n;
-		}
-		return count;
+	fn trace(&self, ray: &Ray3<f32>) -> Option<Hit3<f32>> {
+		ray.trace_collection(self.objects.iter().map(|object| &object.shape))
 	}
 }
 
@@ -175,7 +167,7 @@ fn ray_setup(
 	ref_up: Vec3<f32>,
 	jitter_x: f32,
 	jitter_y: f32,
-) -> Ray<f32> {
+) -> Ray3<f32> {
 	let forward = (target - origin).norm();
 	let right = ref_up.cross(forward).norm();
 	let up = right.cross(forward).norm();
@@ -193,19 +185,20 @@ fn ray_setup(
 
 	let direction = (forward + right * px + up * py).norm();
 
-	Ray { origin, direction }
+	Ray3 { origin, direction, distance: f32::INFINITY }
 }
 
 fn trace_ray(image_width: i32, image_height: i32, scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
-	let mut hits = [TraceHit::default(); 16];
 	let mut rng = urandom::new();
 
 	let mut aa_color = Vec3f::ZERO;
 	for _ in 0..if AA { AA_SAMPLES } else { 1 } {
-		// Compute the ray setup
+		// Jitter for anti-aliasing
 		let jitter_x: f32 = if AA { rng.range(-0.5..0.5) } else { 0.0 };
 		let jitter_y: f32 = if AA { rng.range(-0.5..0.5) } else { 0.0 };
-		let mut ray = ray_setup(image_width, image_height, x, y, Angle::deg(FOV_Y), ORIGIN, TARGET, UP, jitter_x, jitter_y);
+
+		// Compute the ray setup
+		let mut ray = ray_setup(image_width, image_height, x, y, Angle::deg(FOV_Y), ORIGIN, TARGET, REF_UP, jitter_x, jitter_y);
 
 		// Depth-of-field
 		if DOF {
@@ -221,20 +214,18 @@ fn trace_ray(image_width: i32, image_height: i32, scene: &Scene, x: i32, y: i32)
 			let material;
 			let mut color;
 
-			let n_hits = ray.trace(scene, &mut hits);
-			if n_hits > 0 {
-				let hit = hits[..n_hits].iter().min_by(|a, b| a.distance.total_cmp(&b.distance)).unwrap().clone();
+			if let Some(hit) = ray.trace(scene) {
 				let index = hit.index;
 				material = scene.objects[index].material;
 				color = material.texture.sample(&ray);
 
 				// Reflect the ray
-				ray.origin = ray.at(hit.distance) + hit.normal * 0.001;
+				ray.origin = ray.at(hit.distance) + hit.normal * f32::EPSILON;
 				ray.direction = (-ray.direction).reflect(hit.normal);
 
 				// Check if the hit point is lit by the light source
 				let light_at = if AA { scene.light.pos + Vec3::from([(); 3].map(|_| rng.range(-scene.light.radius..scene.light.radius))) } else { scene.light.pos };
-				let is_lit = Ray(ray.origin, (light_at - ray.origin).norm()).trace(scene, &mut hits) == 0;
+				let is_lit = Ray3(ray.origin, (light_at - ray.origin).norm(), f32::INFINITY).trace(scene).is_none();
 
 				// Calculate lighting
 				let ambient_light = 0.3;
@@ -296,11 +287,11 @@ fn scene_render(image: &mut Image, scene: &Scene) {
 	rayon::spawn_fifo(move || {
 		(0..width * height)
 			.into_par_iter()
-			.for_each_with(sender, |s, i| {
-				let x = i % width;
-				let y = i / width;
+			.for_each_with(sender, |sender, index| {
+				let x = index % width;
+				let y = index / width;
 				let color = trace_ray(width, height, &scene, x, y);
-				s.send((x, y, color)).unwrap();
+				sender.send((x, y, color)).unwrap();
 			});
 	});
 
@@ -352,7 +343,7 @@ fn scene_create() -> Scene {
 			// },
 
 			Object {
-				shape: Shape3::Plane(Plane(Vec3(0.0, 1.0, 0.0), 0.0)),
+				shape: Shape3::Plane(Plane3(Vec3::Y, 0.0)),
 				material: Material {
 					texture: Texture::Ground,
 					reflectivity: 0.0,
