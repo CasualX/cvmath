@@ -461,15 +461,23 @@ specialized_type!(Complex, Complexd, f64, re, im);
 #[cfg(feature = "serde")]
 impl<T: serde::Serialize> serde::Serialize for Complex<T> {
 	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-		let slice = <Complex<T> as AsRef<[T; 2]>>::as_ref(self).as_slice();
-		serializer.collect_seq(slice)
+		use serde::ser::SerializeTupleStruct;
+		let mut state = serializer.serialize_tuple_struct("Complex", 2)?;
+		state.serialize_field(&self.re)?;
+		state.serialize_field(&self.im)?;
+		state.end()
 	}
 }
 
 #[cfg(feature = "serde")]
 impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Complex<T> {
 	fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-		let [re, im]: [T; 2] = serde::Deserialize::deserialize(deserializer)?;
+		let (re, im) = {
+			#[derive(serde::Deserialize)]
+			struct Complex<T>(T, T);
+			let Complex(re, im) = Complex::<T>::deserialize(deserializer)?;
+			(re, im)
+		};
 		Ok(Complex { re, im })
 	}
 }

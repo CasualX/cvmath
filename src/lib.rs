@@ -49,3 +49,5 @@ pub use crate::mat::{Mat2f, Mat3f, Mat4f, Transform2f, Transform3f, Mat2d, Mat3d
 #[doc(hidden)]
 pub use crate::quat::{Quatf, Quatd};
 
+#[cfg(test)]
+mod tests;

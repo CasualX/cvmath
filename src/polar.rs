@@ -18,6 +18,14 @@ pub const fn Polar<T>(radius: T, theta: Angle<T>) -> Polar<T> {
 #[cfg(feature = "dataview")]
 unsafe impl<T: dataview::Pod> dataview::Pod for Polar<T> {}
 
+impl<T> Polar<T> {
+	/// Constructs a new polar coordinate from components.
+	#[inline]
+	pub const fn new(radius: T, theta: Angle<T>) -> Polar<T> {
+		Polar { radius, theta }
+	}
+}
+
 impl<T: Float> Polar<T> {
 	#[inline]
 	pub fn complex(self) -> Complex<T> {
@@ -65,3 +73,30 @@ impl_fmt!(fmt::LowerHex);
 impl_fmt!(fmt::UpperHex);
 impl_fmt!(fmt::LowerExp);
 impl_fmt!(fmt::UpperExp);
+
+//----------------------------------------------------------------
+// Serialization
+
+#[cfg(feature = "serde")]
+impl<T: serde::Serialize + 'static> serde::Serialize for Polar<T> {
+	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+		use serde::ser::SerializeTupleStruct;
+		let mut state = serializer.serialize_tuple_struct("Polar", 2)?;
+		state.serialize_field(&self.radius)?;
+		state.serialize_field(&self.theta)?;
+		state.end()
+	}
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T: serde::Deserialize<'de> + 'static> serde::Deserialize<'de> for Polar<T> {
+	fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+		let (radius, theta) = {
+			#[derive(serde::Deserialize)]
+			struct Polar<T: 'static>(T, Angle<T>);
+			let Polar(radius, theta) = Polar::<T>::deserialize(deserializer)?;
+			(radius, theta)
+		};
+		Ok(Polar { radius, theta })
+	}
+}

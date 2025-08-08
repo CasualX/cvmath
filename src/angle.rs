@@ -267,16 +267,33 @@ impl<T: Float + FromStr> FromStr for Angle<T> {
 //----------------------------------------------------------------
 
 #[cfg(feature = "serde")]
-impl<T: serde::Serialize> serde::Serialize for Angle<T> {
+impl<T: serde::Serialize + 'static> serde::Serialize for Angle<T> {
 	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-		self.radians.serialize(serializer)
+		// Pseudo specialization for f32 and f64
+		if let Some(&float) = (&self.radians as &dyn std::any::Any).downcast_ref::<f32>() {
+			float.to_degrees().serialize(serializer)
+		}
+		else if let Some(&double) = (&self.radians as &dyn std::any::Any).downcast_ref::<f64>() {
+			double.to_degrees().serialize(serializer)
+		}
+		else {
+			self.radians.serialize(serializer)
+		}
 	}
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Angle<T> {
+impl<'de, T: serde::Deserialize<'de> + 'static> serde::Deserialize<'de> for Angle<T> {
 	fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Angle<T>, D::Error> {
-		T::deserialize(deserializer).map(Angle)
+		// Pseudo specialization for f32 and f64
+		let mut value = T::deserialize(deserializer)?;
+		if let Some(float) = (&mut value as &mut dyn std::any::Any).downcast_mut::<f32>() {
+			*float = float.to_radians();
+		}
+		else if let Some(double) = (&mut value as &mut dyn std::any::Any).downcast_mut::<f64>() {
+			*double = double.to_radians();
+		}
+		Ok(Angle(value))
 	}
 }
 

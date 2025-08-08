@@ -353,15 +353,25 @@ specialized_type!(Quat, Quatd, f64, a, b, c, d);
 #[cfg(feature = "serde")]
 impl<T: serde::Serialize> serde::Serialize for Quat<T> {
 	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-		let slice = <Quat<T> as AsRef<[T; 4]>>::as_ref(self).as_slice();
-		serializer.collect_seq(slice)
+		use serde::ser::SerializeTupleStruct;
+		let mut state = serializer.serialize_tuple_struct("Quat", 4)?;
+		state.serialize_field(&self.a)?;
+		state.serialize_field(&self.b)?;
+		state.serialize_field(&self.c)?;
+		state.serialize_field(&self.d)?;
+		state.end()
 	}
 }
 
 #[cfg(feature = "serde")]
 impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Quat<T> {
 	fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-		let [a, b, c, d] = <[T; 4]>::deserialize(deserializer)?;
+		let (a, b, c, d) = {
+			#[derive(serde::Deserialize)]
+			struct Quat<T>(T, T, T, T);
+			let Quat(a, b, c, d) = Quat::<T>::deserialize(deserializer)?;
+			(a, b, c, d)
+		};
 		Ok(Quat { a, b, c, d })
 	}
 }

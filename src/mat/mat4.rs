@@ -14,6 +14,7 @@ use super::*;
 /// but interpreted as column-major: each column is a transformed basis vector,
 /// and matrices are applied to column vectors via `mat * vec`.
 #[derive(Copy, Clone, Default, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]
 pub struct Mat4<T> {
 	pub a11: T, pub a12: T, pub a13: T, pub a14: T,

@@ -14,15 +14,15 @@ impl SvgWriter {
 	pub fn new(width: i32, height: i32) -> SvgWriter {
 		SvgWriter(format!(r#"<svg width="{}" height="{}" font-family="monospace" xmlns="http://www.w3.org/2000/svg">"#, width, height))
 	}
-	pub fn circle(&mut self, center: Point2<f32>, radius: f32) -> Attributes<&'static str> {
+	pub fn circle(&mut self, center: Point2<f32>, radius: f32) -> Attributes<'_, &'static str> {
 		self.0 += &format!(r#"<circle cx="{}" cy="{}" r="{}""#, center.x, center.y, radius);
 		Attributes { svg: &mut self.0, closing: " />" }
 	}
-	pub fn line(&mut self, start: Point2<f32>, end: Point2<f32>) -> Attributes<&'static str> {
+	pub fn line(&mut self, start: Point2<f32>, end: Point2<f32>) -> Attributes<'_, &'static str> {
 		self.0 += &format!(r#"<line x1="{}" y1="{}" x2="{}" y2="{}""#, start.x, start.y, end.x, end.y);
 		Attributes { svg: &mut self.0, closing: " />" }
 	}
-	pub fn arrow(&mut self, start: Point2<f32>, end: Point2<f32>, arrowsize: f32) -> Attributes<&'static str> {
+	pub fn arrow(&mut self, start: Point2<f32>, end: Point2<f32>, arrowsize: f32) -> Attributes<'_, &'static str> {
 		let unit = (end - start).resize(arrowsize);
 		let p1 = end - unit + unit.cw() * 0.5;
 		let p2 = end - unit + unit.ccw() * 0.5;
@@ -30,12 +30,12 @@ impl SvgWriter {
 			start.x, start.y, end.x, end.y, p1.x, p1.y, end.x, end.y, p2.x, p2.y);
 		Attributes { svg: &mut self.0, closing: " />" }
 	}
-	pub fn arc(&mut self, start: Point2<f32>, end: Point2<f32>, radius: f32) -> Attributes<&'static str> {
+	pub fn arc(&mut self, start: Point2<f32>, end: Point2<f32>, radius: f32) -> Attributes<'_, &'static str> {
 		self.0 += &format!(r#"<path fill="none" d="M{} {} A{} {} 0 0 1 {} {}""#,
 			start.x, start.y, radius, radius, end.x, end.y);
 		Attributes { svg: &mut self.0, closing: " />" }
 	}
-	pub fn text(&mut self, p: Point2<f32>, text: &str) -> Attributes<String> {
+	pub fn text(&mut self, p: Point2<f32>, text: &str) -> Attributes<'_, String> {
 		self.0 += &format!(r#"<text x="{}" y="{}""#, p.x, p.y);
 		Attributes { svg: &mut self.0, closing: format!(">{}</text>", text) }
 	}

@@ -1611,31 +1611,48 @@ specialized_type!(Vec4, Vec4i, i32, x, y, z, w);
 #[cfg(feature = "serde")]
 impl<T: serde::Serialize> serde::Serialize for Vec2<T> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
-		let slice = <Vec2<T> as AsRef<[T; 2]>>::as_ref(self).as_slice();
-		serializer.collect_seq(slice)
+		use serde::ser::SerializeTupleStruct;
+		let mut state = serializer.serialize_tuple_struct("Vec2", 2)?;
+		state.serialize_field(&self.x)?;
+		state.serialize_field(&self.y)?;
+		state.end()
 	}
 }
 
 #[cfg(feature = "serde")]
 impl<T: serde::Serialize> serde::Serialize for Vec3<T> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
-		let slice = <Vec3<T> as AsRef<[T; 3]>>::as_ref(self).as_slice();
-		serializer.collect_seq(slice)
+		use serde::ser::SerializeTupleStruct;
+		let mut state = serializer.serialize_tuple_struct("Vec3", 3)?;
+		state.serialize_field(&self.x)?;
+		state.serialize_field(&self.y)?;
+		state.serialize_field(&self.z)?;
+		state.end()
 	}
 }
 
 #[cfg(feature = "serde")]
 impl<T: serde::Serialize> serde::Serialize for Vec4<T> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
-		let slice = <Vec4<T> as AsRef<[T; 4]>>::as_ref(self).as_slice();
-		serializer.collect_seq(slice)
+		use serde::ser::SerializeTupleStruct;
+		let mut state = serializer.serialize_tuple_struct("Vec4", 4)?;
+		state.serialize_field(&self.x)?;
+		state.serialize_field(&self.y)?;
+		state.serialize_field(&self.z)?;
+		state.serialize_field(&self.w)?;
+		state.end()
 	}
 }
 
 #[cfg(feature = "serde")]
 impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Vec2<T> {
 	fn deserialize<D>(deserializer: D) -> Result<Vec2<T>, D::Error> where D: serde::Deserializer<'de> {
-		let [x, y] = <[T; 2]>::deserialize(deserializer)?;
+		let (x, y) = {
+			#[derive(serde::Deserialize)]
+			struct Vec2<T>(pub T, pub T);
+			let Vec2(x, y) = Vec2::<T>::deserialize(deserializer)?;
+			(x, y)
+		};
 		Ok(Vec2 { x, y })
 	}
 }
@@ -1643,7 +1660,12 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Vec2<T> {
 #[cfg(feature = "serde")]
 impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Vec3<T> {
 	fn deserialize<D>(deserializer: D) -> Result<Vec3<T>, D::Error> where D: serde::Deserializer<'de> {
-		let [x, y, z] = <[T; 3]>::deserialize(deserializer)?;
+		let (x, y, z) = {
+			#[derive(serde::Deserialize)]
+			struct Vec3<T>(pub T, pub T, pub T);
+			let Vec3(x, y, z) = Vec3::<T>::deserialize(deserializer)?;
+			(x, y, z)
+		};
 		Ok(Vec3 { x, y, z })
 	}
 }
@@ -1651,7 +1673,12 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Vec3<T> {
 #[cfg(feature = "serde")]
 impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Vec4<T> {
 	fn deserialize<D>(deserializer: D) -> Result<Vec4<T>, D::Error> where D: serde::Deserializer<'de> {
-		let [x, y, z, w] = <[T; 4]>::deserialize(deserializer)?;
+		let (x, y, z, w) = {
+			#[derive(serde::Deserialize)]
+			struct Vec4<T>(pub T, pub T, pub T, pub T);
+			let Vec4(x, y, z, w) = Vec4::<T>::deserialize(deserializer)?;
+			(x, y, z, w)
+		};
 		Ok(Vec4 { x, y, z, w })
 	}
 }
