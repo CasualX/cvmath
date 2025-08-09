@@ -1,0 +1,85 @@
+Scene(
+	settings: Settings(
+		width: 1600,
+		height: 1200,
+		rayon: true,
+		fov_y: 90.0,
+		origin: Vec3(0.0, 1.5, 0.0),
+		target: Vec3(0.0, 1.5, -1.0),
+		ref_up: Vec3(0.0, 1.0, 0.0),
+		dof: true,
+		aa: true,
+		aa_samples: 256,
+		max_bounces: 6,
+		ambient_light: 0.1,
+	),
+	materials: {
+		"ground": Material(
+			texture: Color(Vec3(0.6, 0.6, 0.6)),
+			reflectivity: 0.3,
+			hardness: 1.0,
+			diffuse_factor: 1.0,
+			specular_factor: 0.0,
+			roughness: 0.0,
+		),
+		"sphere1": Material(
+			texture: Color(Vec3(1.0, 0.2, 0.2)),
+			reflectivity: 0.5,
+			hardness: 1.0,
+			diffuse_factor: 1.0,
+			specular_factor: 0.0,
+			roughness: 0.0,
+		),
+		"sphere2": Material(
+			texture: Color(Vec3(0.2, 0.2, 1.0)),
+			reflectivity: 0.8,
+			hardness: 1.0,
+			diffuse_factor: 1.0,
+			specular_factor: 0.0,
+			roughness: 0.0,
+		),
+		"dark": Material(
+			texture: Color(Vec3(1.0, 1.0, 0.2)),
+			reflectivity: 0.0,
+			hardness: 1.0,
+			diffuse_factor: 1.0,
+			specular_factor: 0.0,
+			roughness: 0.0,
+		),
+	},
+	objects: [
+		Object(
+			shape: Plane(Plane3(
+				normal: Vec3(0.0, 1.0, 0.0),
+				distance: 0.0,
+			)),
+			material: "ground",
+		),
+		Object(
+			shape: Sphere(Sphere(
+				center: Vec3(-1.5, 1.0, -5.0),
+				radius: 1.0,
+			)),
+			material: "sphere1",
+		),
+		Object(
+			shape: Sphere(Sphere(
+				center: Vec3(1.5, 2.0, -4.0),
+				radius: 1.5,
+			)),
+			material: "sphere2",
+		),
+		Object(
+			shape: Bounds(Bounds3(
+				mins: Vec3(1.8, 0.0, -1.5),
+				maxs: Vec3(3.8, 2.0, 0.5),
+			)),
+			material: "dark",
+		),
+	],
+	light: Light(
+		pos: Vec3(5.0, 5.0, -2.0),
+		color: Vec3(1.0, 1.0, 1.0),
+		radius: 0.0,
+	),
+)

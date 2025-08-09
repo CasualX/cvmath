@@ -2,47 +2,45 @@ use std::sync::mpsc;
 use cvmath::*;
 use rayon::prelude::*;
 
-
-// Image setup
-const WIDTH: i32 = 1920 / 2;
-const HEIGHT: i32 = 1080 / 2;
-
-// Camera setup
-const ORIGIN: Point3<f32> = Point3(0.0, 1.25, -4.0);
-const TARGET: Point3<f32> = Point3(0.0, 1.0, 0.0);
-const REF_UP: Vec3<f32> = Vec3(0.0, 1.0, 0.0);
-const FOV_Y: f32 = 40.0;
-
-// Quality setup
-const DOF: bool = true; // Enable depth-of-field
-const AA: bool = true; // Enable anti-aliasing
-const AA_SAMPLES: usize = 2048; // Number of anti-aliasing samples per pixel
-const MAX_BOUNCES: u32 = 6; // Maximum reflection bounce depth
-
-// Light setup
-const LIGHT: Light = Light {
-	pos: Point3(0.0, 100.0, 0.0),
-	color: Vec3(1.0, 1.0, 1.0),
-	radius: 5.0,
-};
+pub mod scenes;
 
 
-#[derive(Copy, Clone, Debug)]
-enum Texture {
+// A small fudge factor to avoid self-intersection issues in ray tracing
+const RAY_EPSILON: f32 = 0.001;
+
+#[derive(Clone, Debug)]
+pub struct Settings {
+	pub width: i32,
+	pub height: i32,
+	pub rayon: bool,
+	pub fov_y: Angle<f32>,
+	pub origin: Vec3<f32>,
+	pub target: Vec3<f32>,
+	pub ref_up: Vec3<f32>,
+	pub dof: bool,
+	pub aa: bool,
+	pub aa_samples: usize,
+	pub max_bounces: u32,
+	pub ambient_light: f32,
+}
+
+
+#[derive(Clone, Debug)]
+pub enum Texture {
 	None,
 	Color(Vec3<f32>),
 	Ground,
 	Sky,
 }
 impl Texture {
-	fn sample(&self, ray: &Ray3<f32>) -> Vec3<f32> {
+	pub fn sample(&self, ray: &Ray3<f32>) -> Vec3<f32> {
 		match self {
 			Texture::None => Vec3::ZERO,
 			&Texture::Color(color) => color,
 			Texture::Ground => {
 				let distance = -ray.origin.y / ray.direction.y;
 				let i = ray.at(distance).map(f32::floor).hadd() as i32;
-				if i % 2 == 0 {
+				if i % 2 != 0 {
 					Vec3::new(1.0, 0.0, 0.0) // Red
 				}
 				else {
@@ -57,15 +55,15 @@ impl Texture {
 	}
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 #[allow(dead_code)]
-struct Material {
-	texture: Texture,
-	reflectivity: f32,
-	hardness: f32,
-	diffuse_f: f32,
-	specular_f: f32,
-	roughness: f32,
+pub struct Material {
+	pub texture: Texture,
+	pub reflectivity: f32,
+	pub hardness: f32,
+	pub diffuse_factor: f32,
+	pub specular_factor: f32,
+	pub roughness: f32,
 }
 impl Default for Material {
 	fn default() -> Self {
@@ -73,30 +71,31 @@ impl Default for Material {
 			texture: Texture::Color(Vec3::ONE),
 			reflectivity: 1.0,
 			hardness: 1.0,
-			diffuse_f: 1.0,
-			specular_f: 1.0,
+			diffuse_factor: 1.0,
+			specular_factor: 1.0,
 			roughness: 0.0,
 		}
 	}
 }
 
-#[derive(Copy, Clone, Debug)]
-struct Object {
-	shape: Shape3<f32>,
-	material: Material,
+#[derive(Clone, Debug)]
+pub struct Object {
+	pub shape: Shape3<f32>,
+	pub material: u32,
 }
 
 #[derive(Copy, Clone, Debug)]
-struct Light {
-	pos: Point3<f32>,
-	color: Vec3<f32>,
-	radius: f32,
+pub struct Light {
+	pub pos: Point3<f32>,
+	pub color: Vec3<f32>,
+	pub radius: f32,
 }
 
 #[derive(Clone, Debug)]
-struct Scene {
-	objects: Vec<Object>,
-	light: Light,
+pub struct Scene {
+	pub materials: Vec<Material>,
+	pub objects: Vec<Object>,
+	pub light: Light,
 }
 impl Trace3<f32> for Scene {
 	fn inside(&self, pt: Point3<f32>) -> bool {
@@ -109,13 +108,13 @@ impl Trace3<f32> for Scene {
 }
 
 #[derive(Clone, Debug)]
-struct Image {
-	pixels: Vec<u8>,
-	width: i32,
-	height: i32,
+pub struct Image {
+	pub pixels: Vec<u8>,
+	pub width: i32,
+	pub height: i32,
 }
 impl Image {
-	fn new(width: i32, height: i32) -> Image {
+	pub fn new(width: i32, height: i32) -> Image {
 		let size = (width * height * 3) as usize;
 		Image {
 			pixels: vec![0; size],
@@ -123,7 +122,7 @@ impl Image {
 			height,
 		}
 	}
-	fn put(&mut self, x: i32, y: i32, color: Vec3<f32>) {
+	pub fn put(&mut self, x: i32, y: i32, color: Vec3<f32>) {
 		if x < 0 || x >= self.width || y < 0 || y >= self.height {
 			return;
 		}
@@ -151,57 +150,48 @@ const SKY_MATERIAL: Material = Material {
 	texture: Texture::Sky,
 	reflectivity: 0.0,
 	hardness: 0.0,
-	diffuse_f: 1.0,
-	specular_f: 0.0,
+	diffuse_factor: 1.0,
+	specular_factor: 0.0,
 	roughness: 0.0,
 };
 
-fn ray_setup(
-	image_width: i32,
-	image_height: i32,
-	x: i32,
-	y: i32,
-	fov_y: Angle<f32>,
-	origin: Vec3<f32>,
-	target: Vec3<f32>,
-	ref_up: Vec3<f32>,
-	jitter_x: f32,
-	jitter_y: f32,
-) -> Ray3<f32> {
-	let forward = (target - origin).norm();
-	let right = ref_up.cross(forward).norm();
+fn ray_setup(conf: &Settings, x: f32, y: f32) -> Ray3<f32> {
+	let forward = (conf.target - conf.origin).norm();
+	let right = forward.cross(conf.ref_up).norm();
 	let up = right.cross(forward).norm();
 
-	let aspect_ratio = image_width as f32 / image_height as f32;
-	let viewport_height = 2.0 * (fov_y * 0.5).tan();
+	let aspect_ratio = conf.width as f32 / conf.height as f32;
+	let viewport_height = 2.0 * (conf.fov_y * 0.5).tan();
 	let viewport_width = aspect_ratio * viewport_height;
 
-	// Subpixel jitter
-	let u = (x as f32 + 0.5 + jitter_x) / image_width as f32;
-	let v = (y as f32 + 0.5 + jitter_y) / image_height as f32;
+	let u = (x + 0.5) / conf.width as f32;
+	let v = (y + 0.5) / conf.height as f32;
 
 	let px = (u - 0.5) * viewport_width;
-	let py = (v - 0.5) * viewport_height;
+	let py = (0.5 - v) * viewport_height;
 
+	let origin = conf.origin;
 	let direction = (forward + right * px + up * py).norm();
 
 	Ray3 { origin, direction, distance: f32::INFINITY }
 }
 
-fn trace_ray(image_width: i32, image_height: i32, scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
+fn trace_ray(conf: &Settings, scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
 	let mut rng = urandom::new();
 
 	let mut aa_color = Vec3f::ZERO;
-	for _ in 0..if AA { AA_SAMPLES } else { 1 } {
-		// Jitter for anti-aliasing
-		let jitter_x: f32 = if AA { rng.range(-0.5..0.5) } else { 0.0 };
-		let jitter_y: f32 = if AA { rng.range(-0.5..0.5) } else { 0.0 };
+	for _ in 0..if conf.aa { conf.aa_samples } else { 1 } {
+		// Anti-aliasing jitter
+		let jx: f32 = if conf.aa { rng.range(-0.5..0.5) } else { 0.0 };
+		let jy: f32 = if conf.aa { rng.range(-0.5..0.5) } else { 0.0 };
+		let x = x as f32 + jx;
+		let y = y as f32 + jy;
 
 		// Compute the ray setup
-		let mut ray = ray_setup(image_width, image_height, x, y, Angle::deg(FOV_Y), ORIGIN, TARGET, REF_UP, jitter_x, jitter_y);
+		let mut ray = ray_setup(conf, x, y);
 
 		// Depth-of-field
-		if DOF {
+		if conf.dof {
 			let sensor_shift = Vec3(rng.range(-0.05..0.05), rng.range(-0.05..0.05), 0.0);
 			ray.origin += sensor_shift;
 			ray.direction = (ray.direction - sensor_shift * (1.0 / 4.0)).norm();
@@ -210,39 +200,43 @@ fn trace_ray(image_width: i32, image_height: i32, scene: &Scene, x: i32, y: i32)
 		let mut final_color = Vec3::new(0.0, 0.0, 0.0);
 		let mut ray_energy_left = 1.0;
 
-		for _ in 0..MAX_BOUNCES {
-			let material;
-			let mut color;
+		for _ in 0..conf.max_bounces {
+			let (material, color);
 
 			if let Some(hit) = ray.trace(scene) {
 				let index = hit.index;
-				material = scene.objects[index].material;
-				color = material.texture.sample(&ray);
-
-				// Reflect the ray
-				ray.origin = ray.at(hit.distance) + hit.normal * f32::EPSILON;
-				ray.direction = (-ray.direction).reflect(hit.normal);
+				let material_index = scene.objects[index].material as usize;
+				material = &scene.materials[material_index];
+				let mtl_color = material.texture.sample(&ray);
+				let hit_point = ray.at(hit.distance);
 
 				// Check if the hit point is lit by the light source
-				let light_at = if AA { scene.light.pos + Vec3::from([(); 3].map(|_| rng.range(-scene.light.radius..scene.light.radius))) } else { scene.light.pos };
-				let is_lit = Ray3(ray.origin, (light_at - ray.origin).norm(), f32::INFINITY).trace(scene).is_none();
+				let light = &scene.light;
+				let light_at = light.pos + Vec3::from([(); 3].map(|_| rng.range(-light.radius..light.radius)));
+				let light_dir = (light_at - hit_point).norm();
+				let is_lit = Ray3(hit_point, light_dir, f32::INFINITY).step(RAY_EPSILON).trace(scene).is_none();
 
-				// Calculate lighting
-				let ambient_light = 0.3;
 				if is_lit {
-					let diffuse_light = hit.normal.dot((light_at - ray.origin).norm()).max(0.0);
-					let specular_factor = (light_at - ray.origin).norm().dot(ray.direction);
+					// Blinn-Phong specular lighting model
+					let ndotl = hit.normal.dot(light_dir).max(0.0);
+					let half_vec = (light_dir - ray.direction).norm();
+					let spec_angle = hit.normal.dot(half_vec).max(0.0);
+					let specular = spec_angle.powf(material.hardness) * material.specular_factor;
+
 					color =
-						color * ambient_light +
-						color * diffuse_light * material.diffuse_f +
-						scene.light.color * specular_factor.powf(material.hardness) * material.specular_f;
+						mtl_color * conf.ambient_light +
+						mtl_color * ndotl * material.diffuse_factor +
+						light.color * specular;
 				}
 				else {
-					color = color * ambient_light;
+					color = mtl_color * conf.ambient_light;
 				}
+
+				// Reflect the ray for the next bounce
+				ray = Ray3(hit_point, (-ray.direction).reflect(hit.normal), f32::INFINITY).step(RAY_EPSILON);
 			}
 			else {
-				material = SKY_MATERIAL;
+				material = &SKY_MATERIAL;
 				color = material.texture.sample(&ray);
 			}
 
@@ -257,31 +251,30 @@ fn trace_ray(image_width: i32, image_height: i32, scene: &Scene, x: i32, y: i32)
 		aa_color += final_color;
 	}
 
-	if AA {
-		aa_color * (1.0 / AA_SAMPLES as f32)
+	if conf.aa {
+		aa_color * (1.0 / conf.aa_samples as f32)
 	}
 	else {
 		aa_color
 	}
 }
 
-// fn scene_render(image: &mut Image, scene: &Scene) {
-// 	for y in 0..image.height {
-// 		for x in 0..image.width {
-// 			let color = trace_ray(image.width, image.height, scene, x, y);
-// 			image.put(x, y, color);
-// 		}
-// 	}
-// }
+fn scene_render_slow(conf: Settings, scene: Scene) -> Image {
+	let mut image = Image::new(conf.width, conf.height);
+	for y in 0..image.height {
+		for x in 0..image.width {
+			let color = trace_ray(&conf, &scene, x, y);
+			image.put(x, y, color);
+		}
+	}
+	return image;
+}
 
-fn scene_render(image: &mut Image, scene: &Scene) {
+fn scene_render_fast(conf: Settings, scene: Scene) -> Image {
 	let (sender, receiver) = mpsc::channel();
 
-	let width = image.width;
-	let height = image.height;
-
-	// Required for rayon::spawn_fifo
-	let scene = scene.clone();
+	let width = conf.width;
+	let height = conf.height;
 
 	// Spawn parallel producer using rayon
 	rayon::spawn_fifo(move || {
@@ -290,16 +283,18 @@ fn scene_render(image: &mut Image, scene: &Scene) {
 			.for_each_with(sender, |sender, index| {
 				let x = index % width;
 				let y = index / width;
-				let color = trace_ray(width, height, &scene, x, y);
+				let color = trace_ray(&conf, &scene, x, y);
 				sender.send((x, y, color)).unwrap();
 			});
 	});
 
 	// Main thread receives and writes to image buffer
+	let mut image = Image::new(width, height);
 	for _ in 0..(width * height) {
 		let (x, y, color) = receiver.recv().unwrap();
 		image.put(x, y, color);
 	}
+	return image;
 }
 
 fn scene_save(path: &str, image: &Image) -> std::io::Result<()> {
@@ -317,140 +312,13 @@ fn scene_save(path: &str, image: &Image) -> std::io::Result<()> {
 	Ok(())
 }
 
-fn scene_create() -> Scene {
-	Scene {
-		objects: vec![
-			// Object {
-			// 	shape: Shape3::Triangle(Triangle::points(Vec3(-1.0, 0.0, 0.0), Vec3(1.0, 0.0, 0.0), Vec3(0.0, 1.73, 0.0))),
-			// 	material: Material { color: |_| Vec3(0.0, 0.0, 1.0), reflectivity: 0.5, ..Default::default() },
-			// },
-			// Object {
-			// 	shape: Shape3::Triangle(Triangle::points(Vec3(2.0, 0.0, 2.0), Vec3(1.0, 1.73, 2.0), Vec3(0.0, 0.0, 2.0))),
-			// 	material: Material { color: |_| Vec3(0.0, 1.0, 0.0), reflectivity: 0.5, ..Default::default() },
-			// },
-			// Object {
-			// 	shape: Shape3::Triangle(Triangle::points(Vec3(-0.25, 0.75, -1.0), Vec3(0.75, 0.75, -1.0), Vec3(0.25, 2.0, -1.0))),
-			// 	material: Material { color: |_| Vec3(1.0, 0.0, 0.0), reflectivity: 0.5, ..Default::default() },
-			// },
-
-			// Object {
-			// 	shape: Shape3::Triangle(Triangle::points(Vec3(-2.0, 0.0, -1.0), Vec3(2.0, 0.0, -1.0), Vec3(0.0, 3.0, -1.1))),
-			// 	material: Material { color: |_| Vec3(0.0, 0.0, 1.0), reflectivity: 0.5, ..Default::default() },
-			// },
-			// Object {
-			// 	shape: Shape3::Triangle(Triangle::points(Vec3(2.0, 0.0, -5.0), Vec3(-2.0, 0.0, -5.0), Vec3(0.0, 3.0, -4.9))),
-			// 	material: Material { color: |_| Vec3(0.0, 1.0, 0.0), reflectivity: 0.5, ..Default::default() },
-			// },
-
-			Object {
-				shape: Shape3::Plane(Plane3(Vec3::Y, 0.0)),
-				material: Material {
-					texture: Texture::Ground,
-					reflectivity: 0.0,
-					diffuse_f: 0.8,
-					specular_f: 0.0,
-					roughness: 0.0,
-					..Default::default()
-				},
-			},
-
-			Object {
-				shape: Shape3::Sphere(Sphere(Vec3(1.0, 2.0, 3.0), 0.5)),
-				material: Material {
-					texture: Texture::None,
-					reflectivity: 0.95,
-					diffuse_f: 0.0,
-					roughness: 0.75,
-					..Default::default()
-				},
-			},
-			Object {
-				shape: Shape3::Sphere(Sphere(Vec3(-1.25, 0.8, 0.0), 0.25)),
-				material: Material {
-					texture: Texture::Color(Vec3f(255.0, 165.0, 0.0) / 255.0),
-					reflectivity: 0.05,
-					diffuse_f: 0.9,
-					specular_f: 1.0,
-					hardness: 99.0,
-					..Default::default()
-				},
-			},
-
-			// Octahedron — Bottom half
-			Object {
-				shape: Shape3::Triangle(Triangle3::points(
-					Vec3(0.0, 0.0, 0.0),
-					Vec3(0.0, 1.0, 1.0),
-					Vec3(-1.0, 1.0, 0.0),
-				)),
-				material: Material { diffuse_f: 0.0, ..Material::default() },
-			},
-			Object {
-				shape: Shape3::Triangle(Triangle3::points(
-					Vec3(0.0, 0.0, 0.0),
-					Vec3(-1.0, 1.0, 0.0),
-					Vec3(0.0, 1.0, -1.0),
-				)),
-				material: Material { diffuse_f: 0.0, ..Material::default() },
-			},
-			Object {
-				shape: Shape3::Triangle(Triangle3::points(
-					Vec3(0.0, 0.0, 0.0),
-					Vec3(0.0, 1.0, -1.0),
-					Vec3(1.0, 1.0, 0.0),
-				)),
-				material: Material { diffuse_f: 0.0, ..Material::default() },
-			},
-			Object {
-				shape: Shape3::Triangle(Triangle3::points(
-					Vec3(0.0, 0.0, 0.0),
-					Vec3(1.0, 1.0, 0.0),
-					Vec3(0.0, 1.0, 1.0),
-				)),
-				material: Material { diffuse_f: 0.0, ..Material::default() },
-			},
-
-			// Octahedron — Top half
-			Object {
-				shape: Shape3::Triangle(Triangle3::points(
-					Vec3(0.0, 2.0, 0.0),
-					Vec3(-1.0, 1.0, 0.0),
-					Vec3(0.0, 1.0, 1.0),
-				)),
-				material: Material { diffuse_f: 0.0, ..Material::default() },
-			},
-			Object {
-				shape: Shape3::Triangle(Triangle3::points(
-					Vec3(0.0, 2.0, 0.0),
-					Vec3(0.0, 1.0, 1.0),
-					Vec3(1.0, 1.0, 0.0),
-				)),
-				material: Material { diffuse_f: 0.0, ..Material::default() },
-			},
-			Object {
-				shape: Shape3::Triangle(Triangle3::points(
-					Vec3(0.0, 2.0, 0.0),
-					Vec3(1.0, 1.0, 0.0),
-					Vec3(0.0, 1.0, -1.0),
-				)),
-				material: Material { diffuse_f: 0.0, ..Material::default() },
-			},
-			Object {
-				shape: Shape3::Triangle(Triangle3::points(
-					Vec3(0.0, 2.0, 0.0),
-					Vec3(0.0, 1.0, -1.0),
-					Vec3(-1.0, 1.0, 0.0),
-				)),
-				material: Material { diffuse_f: 0.0, ..Material::default() },
-			},
-		],
-		light: LIGHT,
-	}
-}
-
 fn main() {
-	let mut image = Image::new(WIDTH, HEIGHT);
-	let scene = scene_create();
-	scene_render(&mut image, &scene);
+	let (conf, scene) = scenes::raytracing();
+	let image = if conf.rayon {
+		scene_render_fast(conf, scene)
+	}
+	else {
+		scene_render_slow(conf, scene)
+	};
 	scene_save("raytracing.ppm", &image).expect("Failed to save image");
 }
