@@ -1,0 +1,43 @@
+Scene(
+	materials: {
+		"ground": Material(
+			texture: Ground,
+			reflectivity: 0.0,
+			diffuse_factor: 0.8,
+			specular_factor: 0.0,
+			roughness: 0.0,
+		),
+		"sphere1": Material(
+			texture: None,
+			reflectivity: 0.95,
+			diffuse_factor: 0.0,
+			roughness: 0.75,
+		),
+		"sphere2": Material(
+			texture: Color(Vec3(255.0, 165.0, 0.0)),
+			reflectivity: 0.05,
+			diffuse_factor: 0.9,
+			specular_factor: 1.0,
+			hardness: 99.0,
+		),
+	},
+	objects: [
+		Object(
+			shape: Plane(Vec3(0.0, 1.0, 0.0), 0.0),
+			material: "ground",
+		),
+		Object(
+			shape: Sphere(Vec3(-1.0, 2.0, 3.0), 0.5),
+			material: "sphere1",
+		),
+		Object(
+			shape: Sphere(Vec3(1.25, 0.8, 0.0), 0.25),
+			material: "sphere2",
+		),
+	],
+	light: Light(
+		pos: Vec3(0.0, 100.0, 0.0),
+		color: Vec3(1.0, 1.0, 1.0),
+		radius: 5.0,
+	),
+)
