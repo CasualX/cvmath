@@ -12,6 +12,7 @@ mod capsule;
 mod triangle;
 mod ray;
 mod shape;
+mod intersect;
 
 pub use self::point::Point3;
 pub use self::bounds::Bounds3;
