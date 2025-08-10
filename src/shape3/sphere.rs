@@ -57,7 +57,7 @@ impl<T: Float> Trace3<T> for Sphere<T> {
 		let r2 = self.radius * self.radius;
 		let t1c2 = r2 - d2;
 
-		if t1c2 < T::ZERO {
+		if !(t1c2 >= T::ZERO) {
 			return None;
 		}
 		let t1c = t1c2.sqrt();

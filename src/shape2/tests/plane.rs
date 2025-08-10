@@ -72,7 +72,7 @@ fn test_intersect_parallel() {
 }
 
 #[test]
-fn test_intersect_random() {
+fn test_intersect_random_planes() {
 	let mut rng = urandom::new();
 	let epsilon = f32::EPSILON as f64;
 
@@ -103,11 +103,41 @@ fn test_intersect_random() {
 		let intersection = plane1.intersect(plane2);
 		let p = intersection.expect("Planes should intersect");
 
-		// Verify intersection lies on both planes (within tolerance)
+		// Intersection should be on the planes
 		let dist1 = plane1.distance(p);
 		let dist2 = plane2.distance(p);
 
 		assert!(dist1.abs() < epsilon, "Point {p} not on plane1 {plane1:?}: {dist1}");
 		assert!(dist2.abs() < epsilon, "Point {p} not on plane2 {plane2:?}: {dist2}");
+	}
+}
+
+#[test]
+fn test_trace_random_planes() {
+	let mut rng = urandom::new();
+	let epsilon = f32::EPSILON as f64;
+
+	for _ in 0..1000 {
+		// Random plane
+		let normal = Vec2(rng.next_f64(), rng.next_f64()).norm();
+		let distance: f64 = rng.next();
+		let plane = Plane2 { normal, distance };
+
+		// Trace away from the plane: start just outside the plane on the normal side
+		let origin = normal * (distance + rng.next_f64());
+		let direction = (normal + Vec2(rng.range(-0.5..0.5), rng.range(-0.5..0.5))).norm();
+		let mut ray = Ray2 { origin, direction, distance: f64::INFINITY };
+
+		// Should not hit
+		let hit = ray.trace(&plane);
+		assert!(hit.is_none(), "Ray should not hit the plane when moving away from it");
+
+		// Reverse direction should hit
+		ray.direction = -ray.direction;
+		let hit = ray.trace(&plane).expect("Ray should hit the plane when moving towards it");
+
+		// Hit point should be on the plane
+		let d = plane.distance(ray.at(hit.distance));
+		assert!(d.abs() < epsilon, "Hit point should be on the plane: {d}");
 	}
 }

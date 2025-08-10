@@ -29,15 +29,18 @@ impl<T> Triangle2<T> {
 }
 
 impl<T: Copy> Triangle2<T> {
-	/// Constructs a triangle from three points.
-	///
-	/// `p1` is the base point. The edges are computed as:
-	/// - `u = p2 - p1`
-	/// - `v = p3 - p1`
-	pub fn points(p1: Point2<T>, p2: Point2<T>, p3: Point2<T>) -> Triangle2<T> where T: ops::Sub<Output = T> {
-		let u = p2 - p1;
-		let v = p3 - p1;
-		Triangle2 { p: p1, u, v }
+	/// Constructs a triangle with positive area from three points.
+	#[inline]
+	pub fn points(p: Point2<T>, p2: Point2<T>, p3: Point2<T>) -> Triangle2<T> where T: Scalar {
+		let u = p2 - p;
+		let v = p3 - p;
+		Triangle2 { p, u, v }.norm()
+	}
+
+	/// Normalizes the triangle to have positive area.
+	#[inline]
+	pub fn norm(self) -> Triangle2<T> where T: Scalar {
+		if self.u.cross(self.v) >= T::ZERO { self } else { -self }
 	}
 
 	/// Returns the first point of the triangle.
@@ -66,20 +69,46 @@ impl<T: Copy> Triangle2<T> {
 
 		(p1 + p2 + p3) / three
 	}
+
+	/// Returns the signed area of the triangle.
+	#[inline]
+	pub fn area(&self) -> T where T: Scalar {
+		self.u.cross(self.v) / (T::ONE + T::ONE)
+	}
+}
+
+impl<T> ops::Neg for Triangle2<T> {
+	type Output = Triangle2<T>;
+
+	#[inline]
+	fn neg(self) -> Triangle2<T> {
+		Triangle2 { p: self.p, u: self.v, v: self.u }
+	}
+}
+
+impl<T: Scalar> Triangle2<T> {
+	/// Bounds of the triangle.
+	#[inline]
+	pub fn bounds(&self) -> Bounds2<T> {
+		let mins = self.p.min(self.p + self.u).min(self.p + self.v);
+		let maxs = self.p.max(self.p + self.u).max(self.p + self.v);
+		Bounds2 { mins, maxs }
+	}
 }
 
 impl<T: Float> Triangle2<T> {
 	/// Decomposes a point relative to the triangle's local basis.
 	///
-	/// Returns `(x, y)` such that: `q = p + x·u + y·v`,
+	/// Returns `(x, y)` such that: `q = p + x·u + y·v`.
+	///
+	/// If the triangle is degenerate (i.e., has zero area), the returned coordinates will contain infinite values.
 	#[inline]
 	pub fn decompose(&self, q: Point2<T>) -> Vec2<T> {
-		let u = self.u;
-		let v = self.v;
-		let p = self.p;
+		let w = q - self.p;
+		let area_inv = T::ONE / (self.u.cross(self.v));
 
-		let x = (q - p).dot(u) / u.dot(u);
-		let y = (q - p).dot(v) / v.dot(v);
+		let x = w.cross(self.v) * area_inv;
+		let y = self.u.cross(w) * area_inv;
 
 		Vec2(x, y)
 	}
@@ -87,15 +116,14 @@ impl<T: Float> Triangle2<T> {
 	/// Computes the barycentric coordinates of a point relative to the triangle.
 	///
 	/// `α`, `β`, and `γ` are the weights for vertices `p1`, `p2`, and `p3`, respectively, such that `project(q) = α·p1 + β·p2 + γ·p3`.
+	///
+	/// If the triangle is degenerate (i.e., has zero area), the returned coordinates will contain infinite values.
 	#[inline]
 	pub fn barycentric(&self, q: Point2<T>) -> Vec3<T> {
-		let area_inv = T::ONE / (self.u.cross(self.v));
+		let Vec2 { x: beta, y: gamma } = self.decompose(q);
+		let alpha = T::ONE - beta - gamma;
 
-		let a = (q - self.p).cross(self.v) * area_inv;
-		let b = self.u.cross(q - self.p) * area_inv;
-		let c = T::ONE - a - b;
-
-		Vec3(a, b, c)
+		Vec3(alpha, beta, gamma)
 	}
 }
 
@@ -103,11 +131,13 @@ impl<T: Float> Triangle2<T> {
 
 impl<T: Float> Trace2<T> for Triangle2<T> {
 	fn inside(&self, pt: Point2<T>) -> bool {
-		let a = (pt - self.p).cross(self.u);
-		let b = (pt - self.p).cross(self.v);
-		let c = self.u.cross(self.v);
+		let d = pt - self.p;
 
-		a >= T::ZERO && b >= T::ZERO && a + b <= c
+		let a = self.u.cross(d);
+		let b = (self.v - self.u).cross(d - self.u);
+		let c = (-self.v).cross(d - self.v);
+
+		a >= T::ZERO && b >= T::ZERO && c >= T::ZERO
 	}
 
 	fn trace(&self, ray: &Ray2<T>) -> Option<Hit2<T>> {

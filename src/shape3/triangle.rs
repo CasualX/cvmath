@@ -29,15 +29,17 @@ impl<T> Triangle3<T> {
 }
 
 impl<T: Copy> Triangle3<T> {
-	/// Constructs a triangle from three points.
-	///
-	/// `p1` is the base point. The edges are computed as:
-	/// - `u = p2 - p1`
-	/// - `v = p3 - p1`
-	pub fn points(p1: Point3<T>, p2: Point3<T>, p3: Point3<T>) -> Triangle3<T> where T: ops::Sub<Output = T>{
-		let u = p2 - p1;
-		let v = p3 - p1;
-		Triangle3 { p: p1, u, v }
+	/// Constructs a triangle with positive area from three points.
+	pub fn points(p: Point3<T>, p2: Point3<T>, p3: Point3<T>) -> Triangle3<T> where T: Scalar {
+		let u = p2 - p;
+		let v = p3 - p;
+		Triangle3 { p, u, v }.norm()
+	}
+
+	/// Normalizes the triangle to have positive area.
+	#[inline]
+	pub fn norm(self) -> Triangle3<T> where T: Scalar {
+		if self.u.cross(self.v).len_sqr() >= T::ZERO { self } else { -self }
 	}
 
 	/// Returns the first point of the triangle.
@@ -55,13 +57,39 @@ impl<T: Copy> Triangle3<T> {
 	pub fn p3(&self) -> Point3<T> where T: ops::Add<T, Output = T> {
 		self.p + self.v
 	}
+
+	/// Returns the centroid of the triangle.
+	#[inline]
+	pub fn centroid(&self) -> Point3<T> where T: Scalar {
+		let p1 = self.p;
+		let p2 = self.p + self.u;
+		let p3 = self.p + self.v;
+		let three = T::ONE + T::ONE + T::ONE;
+
+		(p1 + p2 + p3) / three
+	}
+
+	/// Returns the signed area of the triangle.
+	#[inline]
+	pub fn area(&self) -> T where T: Float {
+		self.u.cross(self.v).len() / (T::ONE + T::ONE)
+	}
+}
+
+impl<T> ops::Neg for Triangle3<T> {
+	type Output = Triangle3<T>;
+
+	#[inline]
+	fn neg(self) -> Triangle3<T> {
+		Triangle3 { p: self.p, u: self.v, v: self.u }
+	}
 }
 
 impl<T: Float> Triangle3<T> {
 	/// Returns the plane defined by the triangle.
 	#[inline]
 	pub fn plane(&self) -> Plane3<T> {
-		let normal = self.normal();
+		let normal = -self.normal();
 		let distance = -normal.dot(self.p);
 		Plane3 { normal, distance }
 	}

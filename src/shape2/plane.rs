@@ -60,8 +60,7 @@ impl<T: Float> Plane2<T> {
 	/// Projects the point onto the line.
 	#[inline]
 	pub fn project(self, pt: Point2<T>) -> Point2<T> {
-		let dist = self.distance(pt);
-		pt - self.normal * dist
+		pt - self.normal * self.distance(pt)
 	}
 
 	/// Signed distance to the point.
@@ -97,7 +96,7 @@ impl<T: Float> Plane2<T> {
 	/// Returns none if the planes are parallel.
 	#[inline]
 	pub fn intersect(self, rhs: Plane2<T>) -> Option<Point2<T>> {
-		let det = self.normal.x * rhs.normal.y - self.normal.y * rhs.normal.x;
+		let det = self.normal.cross(rhs.normal);
 		if det == T::ZERO {
 			return None;
 		}
@@ -120,6 +119,7 @@ impl<T: Float> Plane2<T> {
 //----------------------------------------------------------------
 
 impl<T: Float> Trace2<T> for Plane2<T> {
+	#[inline]
 	fn inside(&self, pt: Point2<T>) -> bool {
 		self.normal.dot(pt) <= -self.distance
 	}

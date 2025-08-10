@@ -39,6 +39,16 @@ impl<T: Scalar> Circle<T> {
 			radius: self.radius + (target.radius - self.radius) * t,
 		}
 	}
+
+	/// Bounds of the circle.
+	#[inline]
+	pub fn bounds(&self) -> Bounds2<T> {
+		let half = Vec2::dup(self.radius);
+		Bounds2 {
+			mins: self.center - half,
+			maxs: self.center + half,
+		}
+	}
 }
 
 //----------------------------------------------------------------
@@ -46,7 +56,7 @@ impl<T: Scalar> Circle<T> {
 impl<T: Float> Trace2<T> for Circle<T> {
 	#[inline]
 	fn inside(&self, pt: Point2<T>) -> bool {
-		pt.distance_sqr(self.center) < self.radius * self.radius
+		self.center.distance_sqr(pt) < self.radius * self.radius
 	}
 
 	fn trace(&self, ray: &Ray2<T>) -> Option<Hit2<T>> {

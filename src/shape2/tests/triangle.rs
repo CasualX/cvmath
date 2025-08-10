@@ -36,7 +36,7 @@ fn test_trace_triangle_vertices() {
 }
 
 #[test]
-fn test_trace_triangle_random_inside() {
+fn test_trace_random_triangles() {
 	let tri = Triangle2(Point2(0.0, 0.0), Point2(1.0, 0.0), Point2(0.0, 1.0));
 	let mut rng = urandom::new();
 
@@ -51,8 +51,36 @@ fn test_trace_triangle_random_inside() {
 		);
 		let origin = Point2(-2.0, -2.0);
 		let (direction, distance) = (target - origin).norm_len();
-		let ray = Ray2::new(origin, direction, distance + 0.1);
 
-		assert!(tri.trace(&ray).is_some(), "Ray from {origin:?} to {target:?} should hit triangle");
+		let mut ray = Ray2::new(origin, direction, distance + 0.1);
+		assert!(tri.trace(&ray).is_some(), "{ray:?} to {target:?} should hit triangle");
+
+		ray.direction = -ray.direction;
+		assert!(tri.trace(&ray).is_none(), "{ray:?} away from triangle should miss");
+	}
+}
+
+#[test]
+fn test_random_points_inside() {
+	use urandom::Distribution;
+	let mut rng = urandom::new();
+	let distr = urandom::distr::Uniform::from(-10.0..10.0).map(|x| x.round());
+
+	for _ in 0..1000 {
+		let p1 = Point2(rng.sample(&distr), rng.sample(&distr));
+		let p2 = Point2(rng.sample(&distr), rng.sample(&distr));
+		let p3 = Point2(rng.sample(&distr), rng.sample(&distr));
+		let tri = Triangle2::points(p1, p2, p3);
+
+		// Skip degenerate triangles
+		if tri.area() < 1e-4 {
+			continue;
+		}
+
+		let point = Point2(rng.sample(&distr), rng.sample(&distr));
+
+		let Vec2 { x, y } = tri.decompose(point);
+		let inside = x >= 0.0 && y >= 0.0 && (x + y) <= 1.0;
+		assert_eq!(inside, tri.inside(point), "Expected {point:?} inside {tri:?}");
 	}
 }

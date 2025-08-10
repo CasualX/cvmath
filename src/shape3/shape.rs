@@ -12,9 +12,8 @@ pub enum Shape3<T> {
 	Triangle(Triangle3<T>),
 }
 
-impl<T: Float> Shape3<T> {
-	#[inline]
-	pub fn inside(&self, pt: Point3<T>) -> bool {
+impl<T: Float> Trace3<T> for Shape3<T> {
+	fn inside(&self, pt: Point3<T>) -> bool {
 		match self {
 			Shape3::Point(point) => point.inside(pt),
 			Shape3::Bounds(bounds) => bounds.inside(pt),
@@ -24,15 +23,7 @@ impl<T: Float> Shape3<T> {
 			Shape3::Triangle(triangle) => triangle.inside(pt),
 		}
 	}
-}
 
-impl<T: Float> Trace3<T> for Shape3<T> {
-	#[inline]
-	fn inside(&self, pt: Point3<T>) -> bool {
-		self.inside(pt)
-	}
-
-	#[inline]
 	fn trace(&self, ray: &Ray3<T>) -> Option<Hit3<T>> {
 		match self {
 			Shape3::Point(point) => point.trace(ray),

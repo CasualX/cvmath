@@ -31,7 +31,7 @@ impl<T> Plane3<T> {
 	/// Constructs a new plane from a normal and a point.
 	#[inline]
 	pub fn point(normal: Vec3<T>, pt: Point3<T>) -> Plane3<T> where T: Float {
-		let distance = -normal.dot(pt);
+		let distance = normal.dot(pt);
 		Plane3 { normal, distance }
 	}
 
@@ -41,7 +41,7 @@ impl<T> Plane3<T> {
 	#[inline]
 	pub fn triangle(pt1: Point3<T>, pt2: Point3<T>, pt3: Point3<T>) -> Plane3<T> where T: Float {
 		let normal = (pt2 - pt1).cross(pt3 - pt1).norm();
-		let distance = -normal.dot(pt1);
+		let distance = normal.dot(pt1);
 		Plane3 { normal, distance }
 	}
 }
@@ -59,6 +59,22 @@ impl<T: ops::Neg> ops::Neg for Plane3<T> {
 }
 
 impl<T: Float> Plane3<T> {
+	/// Returns the signed distance from the plane to a point.
+	///
+	/// Positive means "inside" (in the direction the normal points).
+	///
+	/// ```
+	/// use cvmath::{Plane3, Point3, Vec3};
+	///
+	/// let plane = Plane3(Vec3(0.0, 0.0, 1.0), 0.0);
+	/// let pt = Point3(20.0, 10.0, 4.0);
+	/// assert_eq!(plane.distance(pt), 4.0);
+	/// ```
+	#[inline]
+	pub fn distance(&self, pt: Point3<T>) -> T {
+		self.normal.dot(pt) + self.distance
+	}
+
 	/// Returns the projection of a point onto the plane.
 	///
 	/// ```
@@ -72,27 +88,14 @@ impl<T: Float> Plane3<T> {
 	pub fn project(&self, pt: Point3<T>) -> Point3<T> {
 		pt - self.normal * self.distance(pt)
 	}
-
-	/// Returns the signed distance from the plane to a point.
-	///
-	/// ```
-	/// use cvmath::{Plane3, Point3, Vec3};
-	///
-	/// let plane = Plane3(Vec3(0.0, 0.0, 1.0), 0.0);
-	/// let pt = Point3(20.0, 10.0, 4.0);
-	/// assert_eq!(plane.distance(pt), 4.0);
-	/// ```
-	#[inline]
-	pub fn distance(&self, pt: Point3<T>) -> T {
-		self.normal.dot(pt) + self.distance
-	}
 }
 
 //----------------------------------------------------------------
 
 impl<T: Float> Trace3<T> for Plane3<T> {
+	#[inline]
 	fn inside(&self, pt: Point3<T>) -> bool {
-		self.distance(pt) <= T::ZERO
+		self.distance(pt) >= T::ZERO
 	}
 
 	fn trace(&self, ray: &Ray3<T>) -> Option<Hit3<T>> {
@@ -101,7 +104,7 @@ impl<T: Float> Trace3<T> for Plane3<T> {
 			return None;
 		}
 
-		let distance = -self.normal.dot(ray.origin) / denom;
+		let distance = -self.distance(ray.origin) / denom;
 		if !(distance > T::EPSILON && distance <= ray.distance) {
 			return None;
 		}

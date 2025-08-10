@@ -44,14 +44,23 @@ impl<T> Line2<T> {
 	}
 }
 
+impl<T: Scalar> Line2<T> {
+	/// Bounds of the line.
+	#[inline]
+	pub fn bounds(&self) -> Bounds2<T> {
+		let (mins, maxs) = self.start.min_max(self.end);
+		Bounds2 { mins, maxs }
+	}
+}
+
 impl<T: Float> Line2<T> {
-	/// Projects the point onto the line.
+	/// Projects the point onto the line segment.
 	#[inline]
 	pub fn project(self, pt: Point2<T>) -> Point2<T> {
-		self.start + (pt - self.start).project(self.end - self.start)
+		self.start + (pt - self.start).project_sat(self.end - self.start)
 	}
 
-	/// Point to line distance.
+	/// Point to line segment distance.
 	#[inline]
 	pub fn distance(self, pt: Point2<T>) -> T {
 		self.project(pt).distance(pt)
@@ -100,12 +109,12 @@ impl<T: Float> Line2<T> {
 	/// let line1 = Line2(Point2(1.0, 1.0), Point2(2.0, 2.0));
 	/// let line2 = Line2(Point2(-1.0, 1.0), Point2(1.0, -1.0));
 	///
-	/// let result = Line2::intersect_pt(line1, line2);
+	/// let result = Line2::intersect(line1, line2);
 	///
 	/// assert_eq!(result, Some(Point2(0.0, 0.0)));
 	/// ```
 	#[inline]
-	pub fn intersect_pt(self, rhs: Line2<T>) -> Option<Point2<T>> {
+	pub fn intersect(self, rhs: Line2<T>) -> Option<Point2<T>> {
 		let denom = self.delta().cross(rhs.delta());
 		if denom == T::ZERO {
 			return None;
@@ -129,6 +138,7 @@ impl<T: Float> Line2<T> {
 
 impl<T: Float> Trace2<T> for Line2<T> {
 	// Line has no inherent orientation
+	#[inline]
 	fn inside(&self, _pt: Point2<T>) -> bool {
 		false
 	}
