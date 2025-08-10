@@ -10,6 +10,7 @@ mod circle;
 mod triangle;
 mod ray;
 mod shape;
+mod union;
 
 pub use self::bounds::Bounds2;
 pub use self::point::Point2;

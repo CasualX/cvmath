@@ -20,6 +20,7 @@ mod polar;
 mod mat;
 mod quat;
 mod rotvec;
+mod csg;
 
 mod shape2;
 mod shape3;
@@ -34,6 +35,7 @@ pub use crate::polar::Polar;
 pub use crate::mat::{Mat2, Mat3, Mat4, Transform2, Transform3, Hand, Clip};
 pub use crate::quat::Quat;
 pub use crate::rotvec::RotationVector;
+pub use crate::csg::{Union, Intersection, Difference, Xor};
 
 pub use crate::shape2::*;
 pub use crate::shape3::*;
