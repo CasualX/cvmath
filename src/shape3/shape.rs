@@ -1,5 +1,6 @@
 use super::*;
 
+/// Heterogeneous Shape3.
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Shape3<T> {

@@ -111,7 +111,7 @@ impl<T: Float> ops::Mul<Ray2<T>> for Transform2<T> {
 	}
 }
 
-/// Trace hit structure.
+/// Hit2 structure.
 ///
 /// Represents an intersection point between a ray and a shape.
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
@@ -128,7 +128,7 @@ pub struct Hit2<T> {
 	pub index: usize,
 }
 
-/// Shapes that support ray intersection tests.
+/// Shapes that support Ray2 intersection tests.
 ///
 /// Types implementing this trait can be intersected by rays, returning hit information such as distance and surface normals.
 pub trait Trace2<T> {

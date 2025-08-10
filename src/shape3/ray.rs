@@ -1,6 +1,6 @@
 use super::*;
 
-/// Ray structure.
+/// Ray3 structure.
 ///
 /// Rays are typically used to trace shapes for intersection tests.
 /// See [`Ray3::trace`] for more information.
@@ -79,7 +79,7 @@ impl<T: Float> ops::Mul<Ray3<T>> for Transform3<T> {
 	}
 }
 
-/// Trace hit structure.
+/// Hit3 structure.
 ///
 /// Represents an intersection point between a ray and a shape.
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
@@ -96,7 +96,7 @@ pub struct Hit3<T> {
 	pub index: usize,
 }
 
-/// Shapes that support ray intersection tests.
+/// Shapes that support Ray3 intersection tests.
 ///
 /// Types implementing this trait can be intersected by rays, returning hit information such as distance and surface normals.
 pub trait Trace3<T> {
