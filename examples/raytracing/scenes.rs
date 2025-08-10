@@ -11,20 +11,22 @@ fn add_material(materials: &mut Vec<Material>, material: Material) -> u32 {
 	return id;
 }
 
-pub fn raytracer() -> (Settings, Scene) {
-	let settings = Settings {
+pub fn raytracer() -> (&'static str, Scene) {
+	let image = ImageSettings {
 		width: 1600,
 		height: 1200,
-		rayon: true,
+		nsamples: 256,
+		max_bounces: 6,
+		use_rayon: true,
+	};
+	let camera = CameraSettings {
 		origin: Point3(0.0, 1.5, 0.0),
 		target: Point3(0.0, 1.5, -1.0),
 		ref_up: Vec3(0.0, 1.0, 0.0),
 		fov_y: Angle::deg(90.0),
-		dof: true, // Enable depth-of-field
-		aa: true, // Enable anti-aliasing
-		aa_samples: 256, // Number of anti-aliasing samples per pixel
-		max_bounces: 6,
-		ambient_light: 0.1,
+		dof_enabled: true,
+		aperture_radius: 0.05,
+		focus_distance: 4.0,
 	};
 
 	const M: Material = Material {
@@ -33,7 +35,6 @@ pub fn raytracer() -> (Settings, Scene) {
 		hardness: 1.0,
 		diffuse_factor: 1.0,
 		specular_factor: 0.0,
-		roughness: 0.0,
 	};
 
 	let mut materials = Vec::new();
@@ -63,7 +64,13 @@ pub fn raytracer() -> (Settings, Scene) {
 	let sphere2_shape = Sphere { center: Point3::new(1.5, 2.0, -4.0), radius: 1.5 };
 	let bounds_shape = Bounds3::point(Point3::new(2.8, 1.0, -0.5), Point3::dup(1.0));
 
-	let scene = Scene {
+	let world = World {
+		ambient_light: 0.1,
+		light: Light {
+			pos: Point3(5.0, 5.0, -2.0),
+			color: Vec3(1.0, 1.0, 1.0),
+			radius: 0.0,
+		},
 		materials,
 		objects: vec![
 			Object {
@@ -83,31 +90,29 @@ pub fn raytracer() -> (Settings, Scene) {
 				material: bounds_material,
 			},
 		],
-		light: Light {
-			pos: Point3(5.0, 5.0, -2.0),
-			color: Vec3(1.0, 1.0, 1.0),
-			radius: 0.0,
-		},
 	};
 
-	(settings, scene)
+	let scene = Scene { image, camera, world };
+	("raytracer.ppm", scene)
 }
 
 
-pub fn raytracing() -> (Settings, Scene) {
-	let settings = Settings {
+pub fn raytracing() -> (&'static str, Scene) {
+	let image = ImageSettings {
 		width: 1920 / 2,
 		height: 1080 / 2,
-		rayon: true,
+		nsamples: 2048,
+		max_bounces: 6,
+		use_rayon: true,
+	};
+	let camera = CameraSettings {
 		origin: Point3(0.0, 1.25, -4.0),
 		target: Point3(0.0, 1.0, 0.0),
 		ref_up: Vec3(0.0, 1.0, 0.0),
 		fov_y: Angle::deg(40.0),
-		dof: true, // Enable depth-of-field
-		aa: true, // Enable anti-aliasing
-		aa_samples: 2048, // Number of anti-aliasing samples per pixel
-		max_bounces: 6, // Maximum reflection bounce depth
-		ambient_light: 0.3,
+		dof_enabled: true,
+		aperture_radius: 0.05,
+		focus_distance: 4.0,
 	};
 
 	let mut materials = Vec::new();
@@ -116,18 +121,17 @@ pub fn raytracing() -> (Settings, Scene) {
 		reflectivity: 0.0,
 		diffuse_factor: 0.8,
 		specular_factor: 0.0,
-		roughness: 0.0,
 		..Default::default()
 	});
 	let sphere1_material = add_material(&mut materials, Material {
 		texture: Texture::None,
 		reflectivity: 0.95,
 		diffuse_factor: 0.0,
-		roughness: 0.75,
+		hardness: 100.0,
 		..Default::default()
 	});
 	let sphere2_material = add_material(&mut materials, Material {
-		texture: Texture::Color(Vec3f(255.0, 165.0, 0.0) / 255.0),
+		texture: Texture::Color(Vec3(1.0, 0.65, 0.0)),
 		reflectivity: 0.05,
 		diffuse_factor: 0.9,
 		specular_factor: 1.0,
@@ -139,7 +143,13 @@ pub fn raytracing() -> (Settings, Scene) {
 		..Material::default()
 	});
 
-	let scene = Scene {
+	let world = World {
+		ambient_light: 0.3,
+		light: Light {
+			pos: Point3(0.0, 100.0, 0.0),
+			color: Vec3(1.0, 1.0, 1.0),
+			radius: 5.0,
+		},
 		materials,
 		objects: vec![
 			// Object {
@@ -246,12 +256,15 @@ pub fn raytracing() -> (Settings, Scene) {
 				material: octahedron_material,
 			},
 		],
-		light: Light {
-			pos: Point3(0.0, 100.0, 0.0),
-			color: Vec3(1.0, 1.0, 1.0),
-			radius: 5.0,
-		},
 	};
 
-	(settings, scene)
+	let scene = Scene { image, camera, world };
+	("raytracing.ppm", scene)
+}
+
+pub fn all() -> Vec<(&'static str, Scene)> {
+	vec![
+		raytracer(),
+		raytracing(),
+	]
 }

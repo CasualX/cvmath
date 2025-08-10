@@ -8,8 +8,8 @@ Computer Vector Graphics Math Library
 
 > Because reinventing the wheel is half the fun.
 
-![Ray Tracing Example](images/raytracing.png)  
-*A ray tracing scene using `cvmath`. See [raytracing.rs](examples/raytracing.rs).*
+![Path Tracing Example](images/pathtracing.png)  
+*A path tracing scene using `cvmath`. See [pathtracing.rs](examples/pathtracing/main.rs).*
 
 🔍 What is this?
 ---------------

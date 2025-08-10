@@ -1,0 +1,102 @@
+{
+  "image": {
+    "width": 1600,
+    "height": 1200,
+    "nsamples": 256,
+    "max_bounces": 6,
+    "use_rayon": true
+  },
+  "camera": {
+    "origin": [0.0, 1.5, 0.0],
+    "target": [0.0, 1.5, -1.0],
+    "ref_up": [0.0, 1.0, 0.0],
+    "fov_y": 90.0,
+    "dof_enabled": true,
+    "aperture_radius": 0.05,
+    "focus_distance": 4.0
+  },
+  "world": {
+    "ambient_light": 0.1,
+    "light": {
+      "pos": [5.0, 5.0, -2.0],
+      "color": [1.0, 1.0, 1.0],
+      "radius": 0.0
+    },
+    "materials": {
+      "ground": {
+        "texture": {
+          "Color": [0.6, 0.6, 0.6]
+        },
+        "reflectivity": 0.3,
+        "hardness": 1.0,
+        "diffuse_factor": 1.0,
+        "specular_factor": 0.0
+      },
+      "sphere1": {
+        "texture": {
+          "Color": [1.0, 0.2, 0.2]
+        },
+        "reflectivity": 0.5,
+        "hardness": 1.0,
+        "diffuse_factor": 1.0,
+        "specular_factor": 0.0
+      },
+      "sphere2": {
+        "texture": {
+          "Color": [0.2, 0.2, 1.0]
+        },
+        "reflectivity": 0.8,
+        "hardness": 1.0,
+        "diffuse_factor": 1.0,
+        "specular_factor": 0.0
+      },
+      "box": {
+        "texture": {
+          "Color": [1.0, 1.0, 0.2]
+        },
+        "reflectivity": 0.0,
+        "hardness": 1.0,
+        "diffuse_factor": 1.0,
+        "specular_factor": 0.0
+      }
+    },
+    "objects": [
+      {
+        "shape": {
+          "Plane": {
+            "normal": [0.0, 1.0, 0.0],
+            "distance": 0.0
+          }
+        },
+        "material": "ground"
+      },
+      {
+        "shape": {
+          "Sphere": {
+            "center": [-1.5, 1.0, -5.0],
+            "radius": 1.0
+          }
+        },
+        "material": "sphere1"
+      },
+      {
+        "shape": {
+          "Sphere": {
+            "center": [1.5, 2.0, -4.0],
+            "radius": 1.5
+          }
+        },
+        "material": "sphere2"
+      },
+      {
+        "shape": {
+          "Bounds": {
+            "mins": [1.8, 0.0, -1.5],
+            "maxs": [3.8, 2.0, 0.5]
+          }
+        },
+        "material": "box"
+      }
+    ]
+  }
+}

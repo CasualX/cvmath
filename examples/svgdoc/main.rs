@@ -1,13 +1,9 @@
-/*!
-Generates the SVG for the documentation and serves as a simple example.
-*/
-
 #![allow(dead_code)]
 
 use cvmath::*;
 
-mod svg;
-use self::svg::SvgWriter;
+mod writer;
+use self::writer::SvgWriter;
 
 const ARROW_SIZE: f32 = 8.0;
 
