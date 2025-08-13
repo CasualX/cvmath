@@ -126,7 +126,7 @@ fn test_trace_random_planes() {
 		// Trace away from the plane: start just outside the plane on the normal side
 		let origin = normal * (distance + rng.next_f64());
 		let direction = (normal + Vec2(rng.range(-0.5..0.5), rng.range(-0.5..0.5))).norm();
-		let mut ray = Ray2 { origin, direction, distance: f64::INFINITY };
+		let mut ray = Ray2 { origin, direction, distance: Interval(0.0, f64::INFINITY) };
 
 		// Should not hit
 		let hit = ray.trace(&plane);
@@ -137,7 +137,7 @@ fn test_trace_random_planes() {
 		let hit = ray.trace(&plane).expect("Ray should hit the plane when moving towards it");
 
 		// Hit point should be on the plane
-		let d = plane.distance(ray.at(hit.distance));
+		let d = plane.distance(hit.point);
 		assert!(d.abs() < epsilon, "Hit point should be on the plane: {d}");
 	}
 }

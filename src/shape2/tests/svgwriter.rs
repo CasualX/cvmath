@@ -1,25 +1,22 @@
-/*!
-Hacked together SVG writer.
-*/
+#![allow(dead_code)]
 
 use std::borrow::Borrow;
-
-use cvmath::Point2;
+use super::*;
 
 //----------------------------------------------------------------
 
 pub struct SvgWriter(String);
 
 impl SvgWriter {
-	pub fn new(width: i32, height: i32) -> SvgWriter {
+	pub fn new(width: f32, height: f32) -> SvgWriter {
 		SvgWriter(format!(r#"<svg width="{}" height="{}" font-family="monospace" xmlns="http://www.w3.org/2000/svg">"#, width, height))
 	}
-	pub fn circle(&mut self, center: Point2<f32>, radius: f32) -> Attributes<'_, &'static str> {
-		self.0 += &format!(r#"<circle cx="{}" cy="{}" r="{}""#, center.x, center.y, radius);
+	pub fn circle(&mut self, circle: Circle<f32>) -> Attributes<'_, &'static str> {
+		self.0 += &format!(r#"<circle cx="{}" cy="{}" r="{}""#, circle.center.x, circle.center.y, circle.radius);
 		Attributes { svg: &mut self.0, closing: " />" }
 	}
-	pub fn line(&mut self, start: Point2<f32>, end: Point2<f32>) -> Attributes<'_, &'static str> {
-		self.0 += &format!(r#"<line x1="{}" y1="{}" x2="{}" y2="{}""#, start.x, start.y, end.x, end.y);
+	pub fn line(&mut self, line: Line2<f32>) -> Attributes<'_, &'static str> {
+		self.0 += &format!(r#"<line x1="{}" y1="{}" x2="{}" y2="{}""#, line.start.x, line.start.y, line.end.x, line.end.y);
 		Attributes { svg: &mut self.0, closing: " />" }
 	}
 	pub fn arrow(&mut self, start: Point2<f32>, end: Point2<f32>, arrowsize: f32) -> Attributes<'_, &'static str> {
@@ -30,14 +27,22 @@ impl SvgWriter {
 			start.x, start.y, end.x, end.y, p1.x, p1.y, end.x, end.y, p2.x, p2.y);
 		Attributes { svg: &mut self.0, closing: " />" }
 	}
+	pub fn triangle(&mut self, tri: Triangle2<f32>) -> Attributes<'_, &'static str> {
+		self.0 += &format!(r#"<path d="M{} {} L{} {} L{} {} Z""#,
+			tri.p1().x, tri.p1().y, tri.p2().x, tri.p2().y, tri.p3().x, tri.p3().y);
+		Attributes { svg: &mut self.0, closing: " />" }
+	}
 	pub fn arc(&mut self, start: Point2<f32>, end: Point2<f32>, radius: f32) -> Attributes<'_, &'static str> {
-		self.0 += &format!(r#"<path fill="none" d="M{} {} A{} {} 0 0 1 {} {}""#,
-			start.x, start.y, radius, radius, end.x, end.y);
+		self.0 += &format!(r#"<path fill="none" d="M{} {} A{} {} 0 0 1 {} {}""#, start.x, start.y, radius, radius, end.x, end.y);
 		Attributes { svg: &mut self.0, closing: " />" }
 	}
 	pub fn text(&mut self, p: Point2<f32>, text: &str) -> Attributes<'_, String> {
 		self.0 += &format!(r#"<text x="{}" y="{}""#, p.x, p.y);
 		Attributes { svg: &mut self.0, closing: format!(">{}</text>", text) }
+	}
+	pub fn rect(&mut self, rect: Bounds2<f32>) -> Attributes<'_, &'static str> {
+		self.0 += &format!(r#"<rect x="{}" y="{}" width="{}" height="{}""#, rect.mins.x, rect.mins.y, rect.width(), rect.height());
+		Attributes { svg: &mut self.0, closing: " />" }
 	}
 	pub fn close(mut self) -> String {
 		self.0 += "</svg>"; self.0

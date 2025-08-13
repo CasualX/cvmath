@@ -4,7 +4,7 @@ use super::*;
 ///
 /// Rays are typically used to trace shapes for intersection tests.
 /// See [`Ray2::trace`] for more information.
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]
 pub struct Ray2<T> {
@@ -16,14 +16,14 @@ pub struct Ray2<T> {
 	/// This vector should be normalized and non-zero; otherwise, results may be incorrect.
 	pub direction: Vec2<T>,
 
-	/// Maximum distance to trace the ray.
-	pub distance: T,
+	/// Distance limit.
+	pub distance: Interval<T>,
 }
 
 /// Ray2 constructor.
 #[allow(non_snake_case)]
 #[inline]
-pub fn Ray2<T>(origin: Point2<T>, direction: Vec2<T>, distance: T) -> Ray2<T> {
+pub fn Ray2<T>(origin: Point2<T>, direction: Vec2<T>, distance: Interval<T>) -> Ray2<T> {
 	Ray2 { origin, direction, distance }
 }
 
@@ -35,7 +35,7 @@ impl<T> Ray2<T> {
 	///
 	/// The direction is normalized. Zero directions may result in unexpected behavior.
 	#[inline]
-	pub fn new(origin: Point2<T>, direction: Vec2<T>, distance: T) -> Ray2<T> where T: Float {
+	pub fn new(origin: Point2<T>, direction: Vec2<T>, distance: Interval<T>) -> Ray2<T> where T: Float {
 		let direction = direction.norm();
 		Ray2 { origin, direction, distance }
 	}
@@ -48,29 +48,46 @@ impl<T: Float> Ray2<T> {
 		self.origin.mul_add(self.direction, distance)
 	}
 
-	/// Returns a new ray that is a step along the ray's direction by the specified distance.
+	/// Reflects the ray at the given hit point.
 	#[inline]
-	pub fn step(&self, distance: T) -> Ray2<T> {
-		Ray2 {
-			origin: self.origin.mul_add(self.direction, distance),
-			direction: self.direction,
-			distance: self.distance - distance,
+	pub fn reflect(&self, hit: &Hit2<T>) -> Ray2<T> {
+		let direction = (-self.direction).reflect(hit.normal);
+		let distance = Interval(self.distance.min, self.distance.max - hit.distance);
+		Ray2 { origin: hit.point, direction, distance }
+	}
+
+	/// Refracts the ray at the given hit point.
+	pub fn refract(&self, hit: &Hit2<T>, ior_outside: T, ior_inside: T) -> Option<Ray2<T>> {
+		let eta = match hit.side {
+			HitSide::Entry => ior_outside / ior_inside,
+			HitSide::Exit  => ior_inside / ior_outside,
+		};
+		let cos_i = -hit.normal.dot(self.direction);
+		let sin2_t = eta * eta * (T::ONE - cos_i * cos_i);
+		// Total internal reflection
+		if sin2_t > T::ONE {
+			return None
 		}
+		let cos_t = (T::ONE - sin2_t).sqrt();
+		let direction = self.direction * eta + hit.normal * (eta * cos_i - cos_t);
+		let direction = direction.norm(); // Ensure direction remains normalized
+		let distance = Interval(self.distance.min, self.distance.max - hit.distance);
+		Some(Ray2 { origin: hit.point, direction, distance })
 	}
 
 	/// Computes the y coordinate where the ray intercepts the Y axis.
 	///
 	/// Returns none if the ray is parallel with the Y axis.
 	#[inline]
-	pub fn y_intercept(self) -> Option<T> {
+	pub fn y_intercept(&self) -> Option<T> {
 		if self.direction.x == T::ZERO {
 			return None;
 		}
-		let t = -self.origin.x / self.direction.x;
-		if !(t >= T::ZERO && t <= self.distance) {
+		let distance = -self.origin.x / self.direction.x;
+		if !(distance > self.distance.min && distance <= self.distance.max) {
 			return None;
 		}
-		let y = self.origin.y + self.direction.y * t;
+		let y = self.origin.y + self.direction.y * distance;
 		Some(y)
 	}
 
@@ -78,15 +95,15 @@ impl<T: Float> Ray2<T> {
 	///
 	/// Returns none if the ray is parallel with the X axis.
 	#[inline]
-	pub fn x_intercept(self) -> Option<T> {
+	pub fn x_intercept(&self) -> Option<T> {
 		if self.direction.y == T::ZERO {
 			return None;
 		}
-		let t = -self.origin.y / self.direction.y;
-		if !(t >= T::ZERO && t <= self.distance) {
+		let distance = -self.origin.y / self.direction.y;
+		if !(distance > self.distance.min && distance <= self.distance.max) {
 			return None;
 		}
-		let x = self.origin.x + self.direction.x * t;
+		let x = self.origin.x + self.direction.x * distance;
 		Some(x)
 	}
 }
@@ -98,9 +115,10 @@ impl<T: Float> ops::Mul<Ray2<T>> for Transform2<T> {
 	fn mul(self, ray: Ray2<T>) -> Ray2<T> {
 		let origin = self * ray.origin;
 
-		let (direction, distance) = if ray.distance.is_finite() {
-			let end = self * ray.at(ray.distance);
-			(end - origin).norm_len()
+		let (direction, distance) = if ray.distance.max.is_finite() {
+			let end = self * ray.at(ray.distance.max);
+			let (direction, max_distance) = (end - origin).norm_len();
+			(direction, Interval(ray.distance.min * max_distance / ray.distance.max, max_distance))
 		}
 		else {
 			let dir = self.mat2() * ray.direction;
@@ -116,6 +134,9 @@ impl<T: Float> ops::Mul<Ray2<T>> for Transform2<T> {
 /// Represents an intersection point between a ray and a shape.
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct Hit2<T> {
+	/// The point of intersection.
+	pub point: Point2<T>,
+
 	/// The distance from the ray's origin to the intersection point.
 	pub distance: T,
 
@@ -126,6 +147,9 @@ pub struct Hit2<T> {
 
 	/// Index of the shape that was hit, if applicable.
 	pub index: usize,
+
+	/// Side of the hit (entry or exit).
+	pub side: HitSide,
 }
 
 /// Shapes that support Ray2 intersection tests.
@@ -137,7 +161,7 @@ pub trait Trace2<T> {
 
 	/// Trace the ray against a shape.
 	///
-	/// Returns the nearest intersection point along the ray, if any.
+	/// Returns the nearest hit along the ray, if any.
 	fn trace(&self, ray: &Ray2<T>) -> Option<Hit2<T>>;
 }
 
@@ -175,8 +199,14 @@ impl<T: Float> Ray2<T> {
 	/// Trace the ray against a collection of shapes.
 	#[inline]
 	pub fn trace_collection<Shape: Trace2<T>, I: IntoIterator<Item = Shape>>(&self, shapes: I) -> Option<Hit2<T>> {
-		shapes.into_iter().enumerate()
-			.filter_map(|(index, shape)| shape.trace(self).map(|hit| Hit2 { index, ..hit }))
-			.min_by(|a, b| T::total_cmp(&a.distance, &b.distance))
+		let mut ray = self.clone();
+		let mut result = None;
+		for (index, shape) in shapes.into_iter().enumerate() {
+			if let Some(hit) = shape.trace(&ray) {
+				result = Some(Hit2 { index, ..hit });
+				ray.distance.max = hit.distance;
+			}
+		}
+		result
 	}
 }

@@ -198,7 +198,6 @@ impl<T: Float> Trace2<T> for Triangle2<T> {
 		let mut min_hit: Option<Hit2<T>> = None;
 
 		for &(q, edge) in edges.as_slice() {
-			// Solve for intersection between ray and segment
 			let p = ray.origin;
 			let d = ray.direction;
 
@@ -207,20 +206,19 @@ impl<T: Float> Trace2<T> for Triangle2<T> {
 				continue; // Parallel to edge
 			}
 
-			let qp = q - p;
-			let t = qp.cross(edge) / denom;
-			let s = qp.cross(d) / denom;
+			let pq = q - p;
+			let distance = pq.cross(edge) / denom;
+			let s = pq.cross(d) / denom;
 
-			if !(t > T::EPSILON && t <= ray.distance && s >= T::ZERO && s <= T::ONE) {
+			if !(s >= T::ZERO && s <= T::ONE && distance > ray.distance.min && distance <= ray.distance.max) {
 				continue; // No intersection
 			}
 
-			if min_hit.is_none() || t < min_hit.as_ref().unwrap().distance {
-				min_hit = Some(Hit2 {
-					distance: t,
-					normal: edge.cw().norm(),
-					index: 0,
-				});
+			if min_hit.is_none() || distance < min_hit.as_ref().unwrap().distance {
+				let point = ray.at(distance);
+				let normal = edge.ccw().norm();
+				let (normal, side) = if denom < T::ZERO { (normal, HitSide::Entry) } else { (-normal, HitSide::Exit) };
+				min_hit = Some(Hit2 { point, distance, normal, index: 0, side });
 			}
 		}
 

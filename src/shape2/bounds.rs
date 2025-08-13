@@ -496,31 +496,28 @@ impl<T: Float> Trace2<T> for Bounds2<T> {
 		let t0 = tmin.vmax();
 		let t1 = tmax.vmin();
 
-		if !(t0 <= t1 && t0 > T::EPSILON && t0 <= ray.distance) {
-			return None;
-		}
+		let distance = if !(t0 <= t1) { return None }
+		else if t0 > ray.distance.min && t0 <= ray.distance.max { t0 }
+		else if t1 > ray.distance.min && t1 <= ray.distance.max { t1 }
+		else { return None };
 
-		// Determine which face was hit
-		let normal = if t0 == tmin.x {
-			Vec2::new(-T::ONE, T::ZERO)
-		}
-		else if t0 == tmax.x {
-			Vec2::new(T::ONE, T::ZERO)
-		}
-		else if t0 == tmin.y {
-			Vec2::new(T::ZERO, -T::ONE)
-		}
-		else if t0 == tmax.y {
-			Vec2::new(T::ZERO, T::ONE)
+		// Outward shape normal: use direction sign per axis
+		let sign = ray.direction.map(T::signum);
+
+		// Calculate the normal based on which axis was hit
+		let normal = (
+			Vec2::dup(distance).eq(tmin).select(-sign, Vec2::ZERO) +
+			Vec2::dup(distance).eq(tmax).select( sign, Vec2::ZERO)
+		).norm();
+
+		let point = ray.at(distance);
+		let (normal, side) = if normal.dot(ray.direction) < T::ZERO {
+			(normal, HitSide::Entry)
 		}
 		else {
-			return None;
+			(-normal, HitSide::Exit)
 		};
 
-		Some(Hit2 {
-			distance: t0,
-			normal,
-			index: 0,
-		})
+		Some(Hit2 { point, distance, normal, index: 0, side })
 	}
 }

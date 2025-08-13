@@ -26,13 +26,13 @@ fn test_trace_random_lines() {
 		}
 
 		let direction = (target - origin).norm();
-		let mut ray = Ray2(origin, direction, f64::INFINITY);
+		let mut ray = Ray2 { origin, direction, distance: Interval(0.0, f64::INFINITY) };
 		let hit = ray.trace(&line);
 
 		if t > 0.01 && t < 0.99 {
 			assert!(hit.is_some(), "Ray should hit the line: {:?} -> {:?}", ray, line);
 			let hit = hit.unwrap();
-			let d = line.distance(ray.at(hit.distance));
+			let d = line.distance(hit.point);
 			assert!(d.abs() < 1e-4, "Hit point should be on the line: {d}");
 		}
 		else if t < -0.01 || t > 1.01 {
