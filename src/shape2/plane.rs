@@ -31,7 +31,7 @@ impl<T> Plane2<T> {
 	/// Constructs a new plane from a normal and a point.
 	#[inline]
 	pub fn point(normal: Vec2<T>, pt: Point2<T>) -> Plane2<T> where T: Float {
-		let distance = -normal.dot(pt);
+		let distance = normal.dot(pt);
 		Plane2 { normal, distance }
 	}
 
@@ -39,7 +39,7 @@ impl<T> Plane2<T> {
 	#[inline]
 	pub fn line(pt1: Point2<T>, pt2: Point2<T>) -> Plane2<T> where T: Float {
 		let normal = (pt2 - pt1).cw().norm();
-		let distance = -normal.dot(pt1);
+		let distance = normal.dot(pt1);
 		Plane2 { normal, distance }
 	}
 }
@@ -133,17 +133,21 @@ impl<T: Float> Trace2<T> for Plane2<T> {
 		}
 
 		// Compute the intersection distance along the ray
-		let t = -(self.normal.dot(ray.origin) + self.distance) / denom;
+		let distance = -self.distance(ray.origin) / denom;
 
 		// Only return a hit if the intersection is within bounds
-		if !(t > T::EPSILON && t <= ray.distance) {
+		if !(distance > ray.distance.min && distance <= ray.distance.max) {
 			return None;
 		}
 
-		Some(Hit2 {
-			distance: t,
-			normal: self.normal,
-			index: 0,
-		})
+		let point = ray.at(distance);
+		let (normal, side) = if denom < T::ZERO {
+			(self.normal, HitSide::Entry)
+		}
+		else {
+			(-self.normal, HitSide::Exit)
+		};
+
+		Some(Hit2 { point, distance, normal, index: 0, side })
 	}
 }

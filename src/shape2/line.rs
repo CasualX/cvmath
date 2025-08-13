@@ -200,16 +200,16 @@ impl<T: Float> Trace2<T> for Line2<T> {
 		let distance = qp.cross(delta) / denom;
 		let u = qp.cross(ray.direction) / denom;
 
-		if !(distance > T::EPSILON && distance <= ray.distance && u >= T::ZERO && u <= T::ONE) {
+		if !(distance > ray.distance.min && distance <= ray.distance.max && u >= T::ZERO && u <= T::ONE) {
 			return None;
 		}
 
-		// Line has no inherent orientation, flip normal to always face ray.origin
-		let mut normal = delta.norm().ccw();
-		if normal.dot(ray.direction) < T::ZERO {
-			normal = -normal;
-		}
+		let point = ray.at(distance);
+		// Normal always points toward the ray direction
+		let normal = if denom < T::ZERO { delta.ccw() } else { delta.cw() }.norm();
+		// Ray always enters the line
+		let side = HitSide::Entry;
 
-		Some(Hit2 { distance, normal, index: 0 })
+		Some(Hit2 { point, distance, normal, index: 0, side })
 	}
 }

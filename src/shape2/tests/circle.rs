@@ -24,7 +24,7 @@ fn test_trace_random_circles() {
 		let origin = (Vec2(vx, vy) * rng.range(200.0..1000.0)).round();
 
 		let direction = (target - origin).norm();
-		let mut ray = Ray2 { origin, direction, distance: f64::INFINITY };
+		let mut ray = Ray2 { origin, direction, distance: Interval(0.0, f64::INFINITY) };
 
 		// Trace towards the circle should hit
 		let hit = ray.trace(&circle);

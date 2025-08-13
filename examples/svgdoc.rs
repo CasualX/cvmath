@@ -1,9 +1,13 @@
+// Generates the SVG for the documentation and serves as a simple example.
+// Running this example will modify the `src/vec.rs` file by adding SVG images to the doc comments.
+
 #![allow(dead_code)]
 
 use cvmath::*;
 
+#[path = "../src/shape2/tests/svgwriter.rs"]
 mod writer;
-use self::writer::SvgWriter;
+use writer::SvgWriter;
 
 const ARROW_SIZE: f32 = 8.0;
 
@@ -51,11 +55,11 @@ fn len_hat() -> String {
 
 	let vhat = Point2(this.x, origin.y);
 
-	let mut svg = SvgWriter::new(400, 120);
+	let mut svg = SvgWriter::new(400.0, 120.0);
 	svg.arrow(origin, this, ARROW_SIZE).stroke("black");
 	svg.arrow(origin, vhat, ARROW_SIZE).stroke("grey").stroke_width(0.5);
 	svg.arrow(vhat, this, ARROW_SIZE).stroke("grey").stroke_width(0.5);
-	svg.circle(origin, 2.0);
+	svg.circle(Circle(origin, 2.0));
 	svg.text(this + Vec2(5.0, 0.0), "this");
 	svg.text((origin + vhat) * 0.5 + Vec2(0.0, 15.0), "x").fill("grey");
 	svg.text((vhat + this) * 0.5 + Vec2(5.0, 0.0), "y").fill("grey");
@@ -71,12 +75,12 @@ fn distance_hat() -> String {
 
 	let vhat = Point2(to.x, this.y);
 
-	let mut svg = SvgWriter::new(400, 120);
-	svg.line(this, to).stroke("black");
+	let mut svg = SvgWriter::new(400.0, 120.0);
+	svg.line(Line2(this, to)).stroke("black");
 	svg.arrow(this, vhat, ARROW_SIZE).stroke("grey").stroke_width(0.5);
 	svg.arrow(vhat, to, ARROW_SIZE).stroke("grey").stroke_width(0.5);
-	svg.circle(this, 2.0);
-	svg.circle(to, 2.0);
+	svg.circle(Circle(this, 2.0));
+	svg.circle(Circle(to, 2.0));
 	svg.text(this + Vec2(-20.0, -10.0), "this");
 	svg.text(to + Vec2(5.0, 0.0), "to");
 	svg.text((this + vhat) * 0.5 + Vec2(0.0, 15.0), "x").fill("grey");
@@ -97,14 +101,14 @@ fn lerp() -> String {
 	let tblue = 0.5;
 	let vblue = v1.lerp(v2, tblue);
 
-	let mut svg = SvgWriter::new(400, 120);
-	svg.line(v1, vgreen).stroke("green");
-	svg.line(vgreen, vblue).stroke("blue");
-	svg.line(vblue, v2).stroke("black");
-	svg.circle(v1, 2.0).fill("black");
-	svg.circle(v2, 2.0).fill("black");
-	svg.circle(vgreen, 2.0).fill("green");
-	svg.circle(vblue, 2.0).fill("blue");
+	let mut svg = SvgWriter::new(400.0, 120.0);
+	svg.line(Line2(v1, vgreen)).stroke("green");
+	svg.line(Line2(vgreen, vblue)).stroke("blue");
+	svg.line(Line2(vblue, v2)).stroke("black");
+	svg.circle(Circle(v1, 2.0)).fill("black");
+	svg.circle(Circle(v2, 2.0)).fill("black");
+	svg.circle(Circle(vgreen, 2.0)).fill("green");
+	svg.circle(Circle(vblue, 2.0)).fill("blue");
 	svg.text(v1 - Vec2(20.0, 10.0), "self").fill("black");
 	svg.text(v2 - Vec2(15.0, -20.0), "rhs").fill("black");
 	svg.text(vgreen - Vec2(20.0, -20.0), "t = 0.2").fill("green");
@@ -139,7 +143,7 @@ fn slerp_nlerp<F: Fn(Point2<f32>, Point2<f32>, f32) -> Point2<f32>>(f: F, name: 
 	let cend = center + f(leg1, leg2, 1.1);
 
 	// Render time
-	let mut svg = SvgWriter::new(400, 140);
+	let mut svg = SvgWriter::new(400.0, 140.0);
 	svg.arrow(center, v1, ARROW_SIZE).stroke("black").stroke_width(0.5);
 	svg.arrow(center, v2, ARROW_SIZE).stroke("black").stroke_width(0.5);
 	svg.arrow(center, p1, ARROW_SIZE).stroke("green").stroke_width(0.25);
@@ -149,11 +153,11 @@ fn slerp_nlerp<F: Fn(Point2<f32>, Point2<f32>, f32) -> Point2<f32>>(f: F, name: 
 	svg.arc(v1, slerp, radius).stroke("green");
 	svg.arc(slerp, v2, radius).stroke("black");
 	svg.arc(v2, cend, radius).stroke("black").stroke_width(0.5);
-	svg.line(v1, lerp).stroke("blue").stroke_width(0.5);
-	svg.circle(v1, 2.0).fill("black");
-	svg.circle(v2, 2.0).fill("black");
-	svg.circle(lerp, 2.0).fill("blue");
-	svg.circle(slerp, 2.0).fill("green");
+	svg.line(Line2(v1, lerp)).stroke("blue").stroke_width(0.5);
+	svg.circle(Circle(v1, 2.0)).fill("black");
+	svg.circle(Circle(v2, 2.0)).fill("black");
+	svg.circle(Circle(lerp, 2.0)).fill("blue");
+	svg.circle(Circle(slerp, 2.0)).fill("green");
 	svg.text(p1 - Vec2(45.0, 5.0), "t = 0.25").fill("green").font_size(10.0);
 	svg.text(p2 - Vec2(20.0, 5.0), "t = 0.50").fill("green").font_size(10.0);
 	svg.text(slerp - Vec2(0.0, 5.0), "t = 0.75").fill("green").font_size(10.0);
@@ -197,16 +201,16 @@ fn project_scalar() -> String {
 	let slr2 = sl2 + offset * 0.25;
 
 	// Render time
-	let mut svg = SvgWriter::new(400, 200);
+	let mut svg = SvgWriter::new(400.0, 200.0);
 	svg.arrow(origin, this, ARROW_SIZE).stroke("black");
 	svg.arrow(origin, v, ARROW_SIZE).stroke("black");
-	svg.circle(origin, 2.0).fill("black");
-	svg.line(p, this).stroke("black").stroke_dasharray(&[5.0, 5.0]).stroke_width(0.5);
-	svg.line(pra1, pra2).stroke("black").stroke_width(0.5);
-	svg.line(pra2, pra3).stroke("black").stroke_width(0.5);
-	svg.line(sl1, sl2).stroke("red").stroke_width(1.5);
-	svg.line(sll1, sll2).stroke("red").stroke_width(1.5);
-	svg.line(slr1, slr2).stroke("red").stroke_width(1.5);
+	svg.circle(Circle(origin, 2.0)).fill("black");
+	svg.line(Line2(p, this)).stroke("black").stroke_dasharray(&[5.0, 5.0]).stroke_width(0.5);
+	svg.line(Line2(pra1, pra2)).stroke("black").stroke_width(0.5);
+	svg.line(Line2(pra2, pra3)).stroke("black").stroke_width(0.5);
+	svg.line(Line2(sl1, sl2)).stroke("red").stroke_width(1.5);
+	svg.line(Line2(sll1, sll2)).stroke("red").stroke_width(1.5);
+	svg.line(Line2(slr1, slr2)).stroke("red").stroke_width(1.5);
 	svg.text(this + Vec2(5.0, 5.0), "self").fill("black");
 	svg.text(v + Vec2(-20.0, 22.0), "v").fill("black");
 	svg.close()
@@ -233,14 +237,14 @@ fn reflect_2d() -> String {
 	let result = transform * result;
 	let origin = transform * origin;
 
-	let mut svg = SvgWriter::new(400, 200);
-	svg.line(this, result).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
-	svg.line(p, pv).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
-	svg.line(pv, result).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
+	let mut svg = SvgWriter::new(400.0, 200.0);
+	svg.line(Line2(this, result)).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
+	svg.line(Line2(p, pv)).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
+	svg.line(Line2(pv, result)).stroke("black").stroke_width(0.5).stroke_dasharray(&[5.0, 5.0]);
 	svg.arrow(origin, v, ARROW_SIZE).stroke("black");
 	svg.arrow(origin, this, ARROW_SIZE).stroke("black");
 	svg.arrow(origin, result, ARROW_SIZE).stroke("red");
-	svg.circle(p, 2.0).fill("black");
+	svg.circle(Circle(p, 2.0)).fill("black");
 	svg.text(v, "v").fill("black");
 	svg.text(this, "self").fill("black");
 	svg.text(p + Vec2(8.0, 10.0), "p").fill("black");

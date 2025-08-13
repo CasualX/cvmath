@@ -26,7 +26,7 @@ fn test_trace_random_lines() {
 		}
 
 		let direction = (target - origin).norm();
-		let mut ray = Ray2(origin, direction, f64::INFINITY);
+		let mut ray = Ray2 { origin, direction, distance: Interval(0.0, f64::INFINITY) };
 		let hit = ray.trace(&line);
 
 		if t > 0.01 && t < 0.99 {

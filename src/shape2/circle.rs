@@ -119,13 +119,15 @@ impl<T: Float> Trace2<T> for Circle<T> {
 		let t1 = tc - t1c;
 		let t2 = tc + t1c;
 
-		if t1 > T::EPSILON && t1 <= ray.distance {
-			let normal = (ray.at(t1) - self.center).norm();
-			return Some(Hit2 { distance: t1, normal, index: 0 });
+		if t1 > ray.distance.min && t1 <= ray.distance.max {
+			let point = ray.at(t1);
+			let normal = (point - self.center).norm();
+			return Some(Hit2 { point, distance: t1, normal, index: 0, side: HitSide::Entry });
 		}
-		if t2 > T::EPSILON && t2 <= ray.distance {
-			let normal = (ray.at(t2) - self.center).norm();
-			return Some(Hit2 { distance: t2, normal, index: 0 });
+		if t2 > ray.distance.min && t2 <= ray.distance.max {
+			let point = ray.at(t2);
+			let normal = (self.center - point).norm();
+			return Some(Hit2 { point, distance: t2, normal, index: 0, side: HitSide::Exit });
 		}
 		return None;
 	}

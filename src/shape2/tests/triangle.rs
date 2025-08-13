@@ -3,10 +3,10 @@ use super::*;
 #[test]
 fn test_trace_simple() {
 	let tri = Triangle2(Point2(0.0, 0.0), Point2(1.0, 0.0), Point2(0.0, 1.0));
-	let ray1 = Ray2 { origin: Point2(0.5, -1.0), direction: Vec2(0.0, 1.0), distance: 10.0 };
+	let ray1 = Ray2 { origin: Point2(0.5, -1.0), direction: Vec2(0.0, 1.0), distance: Interval(0.0, 10.0) };
 	let hit1 = tri.trace(&ray1).expect("Ray should hit the triangle");
 	assert!(hit1.distance - 1.0 < 1e-6, "Intersection distance should be close to 1.0");
-	let ray2 = Ray2 { origin: Point2(-0.5, 0.5), direction: Vec2(1.0, 0.0), distance: 10.0 };
+	let ray2 = Ray2 { origin: Point2(-0.5, 0.5), direction: Vec2(1.0, 0.0), distance: Interval(0.0, 10.0) };
 	let hit2 = tri.trace(&ray2).expect("Ray should hit the triangle");
 	assert!(hit2.distance - 0.5 < 1e-6, "Intersection distance should be close to 0.5");
 }
@@ -16,7 +16,7 @@ fn test_trace_triangle_centroid() {
 	let tri = Triangle2::new(Point2(0.0, 0.0), Point2(1.0, 0.0), Point2(0.0, 1.0));
 	let origin = Point2(-1.0, -1.0);
 	let (direction, distance) = (tri.centroid() - origin).norm_len();
-	let ray = Ray2::new(origin, direction, distance);
+	let ray = Ray2::new(origin, direction, Interval(0.0, distance));
 
 	let hit = tri.trace(&ray).expect("Ray should hit the triangle at centroid");
 	assert!((hit.distance - (2.0).sqrt()).abs() < 1e-6, "Intersection distance should match");
@@ -30,7 +30,7 @@ fn test_trace_triangle_vertices() {
 
 	for (origin, target) in vertices.iter().zip(targets.iter()) {
 		let (direction, distance) = (*target - *origin).norm_len();
-		let ray = Ray2::new(*origin, direction, distance + 0.1);
+		let ray = Ray2::new(*origin, direction, Interval(0.0, distance + 0.1));
 		assert!(tri.trace(&ray).is_some(), "Ray from {:?} to {:?} should hit", origin, target);
 	}
 }
@@ -52,7 +52,7 @@ fn test_trace_random_triangles() {
 		let origin = Point2(-2.0, -2.0);
 		let (direction, distance) = (target - origin).norm_len();
 
-		let mut ray = Ray2::new(origin, direction, distance + 0.1);
+		let mut ray = Ray2::new(origin, direction, Interval(0.0, distance + 0.1));
 		assert!(tri.trace(&ray).is_some(), "{ray:?} to {target:?} should hit triangle");
 
 		ray.direction = -ray.direction;
