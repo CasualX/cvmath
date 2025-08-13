@@ -53,6 +53,50 @@ impl<T: Scalar> Circle<T> {
 
 //----------------------------------------------------------------
 
+#[cfg(feature = "urandom")]
+impl<T> urandom::Distribution<Circle<T>> for urandom::distr::StandardUniform where
+	urandom::distr::StandardUniform: urandom::Distribution<T> + urandom::Distribution<Point2<T>>,
+{
+	#[inline]
+	fn sample<R: urandom::Rng + ?Sized>(&self, rand: &mut urandom::Random<R>) -> Circle<T> {
+		let distr = urandom::distr::StandardUniform;
+		let center = distr.sample(rand);
+		let radius = distr.sample(rand);
+		Circle { center, radius }
+	}
+}
+
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::distr::SampleUniform for Circle<T> {
+	type Sampler = Circle<urandom::distr::Uniform<T>>;
+}
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::distr::UniformSampler<Circle<T>> for Circle<urandom::distr::Uniform<T>> where Point2<T>: urandom::distr::SampleUniform {
+	#[inline]
+	fn try_new(low: Circle<T>, high: Circle<T>) -> Result<Self, urandom::distr::UniformError> {
+		let center = Vec2::try_new(low.center, high.center)?;
+		let radius = urandom::distr::Uniform::try_new(low.radius, high.radius)?;
+		Ok(Circle { center, radius })
+	}
+	#[inline]
+	fn try_new_inclusive(low: Circle<T>, high: Circle<T>) -> Result<Self, urandom::distr::UniformError> where Self: Sized {
+		let center = Vec2::try_new_inclusive(low.center, high.center)?;
+		let radius = urandom::distr::Uniform::try_new_inclusive(low.radius, high.radius)?;
+		Ok(Circle { center, radius })
+	}
+}
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::Distribution<Circle<T>> for Circle<urandom::distr::Uniform<T>> {
+	#[inline]
+	fn sample<R: urandom::Rng + ?Sized>(&self, rand: &mut urandom::Random<R>) -> Circle<T> {
+		let center = self.center.sample(rand);
+		let radius = self.radius.sample(rand);
+		Circle { center, radius }
+	}
+}
+
+//----------------------------------------------------------------
+
 impl<T: Float> Trace2<T> for Circle<T> {
 	#[inline]
 	fn inside(&self, pt: Point2<T>) -> bool {

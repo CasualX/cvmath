@@ -67,6 +67,50 @@ impl<T: Float> Line3<T> {
 
 //----------------------------------------------------------------
 
+#[cfg(feature = "urandom")]
+impl<T> urandom::Distribution<Line3<T>> for urandom::distr::StandardUniform where
+	urandom::distr::StandardUniform: urandom::Distribution<Point3<T>>,
+{
+	#[inline]
+	fn sample<R: urandom::Rng + ?Sized>(&self, rand: &mut urandom::Random<R>) -> Line3<T> {
+		let distr = urandom::distr::StandardUniform;
+		let start = distr.sample(rand);
+		let end = distr.sample(rand);
+		Line3 { start, end }
+	}
+}
+
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::distr::SampleUniform for Line3<T> {
+	type Sampler = Line3<urandom::distr::Uniform<T>>;
+}
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::distr::UniformSampler<Line3<T>> for Line3<urandom::distr::Uniform<T>> where Point3<T>: urandom::distr::SampleUniform {
+	#[inline]
+	fn try_new(low: Line3<T>, high: Line3<T>) -> Result<Self, urandom::distr::UniformError> {
+		let start = Vec3::try_new(low.start, high.start)?;
+		let end = Vec3::try_new(low.end, high.end)?;
+		Ok(Line3 { start, end })
+	}
+	#[inline]
+	fn try_new_inclusive(low: Line3<T>, high: Line3<T>) -> Result<Self, urandom::distr::UniformError> where Self: Sized {
+		let start = Vec3::try_new_inclusive(low.start, high.start)?;
+		let end = Vec3::try_new_inclusive(low.end, high.end)?;
+		Ok(Line3 { start, end })
+	}
+}
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::Distribution<Line3<T>> for Line3<urandom::distr::Uniform<T>> {
+	#[inline]
+	fn sample<R: urandom::Rng + ?Sized>(&self, rand: &mut urandom::Random<R>) -> Line3<T> {
+		let start = self.start.sample(rand);
+		let end = self.end.sample(rand);
+		Line3 { start, end }
+	}
+}
+
+//----------------------------------------------------------------
+
 // Lines are not solid
 impl<T: Float> Trace3<T> for Line3<T> {
 	#[inline]

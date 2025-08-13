@@ -372,6 +372,21 @@ impl<T: Copy + ops::Mul<Output = T> + ops::Add<Output = T> + ops::Sub<Output = T
 }
 
 //----------------------------------------------------------------
+// Random
+
+#[cfg(feature = "urandom")]
+impl<T> urandom::Distribution<Complex<T>> for urandom::distr::StandardUniform where
+	urandom::distr::StandardUniform: urandom::Distribution<T>,
+{
+	#[inline]
+	fn sample<R: urandom::Rng + ?Sized>(&self, rand: &mut urandom::Random<R>) -> Complex<T> {
+		let re = rand.sample(self);
+		let im = rand.sample(self);
+		Complex { re, im }
+	}
+}
+
+//----------------------------------------------------------------
 // Formatting
 
 macro_rules! impl_fmt {

@@ -226,6 +226,18 @@ impl<T: ops::SubAssign> ops::SubAssign for Angle<T> {
 }
 
 //----------------------------------------------------------------
+// Random
+
+#[cfg(feature = "urandom")]
+impl<T: Float + urandom::distr::SampleUniform> urandom::Distribution<Angle<T>> for urandom::distr::StandardUniform {
+	#[inline]
+	fn sample<R: urandom::Rng + ?Sized>(&self, rand: &mut urandom::Random<R>) -> Angle<T> {
+		let rad = rand.sample(&urandom::distr::Uniform::new(T::ZERO, T::TAU));
+		Angle(rad)
+	}
+}
+
+//----------------------------------------------------------------
 // Formatting
 
 macro_rules! fmt {

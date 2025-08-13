@@ -146,6 +146,54 @@ impl<T: Float> ops::Mul<Triangle3<T>> for Transform3<T> {
 
 //----------------------------------------------------------------
 
+#[cfg(feature = "urandom")]
+impl<T: Scalar> urandom::Distribution<Triangle3<T>> for urandom::distr::StandardUniform where
+	urandom::distr::StandardUniform: urandom::Distribution<Point3<T>>,
+{
+	#[inline]
+	fn sample<R: urandom::Rng + ?Sized>(&self, rand: &mut urandom::Random<R>) -> Triangle3<T> {
+		let distr = urandom::distr::StandardUniform;
+		let p1 = distr.sample(rand);
+		let p2 = distr.sample(rand);
+		let p3 = distr.sample(rand);
+		Triangle3::points(p1, p2, p3)
+	}
+}
+
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::distr::SampleUniform for Triangle3<T> {
+	type Sampler = Triangle3<urandom::distr::Uniform<T>>;
+}
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::distr::UniformSampler<Triangle3<T>> for Triangle3<urandom::distr::Uniform<T>> where Point3<T>: urandom::distr::SampleUniform {
+	#[inline]
+	fn try_new(low: Triangle3<T>, high: Triangle3<T>) -> Result<Self, urandom::distr::UniformError> {
+		let p = Vec3::try_new(low.p, high.p)?;
+		let u = Vec3::try_new(low.u, high.u)?;
+		let v = Vec3::try_new(low.v, high.v)?;
+		Ok(Triangle3 { p, u, v })
+	}
+	#[inline]
+	fn try_new_inclusive(low: Triangle3<T>, high: Triangle3<T>) -> Result<Self, urandom::distr::UniformError> where Self: Sized {
+		let p = Vec3::try_new_inclusive(low.p, high.p)?;
+		let u = Vec3::try_new_inclusive(low.u, high.u)?;
+		let v = Vec3::try_new_inclusive(low.v, high.v)?;
+		Ok(Triangle3 { p, u, v })
+	}
+}
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::Distribution<Triangle3<T>> for Triangle3<urandom::distr::Uniform<T>> {
+	#[inline]
+	fn sample<R: urandom::Rng + ?Sized>(&self, rand: &mut urandom::Random<R>) -> Triangle3<T> {
+		let p = self.p.sample(rand);
+		let u = self.u.sample(rand);
+		let v = self.v.sample(rand);
+		Triangle3 { p, u, v }
+	}
+}
+
+//----------------------------------------------------------------
+
 impl<T: Float> Trace3<T> for Triangle3<T> {
 	#[inline]
 	fn inside(&self, _pt: Point3<T>) -> bool {

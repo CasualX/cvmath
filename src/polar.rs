@@ -74,6 +74,18 @@ impl_fmt!(fmt::UpperHex);
 impl_fmt!(fmt::LowerExp);
 impl_fmt!(fmt::UpperExp);
 
+#[cfg(feature = "urandom")]
+impl<T> urandom::Distribution<Polar<T>> for urandom::distr::StandardUniform where
+	urandom::distr::StandardUniform: urandom::Distribution<T> + urandom::Distribution<Angle<T>>,
+{
+	#[inline]
+	fn sample<R: urandom::Rng + ?Sized>(&self, rand: &mut urandom::Random<R>) -> Polar<T> {
+		let radius = rand.sample(self);
+		let theta = rand.sample(self);
+		Polar { radius, theta }
+	}
+}
+
 //----------------------------------------------------------------
 // Serialization
 

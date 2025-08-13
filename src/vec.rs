@@ -1364,6 +1364,44 @@ macro_rules! vec {
 		}
 
 		//----------------------------------------------------------------
+		// Random
+
+		#[cfg(feature = "urandom")]
+		impl<T> urandom::Distribution<$vec<T>> for urandom::distr::StandardUniform where urandom::distr::StandardUniform: urandom::Distribution<T> {
+			#[inline]
+			fn sample<R: urandom::Rng + ?Sized>(&self, rng: &mut urandom::Random<R>) -> $vec<T> {
+				let distr = urandom::distr::StandardUniform;
+				$vec { $($field: distr.sample(rng)),+ }
+			}
+		}
+
+		#[cfg(feature = "urandom")]
+		impl<T: urandom::distr::SampleUniform> urandom::distr::SampleUniform for $vec<T> {
+			type Sampler = $vec<urandom::distr::Uniform<T>>;
+		}
+		#[cfg(feature = "urandom")]
+		impl<T: urandom::distr::SampleUniform> urandom::distr::UniformSampler<$vec<T>> for $vec<urandom::distr::Uniform<T>> {
+			#[inline]
+			fn try_new(low: $vec<T>, high: $vec<T>) -> Result<Self, urandom::distr::UniformError> {
+				$(let $field = urandom::distr::Uniform::try_new(low.$field, high.$field)?;)*
+				Ok($vec { $($field),+ })
+			}
+			#[inline]
+			fn try_new_inclusive(low: $vec<T>, high: $vec<T>) -> Result<Self, urandom::distr::UniformError> {
+				$(let $field = urandom::distr::Uniform::try_new_inclusive(low.$field, high.$field)?;)*
+				Ok($vec { $($field),+ })
+			}
+		}
+		#[cfg(feature = "urandom")]
+		impl<T: urandom::distr::SampleUniform> urandom::Distribution<$vec<T>> for $vec<urandom::distr::Uniform<T>> {
+			#[inline]
+			fn sample<R: urandom::Rng + ?Sized>(&self, rand: &mut urandom::Random<R>) -> $vec<T> {
+				$(let $field = self.$field.sample(rand);)+
+				$vec { $($field),+ }
+			}
+		}
+
+		//----------------------------------------------------------------
 		// Formatting
 
 		fmt!($vec { $($field),+ });

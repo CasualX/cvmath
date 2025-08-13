@@ -276,6 +276,50 @@ impl<T: Scalar> Bounds3<T> {
 
 //----------------------------------------------------------------
 
+#[cfg(feature = "urandom")]
+impl<T: Scalar> urandom::Distribution<Bounds3<T>> for urandom::distr::StandardUniform where
+	urandom::distr::StandardUniform: urandom::Distribution<Point3<T>>,
+{
+	#[inline]
+	fn sample<R: urandom::Rng + ?Sized>(&self, rand: &mut urandom::Random<R>) -> Bounds3<T> {
+		let distr = urandom::distr::StandardUniform;
+		let mins = distr.sample(rand);
+		let maxs = distr.sample(rand);
+		Bounds3 { mins, maxs }.norm()
+	}
+}
+
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::distr::SampleUniform for Bounds3<T> {
+	type Sampler = Bounds3<urandom::distr::Uniform<T>>;
+}
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::distr::UniformSampler<Bounds3<T>> for Bounds3<urandom::distr::Uniform<T>> where Point3<T>: urandom::distr::SampleUniform {
+	#[inline]
+	fn try_new(low: Bounds3<T>, high: Bounds3<T>) -> Result<Self, urandom::distr::UniformError> {
+		let mins = Vec3::try_new(low.mins, high.mins)?;
+		let maxs = Vec3::try_new(low.maxs, high.maxs)?;
+		Ok(Bounds3 { mins, maxs })
+	}
+	#[inline]
+	fn try_new_inclusive(low: Bounds3<T>, high: Bounds3<T>) -> Result<Self, urandom::distr::UniformError> where Self: Sized {
+		let mins = Vec3::try_new_inclusive(low.mins, high.mins)?;
+		let maxs = Vec3::try_new_inclusive(low.maxs, high.maxs)?;
+		Ok(Bounds3 { mins, maxs })
+	}
+}
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::Distribution<Bounds3<T>> for Bounds3<urandom::distr::Uniform<T>> {
+	#[inline]
+	fn sample<R: urandom::Rng + ?Sized>(&self, rand: &mut urandom::Random<R>) -> Bounds3<T> {
+		let mins = self.mins.sample(rand);
+		let maxs = self.maxs.sample(rand);
+		Bounds3 { mins, maxs }
+	}
+}
+
+//----------------------------------------------------------------
+
 impl<T: Float> Trace3<T> for Bounds3<T> {
 	#[inline]
 	fn inside(&self, pt: Point3<T>) -> bool {

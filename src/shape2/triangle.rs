@@ -129,6 +129,54 @@ impl<T: Float> Triangle2<T> {
 
 //----------------------------------------------------------------
 
+#[cfg(feature = "urandom")]
+impl<T> urandom::Distribution<Triangle2<T>> for urandom::distr::StandardUniform where
+	urandom::distr::StandardUniform: urandom::Distribution<Point2<T>>,
+{
+	#[inline]
+	fn sample<R: urandom::Rng + ?Sized>(&self, rand: &mut urandom::Random<R>) -> Triangle2<T> {
+		let distr = urandom::distr::StandardUniform;
+		let p = distr.sample(rand);
+		let u = distr.sample(rand);
+		let v = distr.sample(rand);
+		Triangle2 { p, u, v }
+	}
+}
+
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::distr::SampleUniform for Triangle2<T> {
+	type Sampler = Triangle2<urandom::distr::Uniform<T>>;
+}
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::distr::UniformSampler<Triangle2<T>> for Triangle2<urandom::distr::Uniform<T>> where Point2<T>: urandom::distr::SampleUniform {
+	#[inline]
+	fn try_new(low: Triangle2<T>, high: Triangle2<T>) -> Result<Self, urandom::distr::UniformError> {
+		let p = Vec2::try_new(low.p, high.p)?;
+		let u = Vec2::try_new(low.u, high.u)?;
+		let v = Vec2::try_new(low.v, high.v)?;
+		Ok(Triangle2 { p, u, v })
+	}
+	#[inline]
+	fn try_new_inclusive(low: Triangle2<T>, high: Triangle2<T>) -> Result<Self, urandom::distr::UniformError> where Self: Sized {
+		let p = Vec2::try_new_inclusive(low.p, high.p)?;
+		let u = Vec2::try_new_inclusive(low.u, high.u)?;
+		let v = Vec2::try_new_inclusive(low.v, high.v)?;
+		Ok(Triangle2 { p, u, v })
+	}
+}
+#[cfg(feature = "urandom")]
+impl<T: urandom::distr::SampleUniform> urandom::Distribution<Triangle2<T>> for Triangle2<urandom::distr::Uniform<T>> {
+	#[inline]
+	fn sample<R: urandom::Rng + ?Sized>(&self, rand: &mut urandom::Random<R>) -> Triangle2<T> {
+		let p = self.p.sample(rand);
+		let u = self.u.sample(rand);
+		let v = self.v.sample(rand);
+		Triangle2 { p, u, v }
+	}
+}
+
+//----------------------------------------------------------------
+
 impl<T: Float> Trace2<T> for Triangle2<T> {
 	fn inside(&self, pt: Point2<T>) -> bool {
 		let d = pt - self.p;
