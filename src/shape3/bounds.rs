@@ -336,9 +336,9 @@ impl<T: Float> Trace3<T> for Bounds3<T> {
 		let t0 = tmin.vmax();
 		let t1 = tmax.vmin();
 
-		let t = if !(t0 <= t1) { return None }
-		else if t0 > T::EPSILON && t0 <= ray.distance { t0 }
-		else if t1 > T::EPSILON && t1 <= ray.distance { t1 }
+		let distance = if !(t0 <= t1) { return None }
+		else if t0 > ray.distance.min && t0 <= ray.distance.max { t0 }
+		else if t1 > ray.distance.min && t1 <= ray.distance.max { t1 }
 		else { return None };
 
 		// Outward shape normal: use direction sign per axis
@@ -346,14 +346,19 @@ impl<T: Float> Trace3<T> for Bounds3<T> {
 
 		// Calculate the normal based on which axis was hit
 		let normal = (
-			Vec3::dup(t).eq(tmin).select(-sign, Vec3::ZERO) +
-			Vec3::dup(t).eq(tmax).select( sign, Vec3::ZERO)
+			Vec3::dup(distance).eq(tmin).select(-sign, Vec3::ZERO) +
+			Vec3::dup(distance).eq(tmax).select( sign, Vec3::ZERO)
 		).norm();
 
-		Some(Hit3 {
-			distance: t0,
-			normal,
-			index: 0,
-		})
+		let point = ray.at(distance);
+
+		let (normal, side) = if normal.dot(ray.direction) < T::ZERO {
+			(normal, HitSide::Entry)
+		}
+		else {
+			(-normal, HitSide::Exit)
+		};
+
+		Some(Hit3 { point, distance, normal, index: 0, side })
 	}
 }

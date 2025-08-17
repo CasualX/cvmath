@@ -59,7 +59,7 @@ pub fn raytracer() -> (&'static str, Scene) {
 		..M
 	});
 
-	let ground_shape = Plane3(Vec3::Y, 0.0);
+	let ground_shape = Plane3(-Vec3f::Y, 0.0);
 	let sphere1_shape = Sphere { center: Point3::new(-1.5, 1.0, -5.0), radius: 1.0 };
 	let sphere2_shape = Sphere { center: Point3::new(1.5, 2.0, -4.0), radius: 1.5 };
 	let bounds_shape = Bounds3::point(Point3::new(2.8, 1.0, -0.5), Point3::dup(1.0));
@@ -175,7 +175,7 @@ pub fn raytracing() -> (&'static str, Scene) {
 			// },
 
 			Object {
-				shape: Shape3::Plane(Plane3(Vec3::Y, 0.0)),
+				shape: Shape3::Plane(Plane3(-Vec3f::Y, 0.0)),
 				material: ground_material,
 			},
 

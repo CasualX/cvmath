@@ -198,10 +198,10 @@ fn ray_setup(scene: &Scene, x: i32, y: i32, rng: &mut urandom::Random<impl urand
 		direction = (pt - origin).norm();
 	}
 
-	Ray3 { origin, direction, distance: f32::INFINITY }
+	Ray3 { origin, direction, distance: Interval(RAY_EPSILON, f32::INFINITY) }
 }
 
-fn trace_ray(scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
+fn pixel_color(scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
 	let mut rng = urandom::new();
 
 	let mut final_color = Vec3f::ZERO;
@@ -218,16 +218,15 @@ fn trace_ray(scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
 
 			if let Some(hit) = ray.trace(&scene.world) {
 				let index = hit.index;
-				let material_index = scene.world.objects[index].material as usize;
-				material = &scene.world.materials[material_index];
+				let object = &scene.world.objects[index];
+				material = &scene.world.materials[object.material as usize];
 				let mtl_color = material.texture.sample(&ray);
-				let hit_point = ray.at(hit.distance);
 
 				// Check if the hit point is lit by the light source
 				let light = &scene.world.light;
 				let light_at = light.pos + Vec3::from([(); 3].map(|_| rng.range(-light.radius..light.radius)));
-				let light_dir = (light_at - hit_point).norm();
-				let is_lit = Ray3(hit_point, light_dir, f32::INFINITY).step(RAY_EPSILON).trace(&scene.world).is_none();
+				let light_dir = (light_at - hit.point).norm();
+				let is_lit = Ray3(hit.point, light_dir, Interval(RAY_EPSILON, f32::INFINITY)).trace(&scene.world).is_none();
 
 				if is_lit {
 					// Blinn-Phong specular lighting model
@@ -246,7 +245,7 @@ fn trace_ray(scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
 				}
 
 				// Reflect the ray for the next bounce
-				ray = Ray3(hit_point, (-ray.direction).reflect(hit.normal), f32::INFINITY).step(RAY_EPSILON);
+				ray = ray.reflect(&hit);
 			}
 			else {
 				material = &SKY_MATERIAL;
@@ -300,7 +299,7 @@ fn scene_render_slow(scene: Scene) -> Image {
 		for x in 0..image.width {
 			pr.report(y * image.width + x, image.width * image.height);
 
-			let color = trace_ray(&scene, x, y);
+			let color = pixel_color(&scene, x, y);
 			image.put(x, y, color);
 		}
 	}
@@ -322,7 +321,7 @@ fn scene_render_fast(scene: Scene) -> Image {
 			.for_each_with(sender, |sender, index| {
 				let x = index % width;
 				let y = index / width;
-				let color = trace_ray(&scene, x, y);
+				let color = pixel_color(&scene, x, y);
 				sender.send((x, y, color)).unwrap();
 			});
 	});

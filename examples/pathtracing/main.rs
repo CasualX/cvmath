@@ -145,7 +145,7 @@ fn ray_setup(scene: &Scene, x: i32, y: i32, rng: &mut urandom::Random<impl urand
 		direction = (pt - origin).norm();
 	}
 
-	Ray3 { origin, direction, distance: f32::INFINITY }
+	Ray3 { origin, direction, distance: Interval(1e-4, f32::INFINITY) }
 }
 
 fn random_direction(rng: &mut urandom::Random<impl urandom::Rng>) -> Vec3<f32> {
@@ -173,15 +173,11 @@ fn get_env_light(ray: &Ray3<f32>, env_light: &EnvironmentLighting) -> Vec3<f32> 
 	return Vec3::lerp(env_light.ground_color, sky_gradient, ground_to_sky_t) + sun_mask;
 }
 
-fn fresnel_schlick(cos_theta: f32, f0: Vec3f) -> Vec3f {
+fn fresnel_schlick(f0: Vec3f, cos_theta: f32) -> Vec3f {
 	f0 + (Vec3f::ONE - f0) * (1.0 - cos_theta).powi(5)
 }
 
-fn vec_offset(pos: Vec3<f32>, normal: Vec3<f32>) -> Vec3<f32> {
-	pos + normal * (pos.abs() * 1e-4)
-}
-
-fn trace_ray(scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
+fn pixel_color(scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
 	let mut rng = urandom::new();
 
 	let mut total_incoming_light = Vec3f::ZERO;
@@ -191,7 +187,7 @@ fn trace_ray(scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
 		let mut ray = ray_setup(scene, x, y, &mut rng);
 		if ray.inside(&scene.world) {
 			if let Some(hit) = ray.trace(&scene.world) {
-				ray = ray.step(hit.distance + 1e-4);
+				ray.origin = ray.at(hit.distance);
 				if !ray.inside(&scene.world) {
 					continue; // Skip if still inside after stepping
 				}
@@ -203,24 +199,21 @@ fn trace_ray(scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
 
 		for _ in 0..scene.image.max_bounces {
 			if let Some(hit) = ray.trace(&scene.world) {
-				let material = scene.world.objects[hit.index].material;
-				let material = &scene.world.materials[material as usize];
-
-				// Offset the hit point to avoid self-intersection
-				ray.origin = vec_offset(ray.at(hit.distance), hit.normal);
-
-				// Fresnel base reflectivity (F0)
-				let f0 = Vec3::lerp(Vec3::dup(0.04), material.color, material.metallic);
+				let object = &scene.world.objects[hit.index];
+				let material = &scene.world.materials[object.material as usize];
 
 				// Choose reflection direction
 				let diffuse_dir = (hit.normal + random_direction(&mut rng)).norm();
 				let specular_dir = (-ray.direction).reflect(hit.normal);
 
+				// Fresnel base reflectivity (F0)
+				let f0 = Vec3::lerp(Vec3::dup(0.04), material.color, material.metallic);
+
 				// Fresnel at this angle
 				// let half_vec = (specular_dir - ray.direction).norm();
 				// let cos_theta = (-ray.direction).dot(half_vec).max(0.0);
 				let cos_theta = hit.normal.dot(specular_dir).max(0.0);
-				let fresnel = fresnel_schlick(cos_theta, f0);
+				let fresnel = fresnel_schlick(f0, cos_theta);
 
 				// Diffuse term (only for non-metals)
 				let diffuse_color = material.color * (1.0 - material.metallic);
@@ -230,11 +223,13 @@ fn trace_ray(scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
 					// Specular bounce with roughness-based sampling
 					let alpha = material.roughness * material.roughness;
 					let jittered_specular = (specular_dir + random_direction(&mut rng) * alpha).norm();
+					ray.origin = hit.point;
 					ray.direction = jittered_specular;
 					ray_color *= fresnel;
 				}
 				else {
 					// Diffuse bounce
+					ray.origin = hit.point;
 					ray.direction = diffuse_dir;
 					ray_color *= diffuse_color;
 				}
@@ -291,7 +286,7 @@ fn scene_render_slow(scene: Scene) -> Image {
 		for x in 0..image.width {
 			pr.report(y * image.width + x, image.width * image.height);
 
-			let color = trace_ray(&scene, x, y);
+			let color = pixel_color(&scene, x, y);
 			image.put(x, y, color);
 		}
 	}
@@ -313,7 +308,7 @@ fn scene_render_fast(scene: Scene) -> Image {
 			.for_each_with(sender, |sender, index| {
 				let x = index % width;
 				let y = index / width;
-				let color = trace_ray(&scene, x, y);
+				let color = pixel_color(&scene, x, y);
 				sender.send((x, y, color)).unwrap();
 			});
 	});

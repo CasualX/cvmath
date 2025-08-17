@@ -16,14 +16,14 @@ pub struct Ray3<T> {
 	/// This vector should be normalized and non-zero; otherwise, results may be incorrect.
 	pub direction: Vec3<T>,
 
-	/// Maximum distance to trace the ray.
-	pub distance: T,
+	/// Distance limit.
+	pub distance: Interval<T>,
 }
 
 /// Ray constructor.
 #[allow(non_snake_case)]
 #[inline]
-pub fn Ray3<T>(origin: Point3<T>, direction: Vec3<T>, distance: T) -> Ray3<T> {
+pub fn Ray3<T>(origin: Point3<T>, direction: Vec3<T>, distance: Interval<T>) -> Ray3<T> {
 	Ray3 { origin, direction, distance }
 }
 
@@ -35,7 +35,7 @@ impl<T> Ray3<T> {
 	///
 	/// The direction is normalized. Zero directions may result in unexpected behavior.
 	#[inline]
-	pub fn new(origin: Point3<T>, direction: Vec3<T>, distance: T) -> Ray3<T> where T: Float {
+	pub fn new(origin: Point3<T>, direction: Vec3<T>, distance: Interval<T>) -> Ray3<T> where T: Float {
 		let direction = direction.norm();
 		Ray3 { origin, direction, distance }
 	}
@@ -48,14 +48,12 @@ impl<T: Float> Ray3<T> {
 		self.origin.mul_add(self.direction, distance)
 	}
 
-	/// Returns a new ray that is a step along the ray's direction by the specified distance.
+	/// Reflects the ray at the given hit point.
 	#[inline]
-	pub fn step(&self, distance: T) -> Ray3<T> {
-		Ray3 {
-			origin: self.origin.mul_add(self.direction, distance),
-			direction: self.direction,
-			distance: self.distance - distance,
-		}
+	pub fn reflect(&self, hit: &Hit3<T>) -> Ray3<T> {
+		let direction = (-self.direction).reflect(hit.normal);
+		let distance = Interval(self.distance.min, self.distance.max - hit.distance);
+		Ray3 { origin: hit.point, direction, distance }
 	}
 }
 
@@ -66,9 +64,10 @@ impl<T: Float> ops::Mul<Ray3<T>> for Transform3<T> {
 	fn mul(self, ray: Ray3<T>) -> Ray3<T> {
 		let origin = self * ray.origin;
 
-		let (direction, distance) = if ray.distance.is_finite() {
-			let end = self * ray.at(ray.distance);
-			(end - origin).norm_len()
+		let (direction, distance) = if ray.distance.max.is_finite() {
+			let end = self * ray.at(ray.distance.max);
+			let (direction, max_distance) = (end - origin).norm_len();
+			(direction, Interval(ray.distance.min * max_distance / ray.distance.max, max_distance))
 		}
 		else {
 			let dir = self.mat3() * ray.direction;
@@ -84,6 +83,9 @@ impl<T: Float> ops::Mul<Ray3<T>> for Transform3<T> {
 /// Represents an intersection point between a ray and a shape.
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct Hit3<T> {
+	/// The point of intersection.
+	pub point: Point3<T>,
+
 	/// The distance from the ray's origin to the intersection point.
 	pub distance: T,
 
@@ -94,6 +96,9 @@ pub struct Hit3<T> {
 
 	/// Index of the shape that was hit, if applicable.
 	pub index: usize,
+
+	/// Side of the hit (entry or exit).
+	pub side: HitSide,
 }
 
 /// Shapes that support Ray3 intersection tests.
@@ -141,8 +146,14 @@ impl<T: Float> Ray3<T> {
 	/// Trace the ray against a collection of shapes.
 	#[inline]
 	pub fn trace_collection<Shape: Trace3<T>, I: IntoIterator<Item = Shape>>(&self, shapes: I) -> Option<Hit3<T>> {
-		shapes.into_iter().enumerate()
-			.filter_map(|(index, shape)| shape.trace(self).map(|hit| Hit3 { index, ..hit }))
-			.min_by(|a, b| T::total_cmp(&a.distance, &b.distance))
+		let mut ray = self.clone();
+		let mut result = None;
+		for (index, shape) in shapes.into_iter().enumerate() {
+			if let Some(hit) = shape.trace(&ray) {
+				result = Some(Hit3 { index, ..hit });
+				ray.distance.max = hit.distance;
+			}
+		}
+		result
 	}
 }

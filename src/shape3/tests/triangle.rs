@@ -11,7 +11,7 @@ fn test_ray_hits_triangle_from_outside() {
 	let ray = Ray3 {
 		origin: Point3(0.25, 0.25, 1.0),
 		direction: Vec3(0.0, 0.0, -1.0),
-		distance: f64::INFINITY,
+		distance: Interval(0.0, f64::INFINITY),
 	};
 
 	let result = triangle.trace(&ray);
@@ -32,7 +32,7 @@ fn test_ray_misses_triangle() {
 	let ray = Ray3 {
 		origin: Point3(1.1, 1.1, 1.0),
 		direction: Vec3(0.0, 0.0, -1.0),
-		distance: f64::INFINITY,
+		distance: Interval(0.0, f64::INFINITY),
 	};
 
 	let result = triangle.trace(&ray);
@@ -51,14 +51,14 @@ fn test_ray_originates_inside_triangle() {
 	let ray = Ray3 {
 		origin: Point3(0.25, 0.25, -1.0),
 		direction: Vec3(0.0, 0.0, 1.0),
-		distance: f64::INFINITY,
+		distance: Interval(0.0, f64::INFINITY),
 	};
 
 	let result = triangle.trace(&ray);
 
 	assert!(result.is_some());
 	assert!((result.unwrap().distance - 1.0).abs() < 1e-6);
-	assert_eq!(result.unwrap().normal, Vec3(0.0, 0.0, 1.0));
+	assert_eq!(result.unwrap().normal, Vec3(0.0, 0.0, -1.0));
 }
 
 #[test]
@@ -73,16 +73,16 @@ fn test_trace_random_triangles() {
 		let triangle = Triangle3::points(p1, p2, p3);
 
 		// Skip degenerate triangles
-		if triangle.area().abs() < 1e-6 {
+		if triangle.area() < 1e-6 {
 			continue;
 		}
 
 		// Trace away from the triangle
-		let direction = triangle.plane().normal;
+		let direction = -triangle.plane().normal;
 		let origin = triangle.centroid() + direction;
 
 		// Should not hit
-		let mut ray = Ray3 { origin, direction, distance: f32::INFINITY };
+		let mut ray = Ray3 { origin, direction, distance: Interval(0.0, f32::INFINITY) };
 		let hit = ray.trace(&triangle);
 		assert!(hit.is_none(), "Ray should not hit the triangle when moving away from it");
 
@@ -107,8 +107,7 @@ fn test_trace_random_triangles() {
 
 		// Hit point is on the triangle's plane
 		if let Some(hit) = hit {
-			let point = ray.at(hit.distance);
-			let d = triangle.plane().distance(point);
+			let d = triangle.plane().distance(hit.point);
 			assert!(d.abs() < 1e-4, "Hit point d={d} should be on the triangle's plane");
 		}
 	}

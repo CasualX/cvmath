@@ -100,15 +100,27 @@ impl<T: Float> Trace3<T> for Plane3<T> {
 
 	fn trace(&self, ray: &Ray3<T>) -> Option<Hit3<T>> {
 		let denom = self.normal.dot(ray.direction);
+
+		// If denom is zero, the ray is parallel to the plane
 		if denom == T::ZERO {
 			return None;
 		}
 
+		// Compute the intersection distance along the ray
 		let distance = -self.distance(ray.origin) / denom;
-		if !(distance > T::EPSILON && distance <= ray.distance) {
+		if !(distance > ray.distance.min && distance <= ray.distance.max) {
 			return None;
 		}
 
-		Some(Hit3 { distance, normal: self.normal, index: 0 })
+		let point = ray.at(distance);
+
+		let (normal, side) = if denom < T::ZERO {
+			(self.normal, HitSide::Entry)
+		}
+		else {
+			(-self.normal, HitSide::Exit)
+		};
+
+		Some(Hit3 { point, distance, normal, index: 0, side })
 	}
 }

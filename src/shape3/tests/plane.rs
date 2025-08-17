@@ -17,7 +17,7 @@ fn test_trace() {
 	let ray = Ray3 {
 		origin: Point3(0.0, 0.0, -5.0),
 		direction: Vec3(0.0, 0.0, 1.0),
-		distance: f64::INFINITY,
+		distance: Interval(0.0, f64::INFINITY),
 	};
 
 	let inside = ray.inside(&plane);
@@ -29,18 +29,19 @@ fn test_trace() {
 
 #[test]
 fn test_trace_both_sides() {
+	#[track_caller]
 	fn check(dir: f64, pt: f64, success: bool) {
 		let plane = Plane3(Vec3::Z, 0.0);
 		let ray = Ray3 {
 			origin: Point3(0.0, 0.0, pt),
 			direction: Vec3(0.0, 0.0, dir),
-			distance: f64::INFINITY,
+			distance: Interval(0.0, f64::INFINITY),
 		};
 		let result = ray.trace(&plane);
 		if success {
 			assert!(result.is_some());
 			assert_eq!(result.unwrap().distance, pt.abs());
-			assert_eq!(result.unwrap().normal, plane.normal);
+			assert_eq!(result.unwrap().normal.abs(), plane.normal.abs());
 		}
 		else {
 			assert!(result.is_none());
@@ -62,7 +63,7 @@ fn test_trace_on_plane() {
 	let ray = Ray3 {
 		origin: Point3(0.0, 0.0, 0.0),
 		direction: Vec3(0.0, 0.0, 1.0),
-		distance: f64::INFINITY,
+		distance: Interval(0.0, f64::INFINITY),
 	};
 
 	let inside = ray.inside(&plane);
@@ -85,7 +86,7 @@ fn test_trace_random_planes() {
 		// Trace away from the plane: start just outside the plane on the normal side
 		let origin = normal * (distance + rng.next_f32());
 		let direction = (normal + Vec3(rng.range(-0.5..0.5), rng.range(-0.5..0.5), rng.range(-0.5..0.5))).norm();
-		let mut ray = Ray3 { origin, direction, distance: f32::INFINITY };
+		let mut ray = Ray3 { origin, direction, distance: Interval(0.0, f32::INFINITY) };
 
 		// Should not hit
 		let hit = ray.trace(&plane);
@@ -96,7 +97,7 @@ fn test_trace_random_planes() {
 		let hit = ray.trace(&plane).expect("Ray should hit the plane when moving towards it");
 
 		// Hit point should be on the plane
-		let d = plane.distance(ray.at(hit.distance));
+		let d = plane.distance(hit.point);
 		assert!(d.abs() < 1e-4, "Hit point should be on the plane: {d}");
 	}
 }

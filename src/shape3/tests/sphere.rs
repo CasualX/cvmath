@@ -6,7 +6,7 @@ fn trace_outside() {
 	let ray = Ray3 {
 		origin: Point3(0.0, 0.0, 2.0),
 		direction: Vec3(0.0, 0.0, -1.0),
-		distance: f64::INFINITY,
+		distance: Interval(0.0, f64::INFINITY),
 	};
 
 	let inside = ray.inside(&sphere);
@@ -25,7 +25,7 @@ fn trace_inside() {
 	let ray = Ray3 {
 		origin: Point3(0.0, -5.0, 0.0),
 		direction: Vec3(0.0, 1.0, 0.0),
-		distance: f64::INFINITY,
+		distance: Interval(0.0, f64::INFINITY),
 	};
 
 	let inside = ray.inside(&sphere);
@@ -43,7 +43,7 @@ fn ray_hits_off_center() {
 	let ray = Ray3 {
 		origin: Point3::new(0.5, 0.0, -5.0),
 		direction: Vec3::new(0.0, 0.0, 1.0),
-		distance: f64::INFINITY,
+		distance: Interval(0.0, f64::INFINITY),
 	};
 	let sphere = Sphere { center: Point3::ZERO, radius: 1.0 };
 	let result = ray.trace(&sphere);

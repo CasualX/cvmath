@@ -29,17 +29,11 @@ impl<T> Triangle3<T> {
 }
 
 impl<T: Copy> Triangle3<T> {
-	/// Constructs a triangle with positive area from three points.
+	/// Constructs a triangle from three points.
 	pub fn points(p: Point3<T>, p2: Point3<T>, p3: Point3<T>) -> Triangle3<T> where T: Scalar {
 		let u = p2 - p;
 		let v = p3 - p;
-		Triangle3 { p, u, v }.norm()
-	}
-
-	/// Normalizes the triangle to have positive area.
-	#[inline]
-	pub fn norm(self) -> Triangle3<T> where T: Scalar {
-		if self.u.cross(self.v).len_sqr() >= T::ZERO { self } else { -self }
+		Triangle3 { p, u, v }
 	}
 
 	/// Returns the first point of the triangle.
@@ -69,7 +63,7 @@ impl<T: Copy> Triangle3<T> {
 		(p1 + p2 + p3) / three
 	}
 
-	/// Returns the signed area of the triangle.
+	/// Returns the area of the triangle.
 	#[inline]
 	pub fn area(&self) -> T where T: Float {
 		self.u.cross(self.v).len() / (T::ONE + T::ONE)
@@ -89,7 +83,7 @@ impl<T: Float> Triangle3<T> {
 	/// Returns the plane defined by the triangle.
 	#[inline]
 	pub fn plane(&self) -> Plane3<T> {
-		let normal = -self.normal();
+		let normal = self.normal();
 		let distance = -normal.dot(self.p);
 		Plane3 { normal, distance }
 	}
@@ -224,17 +218,17 @@ impl<T: Float> Trace3<T> for Triangle3<T> {
 			return None;
 		}
 
-		let t0 = f * self.v.dot(q);
+		let distance = f * self.v.dot(q);
 
-		if !(t0 > T::EPSILON && t0 <= ray.distance) {
+		if !(distance > ray.distance.min && distance <= ray.distance.max) {
 			return None;
 		}
 
 		let normal = self.normal();
-		Some(Hit3 {
-			distance: t0,
-			normal,
-			index: 0,
-		})
+		let normal = if normal.dot(ray.direction) < T::ZERO { normal } else { -normal };
+
+		let point = ray.at(distance);
+
+		Some(Hit3 { point, distance, normal, index: 0, side: HitSide::Entry })
 	}
 }
