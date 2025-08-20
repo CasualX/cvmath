@@ -77,6 +77,18 @@ impl<T: Float> Angle<T> {
 		self.radians.sin_cos()
 	}
 
+	/// Converts the angle to a normalized 2D vector.
+	#[inline]
+	pub fn vec2(self) -> Vec2<T> {
+		let (s, c) = self.sin_cos();
+		Vec2(c, s)
+	}
+	/// Converts the angle to polar coordinates.
+	#[inline]
+	pub fn polar(self, radius: T) -> Polar<T> {
+		Polar::new(radius, self)
+	}
+
 	#[inline]
 	pub fn asin(sin: T) -> Self {
 		Angle(sin.asin())

@@ -92,3 +92,39 @@ fn test_reflect_refract() {
 	let _ = std::fs::create_dir("target/visual");
 	std::fs::write("target/visual/test_reflect_refract.svg", svg.close()).unwrap();
 }
+
+// This test attempts to replicate the 'cosine weighted sampling' for 3D rays in 2D
+// Turns out in 2D the distribution doesn't quite work that way, the opposite even
+// The distribution tends to be biased towards the edges of the circle arc
+#[test]
+fn test_random_direction() {
+	const WIDTH: f32 = 1200.0;
+	const HEIGHT: f32 = 600.0;
+	const SCALE: f32 = 100.0;
+	const NRAYS: i32 = 100;
+
+	let mut svg = SvgWriter::new(WIDTH, HEIGHT);
+
+	fn draw(svg: &mut SvgWriter, origin: Point2f, base_dir: Vec2f, scale: f32) {
+		for i in 0..NRAYS {
+			let a = Angle::deg(i as f32 / NRAYS as f32 * 360.0);
+			let rdir = a.vec2();
+
+			let dir = (base_dir + rdir * scale).norm();
+			svg.line(Line2(origin, origin + dir * SCALE))
+				.stroke("rgba(255, 255, 0, 0.1)")
+				.stroke_width(1.0);
+		}
+	}
+
+	let base_dir = Vec2f(-1.0, 1.0).norm();
+	draw(&mut svg, Point2f(WIDTH * (1.0 / 4.0), HEIGHT * (1.0/3.0)), base_dir, 0.1);
+	draw(&mut svg, Point2f(WIDTH * (2.0 / 4.0), HEIGHT * (1.0/3.0)), base_dir, 0.25);
+	draw(&mut svg, Point2f(WIDTH * (3.0 / 4.0), HEIGHT * (1.0/3.0)), base_dir, 0.5);
+	draw(&mut svg, Point2f(WIDTH * (1.0 / 4.0), HEIGHT * (2.0/3.0)), base_dir, 0.75);
+	draw(&mut svg, Point2f(WIDTH * (2.0 / 4.0), HEIGHT * (2.0/3.0)), base_dir, 0.95);
+	draw(&mut svg, Point2f(WIDTH * (3.0 / 4.0), HEIGHT * (2.0/3.0)), base_dir, 1.0);
+
+	let _ = std::fs::create_dir("target/visual");
+	std::fs::write("target/visual/test_random_direction.svg", svg.close()).unwrap();
+}
