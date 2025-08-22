@@ -1,6 +1,6 @@
 [package]
 name = "cvmath"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["Casper <CasualX@users.noreply.github.com>"]
 edition = "2021"
 
