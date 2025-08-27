@@ -157,17 +157,12 @@ fn random_direction(rng: &mut urandom::Random<impl urandom::Rng>) -> Vec3<f32> {
 }
 
 fn get_env_light(ray: &Ray3<f32>, env_light: &EnvironmentLighting) -> Vec3<f32> {
-	fn smoothstep(x: f32, y: f32, t: f32) -> f32 {
-		let t = ((t - x) / (y - x)).clamp(0.0, 1.0);
-		t * t * (3.0 - 2.0 * t)
-	}
-
-	let sky_gradient_t = smoothstep(0.0, 0.4, ray.direction.y).powf(0.35);
+	let sky_gradient_t = scalar::smoothstep(0.0, 0.4, ray.direction.y).powf(0.35);
 
 	let sky_gradient = Vec3::lerp(env_light.sky_color_horizon, env_light.sky_color_zenith, sky_gradient_t);
 	let sun = ray.direction.dot(-env_light.sun_light_direction).max(0.0).powf(env_light.sun_focus) * env_light.sun_intensity;
 
-	let ground_to_sky_t = smoothstep(-0.01, 0.0, ray.direction.y);
+	let ground_to_sky_t = scalar::smoothstep(-0.01, 0.0, ray.direction.y);
 	let sun_mask = if ground_to_sky_t >= 1.0 { Vec3::dup(sun) } else { Vec3::ZERO };
 
 	return Vec3::lerp(env_light.ground_color, sky_gradient, ground_to_sky_t) + sun_mask;

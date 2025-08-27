@@ -11,6 +11,7 @@ mod macros;
 
 mod num;
 mod angle;
+pub mod scalar;
 
 mod vec;
 mod bools;

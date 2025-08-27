@@ -19,6 +19,11 @@ impl SvgWriter {
 		self.0 += &format!(r#"<line x1="{}" y1="{}" x2="{}" y2="{}""#, line.start.x, line.start.y, line.end.x, line.end.y);
 		Attributes { svg: &mut self.0, closing: " />" }
 	}
+	pub fn polyline(&mut self, pts: impl IntoIterator<Item = Point2<f32>>) -> Attributes<'_, &'static str> {
+		self.0 += &format!(r#"<polyline points="{}""#,
+			pts.into_iter().map(|p| format!("{:.1} {:.1}", p.x, p.y)).collect::<Vec<_>>().join(" "));
+		Attributes { svg: &mut self.0, closing: " />" }
+	}
 	pub fn arrow(&mut self, start: Point2<f32>, end: Point2<f32>, arrowsize: f32) -> Attributes<'_, &'static str> {
 		let unit = (end - start).resize(arrowsize);
 		let p1 = end - unit + unit.cw() * 0.5;
