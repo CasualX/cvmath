@@ -111,12 +111,12 @@ impl<T: Float> Trace3<T> for Sphere<T> {
 
 		if t1 > ray.distance.min && t1 <= ray.distance.max {
 			let point = ray.at(t1);
-			let normal = (point - self.center).norm();
+			let normal = (point - self.center) * (T::ONE / self.radius);
 			return Some(Hit3 { point, distance: t1, normal, index: 0, side: HitSide::Entry });
 		}
 		if t2 > ray.distance.min && t2 <= ray.distance.max {
 			let point = ray.at(t2);
-			let normal = (self.center - point).norm();
+			let normal = (self.center - point) * (T::ONE / self.radius);
 			return Some(Hit3 { point, distance: t2, normal, index: 0, side: HitSide::Exit });
 		}
 		return None;
