@@ -23,12 +23,16 @@ pub use self::mat4::Mat4;
 pub use self::transform2::Transform2;
 pub use self::transform3::Transform3;
 
-/// Handness of the coordinate system.
+/// Handedness of the coordinate system.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Hand {
 	/// Left-handed coordinate system.
+	///
+	/// Mnemonic (left hand): Thumb along +X (to the right), index finger along +Y (up), middle finger along +Z.
 	LH,
 	/// Right-handed coordinate system.
+	///
+	/// Mnemonic (right hand): Thumb along +X (to the right), index finger along +Y (up), middle finger along +Z.
 	RH,
 }
 
