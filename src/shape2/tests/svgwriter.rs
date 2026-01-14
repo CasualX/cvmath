@@ -52,6 +52,9 @@ impl SvgWriter {
 	pub fn close(mut self) -> String {
 		self.0 += "</svg>"; self.0
 	}
+	pub fn save(self, path: &str) -> std::io::Result<()> {
+		std::fs::write(path, self.close())
+	}
 }
 
 //----------------------------------------------------------------

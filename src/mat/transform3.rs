@@ -129,7 +129,19 @@ impl<T: Float> Transform3<T> {
 
 	/// Orthographic projection matrix.
 	///
-	/// Clip and hand parameters only affect the Z coordinate.
+	/// Axis conventions relative to the viewer's screen:
+	///
+	/// Right-handed mode ([Hand::RH]):
+	/// * +X → right side of the screen
+	/// * +Y → top of the screen
+	/// * +Z → increases into the scene
+	///
+	/// Left-handed mode ([Hand::LH]):
+	/// * +X → right side of the screen
+	/// * +Y → top of the screen
+	/// * +Z → decreases into the scene
+	///
+	/// The `clip` parameter controls the mapping of the Z range into clip space.
 	#[inline]
 	pub fn ortho(bounds: Bounds3<T>, (hand, clip): (Hand, Clip)) -> Transform3<T> {
 		let Bounds3 {
@@ -137,7 +149,9 @@ impl<T: Float> Transform3<T> {
 			maxs: Vec3 { x: right, y: top, z: far },
 		} = bounds;
 
-		debug_assert!(T::ZERO < near && near < far);
+		debug_assert!(near != far);
+		debug_assert!(left != right);
+		debug_assert!(bottom != top);
 
 		let a11 = T::TWO / (right - left);
 		let a14 = -(right + left) / (right - left);
@@ -148,6 +162,18 @@ impl<T: Float> Transform3<T> {
 		let a34 = -match clip { Clip::ZO => near, Clip::NO => far + near } / (far - near);
 
 		Transform3 { a11, a14, a22, a24, a33, a34, ..Self::IDENTITY }
+	}
+
+	/// Maps NDC coordinates to screen space.
+	#[inline]
+	pub fn screen(width: T, height: T) -> Transform3<T> {
+		let half_width = width / T::TWO;
+		let half_height = height / T::TWO;
+		let x = Vec3 { x: half_width, y: T::ZERO, z: T::ZERO };
+		let y = Vec3 { x: T::ZERO, y: -half_height, z: T::ZERO };
+		let z = Vec3::Z;
+		let t = Vec3 { x: half_width, y: half_height, z: T::ONE };
+		Transform3::compose(x, y, z, t)
 	}
 }
 
@@ -432,14 +458,14 @@ impl_mat_mul_mat!(Transform3);
 impl<T: fmt::Display> fmt::Display for Transform3<T> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.write_str("Transform3(")?;
-		print::print(&move |i| &self.as_array()[i], 0x23, f)?;
+		print::print(&move |i| &self.as_array()[i], 0x34, f)?;
 		f.write_str(")")
 	}
 }
 impl<T: fmt::Debug> fmt::Debug for Transform3<T> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.write_str("Transform3(")?;
-		print::print(&move |i| print::Debug(&self.as_array()[i]), 0x23, f)?;
+		print::print(&move |i| print::Debug(&self.as_array()[i]), 0x34, f)?;
 		f.write_str(")")
 	}
 }
@@ -487,4 +513,32 @@ fn test_inverse() {
 		let error = (unprojected - p).len();
 		assert!(error < 1e-6, "Failed for mat: {mat:?}, p: {p:?}, error: {error}");
 	}
+}
+
+#[test]
+fn test_ortho() {
+	// aspect ratio 2:1, z range -2..2
+	let bounds = Bounds3(
+		Vec3(-10.0, -5.0, -2.0),
+		Vec3(10.0, 5.0, 2.0),
+	);
+
+	let ortho = Transform3::ortho(bounds, (Hand::LH, Clip::ZO));
+	dbg!(ortho);
+
+	let p1 = Vec3(-10.0, -5.0, -2.0);
+	let p2 = Vec3(10.0, 5.0, 2.0);
+	let c = Vec3(0.0, 0.0, 0.0);
+
+	#[track_caller]
+	fn assert_approx_eq(point: Vec3f, transform: Transform3f, expected: Vec3f) {
+		let value = transform * point;
+		assert!((value.x - expected.x).abs() < 1e-6, "X component differs: got {}, expected {}", value.x, expected.x);
+		assert!((value.y - expected.y).abs() < 1e-6, "Y component differs: got {}, expected {}", value.y, expected.y);
+		assert!((value.z - expected.z).abs() < 1e-6, "Z component differs: got {}, expected {}", value.z, expected.z);
+	}
+
+	assert_approx_eq(p1, ortho, Vec3f(-1.0, -1.0, 0.0));
+	assert_approx_eq(p2, ortho, Vec3f(1.0, 1.0, 1.0));
+	assert_approx_eq(c, ortho, Vec3f(0.0, 0.0, 0.5));
 }

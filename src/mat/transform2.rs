@@ -162,6 +162,17 @@ impl<T: Float> Transform2<T> {
 			a21: T::ZERO, a22, a23,
 		}
 	}
+
+	/// Maps NDC coordinates to screen space.
+	#[inline]
+	pub fn screen(width: T, height: T) -> Transform2<T> {
+		let half_width = width / T::TWO;
+		let half_height = height / T::TWO;
+		let x = Vec2 { x: half_width, y: T::ZERO };
+		let y = Vec2 { x: T::ZERO, y: -half_height };
+		let t = Vec2 { x: half_width, y: half_height };
+		Transform2::compose(x, y, t)
+	}
 }
 
 //----------------------------------------------------------------
