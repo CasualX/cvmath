@@ -56,6 +56,12 @@ impl<T: Float> Angle<T> {
 		Angle(self.radians - div.floor() * T::TAU)
 	}
 
+	/// Absolute value of the angle.
+	#[inline]
+	pub fn abs(self) -> Self {
+		Angle(self.radians.abs())
+	}
+
 	/// Sine.
 	#[inline]
 	pub fn sin(self) -> T {

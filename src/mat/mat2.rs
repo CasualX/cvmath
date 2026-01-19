@@ -71,8 +71,15 @@ impl<T: Float> Mat2<T> {
 	/// Scaling matrix.
 	///
 	/// Scales around the origin.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2::scaling(cvmath::Vec2(2.0, 3.0));
+	/// let value = mat * cvmath::Vec2(4.0, 5.0);
+	/// let expected = cvmath::Vec2(8.0, 15.0);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
-	pub fn scale(scale: Vec2<T>) -> Mat2<T> {
+	pub fn scaling(scale: Vec2<T>) -> Mat2<T> {
 		Mat2 {
 			a11: scale.x, a12: T::ZERO,
 			a21: T::ZERO, a22: scale.y,
@@ -82,8 +89,15 @@ impl<T: Float> Mat2<T> {
 	/// Rotation matrix.
 	///
 	/// Rotates around the origin.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2::rotation(cvmath::Angle::deg(90.0));
+	/// let value = (mat * cvmath::Vec2(1.0f64, 1.0)).cast::<f32>();
+	/// let expected = cvmath::Vec2(-1.0f32, 1.0);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
-	pub fn rotate(angle: Angle<T>) -> Mat2<T> {
+	pub fn rotation(angle: Angle<T>) -> Mat2<T> {
 		let (cy, cx) = angle.sin_cos();
 		Mat2 {
 			a11: cx, a12: -cy,
@@ -91,9 +105,43 @@ impl<T: Float> Mat2<T> {
 		}
 	}
 
+	/// Returns the shortest rotation that aligns vector `from` with vector `to`.
+	///
+	/// The resulting matrix `R` satisfies:
+	///
+	/// ```text
+	/// R * from = to
+	/// ```
+	///
+	/// Both vectors are expected to be normalized.
+	/// The implementation avoids trigonometric functions.
+	///
+	/// The 2D rotation is uniquely defined even when the vectors are opposite, so this returns a 180° rotation in that case.
+	///
+	/// This is useful for constructing an orientation matrix that points one direction vector toward another.
+	///
+	/// ```
+	/// let from = cvmath::Vec2(1.0, 1.0).norm();
+	/// let to = cvmath::Vec2(-1.0, 1.0).norm();
+	/// let mat = cvmath::Mat2::rotation_between(from, to);
+	///
+	/// let expected = to.cast::<f32>();
+	/// let value = (mat * from).cast::<f32>();
+	/// assert_eq!(expected, value);
+	/// ```
+	#[inline]
+	pub fn rotation_between(from: Vec2<T>, to: Vec2<T>) -> Mat2<T> {
+		let z = from.cross(to);
+		let c = from.dot(to);
+		Mat2 {
+			a11: c, a12: -z,
+			a21: z, a22: c,
+		}
+	}
+
 	/// Skewing matrix.
 	#[inline]
-	pub fn skew(skew: Vec2<T>) -> Mat2<T> {
+	pub fn skewing(skew: Vec2<T>) -> Mat2<T> {
 		Mat2 {
 			a11: T::ONE, a12: skew.x,
 			a21: skew.y, a22: T::ONE,
@@ -104,8 +152,15 @@ impl<T: Float> Mat2<T> {
 	///
 	/// Reflects around the given axis.
 	/// If axis is the zero vector, returns a point reflection around the origin.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2::reflection(cvmath::Vec2d::Y);
+	/// let value = mat * cvmath::Vec2(2.0, 3.0);
+	/// let expected = cvmath::Vec2(-2.0, 3.0);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
-	pub fn reflect(axis: Vec2<T>) -> Mat2<T> {
+	pub fn reflection(axis: Vec2<T>) -> Mat2<T> {
 		let ls = axis.dot(axis);
 		if ls > T::EPSILON {
 			let Vec2 { x, y } = axis;
@@ -117,7 +172,7 @@ impl<T: Float> Mat2<T> {
 		}
 		else {
 			// Do something like point reflection instead of NaN
-			Mat2::scale(Vec2::dup(-T::ONE))
+			Mat2::scaling(Vec2::dup(-T::ONE))
 		}
 	}
 
@@ -125,8 +180,15 @@ impl<T: Float> Mat2<T> {
 	///
 	/// Projects onto the given axis.
 	/// If axis is the zero vector, returns the zero matrix.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2::projection(cvmath::Vec2d::X);
+	/// let value = mat * cvmath::Vec2(2.0, 3.0);
+	/// let expected = cvmath::Vec2(2.0, 0.0);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
-	pub fn project(axis: Vec2<T>) -> Mat2<T> {
+	pub fn projection(axis: Vec2<T>) -> Mat2<T> {
 		let ls = axis.dot(axis);
 		if ls > T::EPSILON {
 			let Vec2 { x, y } = axis;
@@ -148,6 +210,13 @@ impl<T: Float> Mat2<T> {
 
 impl<T> Mat2<T> {
 	/// Converts to a Transform2 matrix.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2(1, 2, 3, 4).transform2();
+	/// let value = mat.into_row_major();
+	/// let expected = [[1, 2, 0], [3, 4, 0]];
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn transform2(self) -> Transform2<T> where T: Zero {
 		Transform2 {
@@ -156,6 +225,13 @@ impl<T> Mat2<T> {
 		}
 	}
 	/// Adds a translation to the matrix.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2::IDENTITY.translate(cvmath::Vec2(5, 6));
+	/// let value = mat.into_row_major();
+	/// let expected = [[1, 0, 5], [0, 1, 6]];
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn translate(self, trans: Vec2<T>) -> Transform2<T> {
 		let Vec2 { x: a13, y: a23 } = trans;
@@ -172,6 +248,12 @@ impl<T> Mat2<T> {
 		unsafe { mem::transmute(self)}
 	}
 	/// Imports the matrix from a row-major layout.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2::from_row_major([[1, 2], [3, 4]]);
+	/// let expected = cvmath::Mat2(1, 2, 3, 4);
+	/// assert_eq!(expected, mat);
+	/// ```
 	#[inline]
 	pub fn from_row_major(mat: [[T; 2]; 2]) -> Mat2<T> {
 		let [[a11, a12], [a21, a22]] = mat;
@@ -181,6 +263,12 @@ impl<T> Mat2<T> {
 		}
 	}
 	/// Imports the matrix from a column-major layout.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2::from_column_major([[1, 3], [2, 4]]);
+	/// let expected = cvmath::Mat2(1, 2, 3, 4);
+	/// assert_eq!(expected, mat);
+	/// ```
 	#[inline]
 	pub fn from_column_major(mat: [[T; 2]; 2]) -> Mat2<T> {
 		let [[a11, a21], [a12, a22]] = mat;
@@ -190,6 +278,12 @@ impl<T> Mat2<T> {
 		}
 	}
 	/// Exports the matrix as a row-major array.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2(1, 2, 3, 4).into_row_major();
+	/// let expected = [[1, 2], [3, 4]];
+	/// assert_eq!(expected, mat);
+	/// ```
 	#[inline]
 	pub fn into_row_major(self) -> [[T; 2]; 2] {
 		[
@@ -198,6 +292,12 @@ impl<T> Mat2<T> {
 		]
 	}
 	/// Exports the matrix as a column-major array.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2(1, 2, 3, 4).into_column_major();
+	/// let expected = [[1, 3], [2, 4]];
+	/// assert_eq!(expected, mat);
+	/// ```
 	#[inline]
 	pub fn into_column_major(self) -> [[T; 2]; 2] {
 		[
@@ -212,6 +312,13 @@ impl<T> Mat2<T> {
 
 impl<T> Mat2<T> {
 	/// Composes the matrix from basis vectors.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2::compose(cvmath::Vec2(1, 2), cvmath::Vec2(3, 4));
+	/// let value = mat.into_row_major();
+	/// let expected = [[1, 3], [2, 4]];
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn compose(x: Vec2<T>, y: Vec2<T>) -> Mat2<T> {
 		Mat2 {
@@ -220,11 +327,23 @@ impl<T> Mat2<T> {
 		}
 	}
 	/// Gets the transformed X basis vector.
+	///
+	/// ```
+	/// let value = cvmath::Mat2(1, 2, 3, 4).x();
+	/// let expected = cvmath::Vec2(1, 3);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn x(self) -> Vec2<T> {
 		Vec2 { x: self.a11, y: self.a21 }
 	}
 	/// Gets the transformed Y basis vector.
+	///
+	/// ```
+	/// let value = cvmath::Mat2(1, 2, 3, 4).y();
+	/// let expected = cvmath::Vec2(2, 4);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn y(self) -> Vec2<T> {
 		Vec2 { x: self.a12, y: self.a22 }
@@ -236,11 +355,21 @@ impl<T> Mat2<T> {
 
 impl<T: Scalar> Mat2<T> {
 	/// Computes the determinant.
+	///
+	/// ```
+	/// let value = cvmath::Mat2(1, 2, 3, 4).det();
+	/// assert_eq!(-2, value);
+	/// ```
 	#[inline]
 	pub fn det(self) -> T {
 		self.a11 * self.a22 - self.a21 * self.a12
 	}
 	/// Computes the trace.
+	///
+	/// ```
+	/// let value = cvmath::Mat2(1, 2, 3, 4).trace();
+	/// assert_eq!(5, value);
+	/// ```
 	#[inline]
 	pub fn trace(self) -> T {
 		self.a11 + self.a22
@@ -250,11 +379,24 @@ impl<T: Scalar> Mat2<T> {
 	/// This measure is useful for quickly checking matrix magnitude or comparing matrices without the cost of a square root operation.
 	///
 	/// To check if a matrix is effectively zero, test if `flat_norm_sqr()` is below a small epsilon threshold.
+	///
+	/// ```
+	/// let value = cvmath::Mat2(1, 2, 3, 4).flat_norm_sqr();
+	/// assert_eq!(30, value);
+	/// ```
 	#[inline]
 	pub fn flat_norm_sqr(self) -> T {
 		self.a11 * self.a11 + self.a12 * self.a12 +
 		self.a21 * self.a21 + self.a22 * self.a22
 	}
+	/// Attempts to invert the matrix.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2(1.0, 2.0, 3.0, 4.0);
+	/// let value = mat.try_invert();
+	/// let expected = Some(cvmath::Mat2(-2.0, 1.0, 1.5, -0.5));
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn try_invert(self) -> Option<Mat2<T>> where T: Float {
 		let det = self.det();
@@ -265,20 +407,38 @@ impl<T: Scalar> Mat2<T> {
 	}
 	/// Computes the inverse matrix.
 	///
-	/// Returns the zero matrix if the determinant is near zero.
+	/// Returns the zero matrix if the determinant is exactly zero.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2(1.0, 2.0, 3.0, 4.0);
+	/// let value = mat.inverse();
+	/// let expected = cvmath::Mat2(-2.0, 1.0, 1.5, -0.5);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn inverse(self) -> Mat2<T> where T: Float {
 		self.try_invert().unwrap_or(Mat2::ZERO)
 	}
 	/// Returns the transposed matrix.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2(1, 2, 3, 4);
+	/// assert_eq!(cvmath::Mat2(1, 3, 2, 4), mat.transpose());
+	/// ```
 	#[inline]
 	pub fn transpose(self) -> Mat2<T> {
 		Mat2 {
-			a11: self.a22, a12: self.a21,
-			a21: self.a12, a22: self.a11,
+			a11: self.a11, a12: self.a21,
+			a21: self.a12, a22: self.a22,
 		}
 	}
 	/// Computes the adjugate matrix.
+	///
+	/// ```
+	/// let value = cvmath::Mat2(1, 2, 3, 4).adjugate();
+	/// let expected = cvmath::Mat2(4, -2, -3, 1);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn adjugate(self) -> Mat2<T> {
 		Mat2 {
@@ -287,6 +447,14 @@ impl<T: Scalar> Mat2<T> {
 		}
 	}
 	/// Linear interpolation between the matrix elements.
+	///
+	/// ```
+	/// let source = cvmath::Mat2::IDENTITY;
+	/// let target = cvmath::Mat2::scaling(cvmath::Vec2(3.0, 5.0));
+	/// let value = source.lerp(target, 0.5);
+	/// let expected = cvmath::Mat2(2.0, 0.0, 0.0, 3.0);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn lerp(self, rhs: Mat2<T>, t: T) -> Mat2<T> where T: Float {
 		Mat2 {
@@ -295,6 +463,21 @@ impl<T: Scalar> Mat2<T> {
 			a21: self.a21 + (rhs.a21 - self.a21) * t,
 			a22: self.a22 + (rhs.a22 - self.a22) * t,
 		}
+	}
+	/// Applies the transformation around a given origin.
+	///
+	/// ```
+	/// let rotation = cvmath::Mat2::rotation(cvmath::Angle::deg(90.0));
+	/// let mat = rotation.around(cvmath::Vec2(2.0f64, 3.0));
+	/// let value = (mat * cvmath::Vec2(3.0, 3.0)).cast::<f32>();
+	/// let expected = cvmath::Vec2(2.0f32, 4.0);
+	/// assert_eq!(expected, value);
+	/// ```
+	#[inline]
+	pub fn around(self, origin: Vec2<T>) -> Transform2<T> where T: Float {
+		let to_origin = Transform2::translation(-origin);
+		let from_origin = Transform2::translation(origin);
+		from_origin * self * to_origin
 	}
 }
 
@@ -426,4 +609,48 @@ fn test_fmt() {
 
 	let mat = Mat2(1.23456789, 2.3456789, 3.45678901, 4.56789012);
 	assert_eq!(format!("{mat}"), "Mat2([1.23456789, 2.3456789], [3.45678901, 4.56789012])");
+}
+
+#[test]
+fn test_fmt_precision_behavior() {
+	let mat = Mat2(1.15, 2.0, 3.3, 4.4);
+	assert_eq!(format!("{mat:.2}"), "Mat2([1.15, 2.00], [3.30, 4.40])");
+	assert_eq!(format!("{mat:#.2}"), "Mat2(\n [1.15,    2],\n [ 3.3,  4.4])");
+}
+
+#[test]
+fn test_fmt_width_behavior() {
+	let mat = Mat2(1.15, 2.0, 3.3, 4.4);
+	assert_eq!(format!("{mat:8.2}"), "Mat2([    1.15,     2.00], [    3.30,     4.40])");
+	assert_eq!(format!("{mat:#8.2}"), "Mat2(\n [1.15,    2],\n [ 3.3,  4.4])");
+}
+
+#[test]
+fn test_rotation() {
+	let angle = Angle::deg(45.0);
+	let rot = Mat2::rotation(angle);
+	let v = Vec2(1.0, 0.0);
+	let value = (rot * v).angle(v).cast::<f32>();
+	let expected = angle.cast::<f32>();
+	assert_eq!(value, expected);
+}
+
+#[test]
+fn test_rotation_between() {
+	let from = Vec2(1.0, 1.0).norm();
+	let to = Vec2(-1.0, 1.0).norm();
+	let matrix = Mat2::rotation_between(from, to);
+	let value = (matrix * from).cast::<f32>();
+	let expected = to.cast::<f32>();
+	assert_eq!(expected, value);
+}
+
+#[test]
+fn test_rotation_between_opposite() {
+	let from = Vec2f::X;
+	let to = -Vec2f::X;
+	let rot = Mat2f::rotation_between(from, to);
+	let value = (rot * from).cast::<f32>();
+	let expected = to.cast::<f32>();
+	assert_eq!(expected, value);
 }

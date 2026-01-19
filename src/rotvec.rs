@@ -21,7 +21,7 @@ impl<T: Float> RotationVector<T> {
 	#[inline]
 	pub fn mat3(self) -> Mat3<T> {
 		let (axis, radians) = self.v.norm_len();
-		Mat3::rotate(axis, Angle { radians })
+		Mat3::rotation(axis, Angle { radians })
 	}
 	#[inline]
 	pub fn quat(self) -> Quat<T> {
@@ -49,16 +49,26 @@ impl<T: Float> From<RotationVector<T>> for (Vec3<T>, Angle<T>) {
 unsafe impl<T: dataview::Pod> dataview::Pod for RotationVector<T> {}
 
 #[cfg(feature = "serde")]
-impl<T> serde::Serialize for RotationVector<T> where Vec3<T>: serde::Serialize {
+impl<T: serde::Serialize> serde::Serialize for RotationVector<T> {
 	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-		self.v.serialize(serializer)
+		use serde::ser::SerializeTupleStruct;
+		let mut state = serializer.serialize_tuple_struct("RotationVector", 3)?;
+		state.serialize_field(&self.v.x)?;
+		state.serialize_field(&self.v.y)?;
+		state.serialize_field(&self.v.z)?;
+		state.end()
 	}
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T> serde::Deserialize<'de> for RotationVector<T> where Vec3<T>: serde::Deserialize<'de> {
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for RotationVector<T> {
 	fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-		let v = Vec3::<T>::deserialize(deserializer)?;
-		Ok(RotationVector { v })
+		let (x, y, z) = {
+			#[derive(serde::Deserialize)]
+			struct RotationVector<T>(T, T, T);
+			let RotationVector(x, y, z) = RotationVector::<T>::deserialize(deserializer)?;
+			(x, y, z)
+		};
+		Ok(RotationVector { v: Vec3 { x, y, z } })
 	}
 }

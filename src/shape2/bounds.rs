@@ -415,6 +415,11 @@ impl<T: Scalar> Bounds2<T> {
 			end: self.top_left(),
 		}
 	}
+	/// Computes the aspect ratio _(width / height)_.
+	#[inline]
+	pub fn aspect_ratio(&self) -> T where T: Float {
+		self.width() / self.height()
+	}
 	/// Linear interpolation between the shapes.
 	#[inline]
 	pub fn lerp(self, target: Bounds2<T>, t: T) -> Bounds2<T> where T: Scalar {

@@ -153,22 +153,31 @@ impl<T: Float> Quat<T> {
 
 		(axis, angle)
 	}
-	/// Constructs a quaternion that represents the rotation from one vector to another.
+	/// Returns the shortest rotation that rotates vector `from` onto `to`.
+	///
+	/// The resulting quaternion `q` satisfies:
+	///
+	/// ```text
+	/// q * from * q⁻¹ = to
+	/// ```
+	///
+	/// Both `from` and `to` are expected to be normalized direction vectors.
+	/// The implementation avoids trigonometric functions.
+	///
+	/// If the vectors are opposite (`dot(from,to) ≈ -1`), the rotation axis is
+	/// not uniquely defined. In this case an arbitrary perpendicular axis to
+	/// `from` is chosen, producing a 180° rotation.
 	pub fn rotation(from: Vec3<T>, to: Vec3<T>) -> Quat<T> {
-		let from = from.norm();
-		let to = to.norm();
-		let dot = from.dot(to);
-		if dot >= T::ONE - T::EPSILON {
-			Quat::UNIT
-		}
-		else if dot <= -(T::ONE - T::EPSILON) {
+		let v = from.cross(to);
+		let w = T::ONE + from.dot(to);
+
+		if w <= T::EPSILON {
+			// vectors opposite
 			let axis = from.any_perp();
-			Quat::from_axis_angle(axis, Angle::HALF)
+			Quat { a: T::ZERO, b: axis.x, c: axis.y, d: axis.z }
 		}
 		else {
-			let axis = from.cross(to).norm();
-			let angle = Angle::acos(dot);
-			Quat::from_axis_angle(axis, angle)
+			Quat { a: w, b: v.x, c: v.y, d: v.z }.norm()
 		}
 	}
 	/// Raises this quaternion to the power of `v`, representing a fractional rotation.

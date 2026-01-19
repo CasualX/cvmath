@@ -238,7 +238,7 @@ impl<T: Float> Mat4<T> {
 
 		let projection = Mat4::perspective(adjusted_fov_y, aspect_ratio, near + dz, far + dz, flags);
 		let trans = Vec3(T::ZERO, T::ZERO, match flags.0 { Hand::LH => dz, Hand::RH => -dz });
-		let view_shift = Transform3::translate(trans);
+		let view_shift = Transform3::translation(trans);
 
 		projection * view_shift
 	}
@@ -391,7 +391,7 @@ impl<T: Scalar> Mat4<T> {
 	}
 	/// Computes the inverse matrix.
 	///
-	/// Returns the zero matrix if the determinant is near zero.
+	/// Returns the zero matrix if the determinant is exactly zero.
 	#[inline]
 	pub fn inverse(self) -> Mat4<T> where T: Float {
 		glu_invert(&self).unwrap_or(Mat4::ZERO)

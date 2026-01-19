@@ -77,8 +77,15 @@ impl<T: Zero + One> Transform3<T> {
 
 impl<T: Float> Transform3<T> {
 	/// Translation matrix.
+	///
+	/// ```
+	/// let mat = cvmath::Transform3::translation(cvmath::Vec3(5.0, 6.0, 7.0));
+	/// let value = mat * cvmath::Vec3(1.0, 2.0, 3.0);
+	/// let expected = cvmath::Vec3(6.0, 8.0, 10.0);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
-	pub fn translate(trans: Vec3<T>) -> Transform3<T> {
+	pub fn translation(trans: Vec3<T>) -> Transform3<T> {
 		let Vec3 { x: a14, y: a24, z: a34 } = trans;
 		Transform3 { a14, a24, a34, ..Transform3::IDENTITY }
 	}
@@ -86,21 +93,57 @@ impl<T: Float> Transform3<T> {
 	/// Scaling matrix.
 	///
 	/// Scales around the origin.
+	///
+	/// ```
+	/// let mat = cvmath::Transform3::scaling(cvmath::Vec3(2.0, 3.0, 4.0));
+	/// let value = mat * cvmath::Vec3(4.0, 5.0, 6.0);
+	/// let expected = cvmath::Vec3(8.0, 15.0, 24.0);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
-	pub fn scale(scale: Vec3<T>) -> Transform3<T> {
+	pub fn scaling(scale: Vec3<T>) -> Transform3<T> {
 		let Vec3 { x: a11, y: a22, z: a33 } = scale;
 		Transform3 { a11, a22, a33, ..Transform3::IDENTITY }
 	}
 
-	/// Rotation matrix around an axis.
+	/// Rotation matrix around an axis. See [Mat3::rotation] for details.
+	///
+	/// ```
+	/// let mat = cvmath::Transform3::rotation(cvmath::Vec3::Z, cvmath::Angle::deg(90.0));
+	/// let value = (mat * cvmath::Vec3(1.0f64, 1.0, 1.0)).cast::<f32>();
+	/// let expected = cvmath::Vec3(-1.0f32, 1.0, 1.0);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
-	pub fn rotate(axis: Vec3<T>, angle: Angle<T>) -> Transform3<T> {
-		Mat3::rotate(axis, angle).transform3()
+	pub fn rotation(axis: Vec3<T>, angle: Angle<T>) -> Transform3<T> {
+		Mat3::rotation(axis, angle).transform3()
+	}
+
+	/// Rotation matrix between two vectors. See [Mat3::rotation_between] for details.
+	///
+	/// ```
+	/// let from = cvmath::Vec3(1.0, 0.0, 0.0);
+	/// let to = cvmath::Vec3(0.0, 1.0, 0.0);
+	/// let mat = cvmath::Transform3::rotation_between(from, to);
+	/// let value = (mat * from).cast::<f32>();
+	/// let expected = to.cast::<f32>();
+	/// assert_eq!(expected, value);
+	/// ```
+	#[inline]
+	pub fn rotation_between(from: Vec3<T>, to: Vec3<T>) -> Transform3<T> {
+		Mat3::rotation_between(from, to).transform3()
 	}
 }
 
 impl<T: Float> Transform3<T> {
 	/// Look-at matrix.
+	///
+	/// ```
+	/// let mat = cvmath::Transform3::look_at(cvmath::Vec3(0.0, 0.0, 5.0), cvmath::Vec3(0.0, 0.0, 0.0), cvmath::Vec3::Y, cvmath::Hand::RH);
+	/// let value = mat * cvmath::Vec3(0.0, 0.0, 5.0);
+	/// let expected = cvmath::Vec3(0.0, 0.0, 0.0);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn look_at(position: Vec3<T>, target: Vec3<T>, ref_up: Vec3<T>, hand: Hand) -> Transform3<T> {
 		let forward = match hand {
@@ -142,6 +185,14 @@ impl<T: Float> Transform3<T> {
 	/// * +Z → decreases into the scene
 	///
 	/// The `clip` parameter controls the mapping of the Z range into clip space.
+	///
+	/// ```
+	/// let bounds = cvmath::Bounds3(cvmath::Vec3(-1.0, -1.0, 0.0), cvmath::Vec3(1.0, 1.0, 1.0));
+	/// let mat = cvmath::Transform3::ortho(bounds, (cvmath::Hand::LH, cvmath::Clip::ZO));
+	/// let value = mat * cvmath::Vec3(0.5, -0.5, 0.25);
+	/// let expected = cvmath::Vec3(0.5, -0.5, 0.25);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn ortho(bounds: Bounds3<T>, (hand, clip): (Hand, Clip)) -> Transform3<T> {
 		let Bounds3 {
@@ -165,6 +216,13 @@ impl<T: Float> Transform3<T> {
 	}
 
 	/// Maps NDC coordinates to screen space.
+	///
+	/// ```
+	/// let mat = cvmath::Transform3::screen(640.0, 480.0);
+	/// let value = mat * cvmath::Vec3(-1.0, -1.0, 0.0);
+	/// let expected = cvmath::Vec3(0.0, 480.0, 1.0);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn screen(width: T, height: T) -> Transform3<T> {
 		let half_width = width / T::TWO;
@@ -175,6 +233,31 @@ impl<T: Float> Transform3<T> {
 		let t = Vec3 { x: half_width, y: half_height, z: T::ONE };
 		Transform3::compose(x, y, z, t)
 	}
+
+	/// Maps NDC coordinates to viewport space.
+	///
+	/// ```
+	/// let bounds = cvmath::Bounds2::c(10.0, 20.0, 110.0, 220.0);
+	/// let mat = cvmath::Transform3::viewport(bounds);
+	/// let value = mat * cvmath::Vec3(-1.0, -1.0, 0.0);
+	/// let expected = cvmath::Vec3(10.0, 220.0, 1.0);
+	/// assert_eq!(expected, value);
+	/// ```
+	#[inline]
+	pub fn viewport(bounds: Bounds2<T>) -> Transform3<T> {
+		let Bounds2 {
+			mins: Vec2 { x: left, y: top },
+			maxs: Vec2 { x: right, y: bottom },
+		} = bounds;
+
+		let half_width = (right - left) / T::TWO;
+		let half_height = (bottom - top) / T::TWO;
+		let x = Vec3 { x: half_width, y: T::ZERO, z: T::ZERO };
+		let y = Vec3 { x: T::ZERO, y: -half_height, z: T::ZERO };
+		let z = Vec3::Z;
+		let t = Vec3 { x: left + half_width, y: top + half_height, z: T::ONE };
+		Transform3::compose(x, y, z, t)
+	}
 }
 
 //----------------------------------------------------------------
@@ -182,6 +265,13 @@ impl<T: Float> Transform3<T> {
 
 impl<T: Zero + One> Transform3<T> {
 	/// Converts to a 4x4 matrix.
+	///
+	/// ```
+	/// let mat = cvmath::Transform3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).mat4();
+	/// let value = mat.into_row_major();
+	/// let expected = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [0, 0, 0, 1]];
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn mat4(self) -> Mat4<T> {
 		self.into()
@@ -194,6 +284,12 @@ impl<T> Transform3<T> {
 		unsafe { mem::transmute(self)}
 	}
 	/// Imports the matrix from a row-major layout.
+	///
+	/// ```
+	/// let mat = cvmath::Transform3::from_row_major([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]);
+	/// let expected = cvmath::Transform3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
+	/// assert_eq!(expected, mat);
+	/// ```
 	#[inline]
 	pub fn from_row_major(mat: [[T; 4]; 3]) -> Transform3<T> {
 		let [[a11, a12, a13, a14], [a21, a22, a23, a24], [a31, a32, a33, a34]] = mat;
@@ -204,6 +300,12 @@ impl<T> Transform3<T> {
 		}
 	}
 	/// Imports the matrix from a column-major layout.
+	///
+	/// ```
+	/// let mat = cvmath::Transform3::from_column_major([[1, 5, 9], [2, 6, 10], [3, 7, 11], [4, 8, 12]]);
+	/// let expected = cvmath::Transform3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
+	/// assert_eq!(expected, mat);
+	/// ```
 	#[inline]
 	pub fn from_column_major(mat: [[T; 3]; 4]) -> Transform3<T> {
 		let [[a11, a21, a31], [a12, a22, a32], [a13, a23, a33], [a14, a24, a34]] = mat;
@@ -214,6 +316,12 @@ impl<T> Transform3<T> {
 		}
 	}
 	/// Exports the matrix as a row-major array.
+	///
+	/// ```
+	/// let value = cvmath::Transform3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).into_row_major();
+	/// let expected = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]];
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn into_row_major(self) -> [[T; 4]; 3] {
 		[
@@ -223,6 +331,12 @@ impl<T> Transform3<T> {
 		]
 	}
 	/// Exports the matrix as a column-major array.
+	///
+	/// ```
+	/// let value = cvmath::Transform3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).into_column_major();
+	/// let expected = [[1, 5, 9], [2, 6, 10], [3, 7, 11], [4, 8, 12]];
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn into_column_major(self) -> [[T; 3]; 4] {
 		[
@@ -239,6 +353,13 @@ impl<T> Transform3<T> {
 
 impl<T> Transform3<T> {
 	/// Composes the matrix from basis vectors.
+	///
+	/// ```
+	/// let mat = cvmath::Transform3::compose(cvmath::Vec3(1, 2, 3), cvmath::Vec3(4, 5, 6), cvmath::Vec3(7, 8, 9), cvmath::Vec3(10, 11, 12));
+	/// let value = mat.into_row_major();
+	/// let expected = [[1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]];
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn compose(x: Vec3<T>, y: Vec3<T>, z: Vec3<T>, t: Vec3<T>) -> Transform3<T> {
 		Transform3 {
@@ -248,26 +369,56 @@ impl<T> Transform3<T> {
 		}
 	}
 	/// Gets the transformed X basis vector.
+	///
+	/// ```
+	/// let value = cvmath::Transform3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).x();
+	/// let expected = cvmath::Vec3(1, 5, 9);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn x(self) -> Vec3<T> {
 		Vec3 { x: self.a11, y: self.a21, z: self.a31 }
 	}
 	/// Gets the transformed Y basis vector.
+	///
+	/// ```
+	/// let value = cvmath::Transform3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).y();
+	/// let expected = cvmath::Vec3(2, 6, 10);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn y(self) -> Vec3<T> {
 		Vec3 { x: self.a12, y: self.a22, z: self.a32 }
 	}
 	/// Gets the transformed Z basis vector.
+	///
+	/// ```
+	/// let value = cvmath::Transform3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).z();
+	/// let expected = cvmath::Vec3(3, 7, 11);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn z(self) -> Vec3<T> {
 		Vec3 { x: self.a13, y: self.a23, z: self.a33 }
 	}
 	/// Gets the translation vector.
+	///
+	/// ```
+	/// let value = cvmath::Transform3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).t();
+	/// let expected = cvmath::Vec3(4, 8, 12);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn t(self) -> Vec3<T> {
 		Vec3 { x: self.a14, y: self.a24, z: self.a34 }
 	}
 	/// Gets the rotation matrix.
+	///
+	/// ```
+	/// let value = cvmath::Transform3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).mat3();
+	/// let expected = cvmath::Mat3(1, 2, 3, 5, 6, 7, 9, 10, 11);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn mat3(self) -> Mat3<T> {
 		Mat3 {
@@ -283,6 +434,11 @@ impl<T> Transform3<T> {
 
 impl<T: Scalar> Transform3<T> {
 	/// Computes the determinant.
+	///
+	/// ```
+	/// let value = cvmath::Transform3::scaling(cvmath::Vec3(2.0, 3.0, 4.0)).det();
+	/// assert_eq!(24.0, value);
+	/// ```
 	#[inline]
 	pub fn det(self) -> T {
 		self.a11 * (self.a22 * self.a33 - self.a23 * self.a32) +
@@ -290,6 +446,11 @@ impl<T: Scalar> Transform3<T> {
 		self.a13 * (self.a21 * self.a32 - self.a22 * self.a31)
 	}
 	/// Computes the trace.
+	///
+	/// ```
+	/// let value = cvmath::Transform3::scaling(cvmath::Vec3(2.0, 3.0, 4.0)).trace();
+	/// assert_eq!(10.0, value);
+	/// ```
 	#[inline]
 	pub fn trace(self) -> T {
 		self.a11 + self.a22 + self.a33 + T::ONE
@@ -299,12 +460,27 @@ impl<T: Scalar> Transform3<T> {
 	/// This measure is useful for quickly checking matrix magnitude or comparing matrices without the cost of a square root operation.
 	///
 	/// To check if a matrix is effectively zero, test if `flat_norm_sqr()` is below a small epsilon threshold.
+	///
+	/// ```
+	/// let value = cvmath::Transform3(2, 0, 0, 1, 0, 3, 0, 2, 0, 0, 4, 3).flat_norm_sqr();
+	/// assert_eq!(43, value);
+	/// ```
 	#[inline]
 	pub fn flat_norm_sqr(self) -> T {
 		self.a11 * self.a11 + self.a12 * self.a12 + self.a13 * self.a13 + self.a14 * self.a14 +
 		self.a21 * self.a21 + self.a22 * self.a22 + self.a23 * self.a23 + self.a24 * self.a24 +
 		self.a31 * self.a31 + self.a32 * self.a32 + self.a33 * self.a33 + self.a34 * self.a34
 	}
+	/// Attempts to invert the transform.
+	///
+	/// ```
+	/// let mat = cvmath::Transform3::translation(cvmath::Vec3(8.0, 10.0, 12.0)) * cvmath::Transform3::scaling(cvmath::Vec3(2.0, 4.0, 8.0));
+	/// let point = cvmath::Vec3(7.0f64, 8.0, 9.0);
+	/// let projected = mat * point;
+	/// let value = (mat.try_invert().unwrap() * projected).cast::<f32>();
+	/// let expected = point.cast::<f32>();
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn try_invert(self) -> Option<Transform3<T>> where T: Float {
 		let det = self.det();
@@ -336,12 +512,29 @@ impl<T: Scalar> Transform3<T> {
 	}
 	/// Computes the inverse matrix.
 	///
-	/// Returns the zero matrix if the determinant is near zero.
+	/// Returns the zero matrix if the determinant is exactly zero.
+	///
+	/// ```
+	/// let mat = cvmath::Transform3::translation(cvmath::Vec3(8.0, 10.0, 12.0)) * cvmath::Transform3::scaling(cvmath::Vec3(2.0, 4.0, 8.0));
+	/// let point = cvmath::Vec3(7.0f64, 8.0, 9.0);
+	/// let projected = mat * point;
+	/// let value = (mat.inverse() * projected).cast::<f32>();
+	/// let expected = point.cast::<f32>();
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn inverse(self) -> Transform3<T> where T: Float {
 		self.try_invert().unwrap_or(Transform3::ZERO)
 	}
 	/// Linear interpolation between the matrix elements.
+	///
+	/// ```
+	/// let source = cvmath::Transform3::IDENTITY;
+	/// let target = cvmath::Transform3::translation(cvmath::Vec3(8.0, 10.0, 12.0));
+	/// let value = source.lerp(target, 0.5);
+	/// let expected = cvmath::Transform3(1.0, 0.0, 0.0, 4.0, 0.0, 1.0, 0.0, 5.0, 0.0, 0.0, 1.0, 6.0);
+	/// assert_eq!(expected, value);
+	/// ```
 	#[inline]
 	pub fn lerp(self, rhs: Transform3<T>, t: T) -> Transform3<T> where T: Float {
 		Transform3 {
@@ -360,6 +553,63 @@ impl<T: Scalar> Transform3<T> {
 			a33: self.a33 + (rhs.a33 - self.a33) * t,
 			a34: self.a34 + (rhs.a34 - self.a34) * t,
 		}
+	}
+	/// Solves a linear system of equations represented by the matrix.
+	///
+	/// Interprets the affine transform rows as the system:
+	///
+	/// - _a_<sub>11</sub> **x** + _a_<sub>12</sub> **y** + _a_<sub>13</sub> **z** + _a_<sub>14</sub> = 0
+	/// - _a_<sub>21</sub> **x** + _a_<sub>22</sub> **y** + _a_<sub>23</sub> **z** + _a_<sub>24</sub> = 0
+	/// - _a_<sub>31</sub> **x** + _a_<sub>32</sub> **y** + _a_<sub>33</sub> **z** + _a_<sub>34</sub> = 0
+	///
+	/// Equivalently, this finds the vector `v` such that `self * v == Vec3::ZERO`.
+	///
+	/// Returns `None` if the determinant is zero (no unique solution).
+	///
+	/// ```
+	/// let mat = cvmath::Transform3(
+	/// 	1.0,  2.0, 1.0, -9.0,
+	/// 	2.0, -1.0, 3.0, -4.0,
+	/// 	1.0,  1.0, 1.0, -6.0,
+	/// );
+	/// let value = mat.solve();
+	/// let expected = Some(cvmath::Vec3(2.0, 3.0, 1.0));
+	/// assert_eq!(expected, value);
+	/// ```
+	#[inline]
+	pub fn solve(self) -> Option<Vec3<T>> {
+		let det = self.det();
+		if det == T::ZERO {
+			return None;
+		}
+
+		let inv_det = T::ONE / det;
+		Some(Vec3 {
+			x: (self.a12 * (self.a24 * self.a33 - self.a23 * self.a34) +
+				self.a13 * (self.a22 * self.a34 - self.a24 * self.a32) +
+				self.a14 * (self.a23 * self.a32 - self.a22 * self.a33)) * inv_det,
+			y: (self.a11 * (self.a23 * self.a34 - self.a24 * self.a33) +
+				self.a13 * (self.a24 * self.a31 - self.a21 * self.a34) +
+				self.a14 * (self.a21 * self.a33 - self.a23 * self.a31)) * inv_det,
+			z: (self.a11 * (self.a24 * self.a32 - self.a22 * self.a34) +
+				self.a12 * (self.a21 * self.a34 - self.a24 * self.a31) +
+				self.a14 * (self.a22 * self.a31 - self.a21 * self.a32)) * inv_det,
+		})
+	}
+	/// Applies the transformation around a given origin.
+	///
+	/// ```
+	/// let rotation = cvmath::Transform3::rotation(cvmath::Vec3::Z, cvmath::Angle::deg(90.0));
+	/// let mat = rotation.around(cvmath::Vec3(2.0f64, 3.0, 4.0));
+	/// let value = (mat * cvmath::Vec3(3.0, 3.0, 4.0)).cast::<f32>();
+	/// let expected = cvmath::Vec3(2.0f32, 4.0, 4.0);
+	/// assert_eq!(expected, value);
+	/// ```
+	#[inline]
+	pub fn around(self, origin: Vec3<T>) -> Transform3<T> where T: Float {
+		let to_origin = Transform3::translation(-origin);
+		let from_origin = Transform3::translation(origin);
+		from_origin * self * to_origin
 	}
 }
 

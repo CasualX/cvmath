@@ -29,10 +29,10 @@ impl<T> Polar<T> {
 impl<T: Float> Polar<T> {
 	#[inline]
 	pub fn complex(self) -> Complex<T> {
-		let (re, im) = self.theta.sin_cos();
+		let (sin, cos) = self.theta.sin_cos();
 		Complex {
-			re: self.radius * re,
-			im: self.radius * im,
+			re: self.radius * cos,
+			im: self.radius * sin,
 		}
 	}
 }

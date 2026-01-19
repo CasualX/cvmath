@@ -46,8 +46,39 @@ impl<T: Zero + One> Complex<T> {
 impl<T: Float> Complex<T> {
 	/// Rotating complex number.
 	#[inline]
-	pub fn rotate(angle: Angle<T>) -> Complex<T> {
-		let (re, im) = angle.sin_cos();
+	pub fn rotation(angle: Angle<T>) -> Complex<T> {
+		let (sin, cos) = angle.sin_cos();
+		Complex { re: cos, im: sin }
+	}
+
+	/// Returns the shortest rotation that aligns vector `from` with vector `to`.
+	///
+	/// The resulting complex number `R` satisfies:
+	///
+	/// ```text
+	/// R * from = to
+	/// ```
+	///
+	/// Both vectors are expected to be normalized.
+	/// The implementation avoids trigonometric functions.
+	///
+	/// The 2D rotation is uniquely defined even when the vectors are opposite, so this returns a 180° rotation in that case.
+	///
+	/// This is useful for constructing a 2D orientation that points one direction vector toward another.
+	///
+	/// ```
+	/// let from = cvmath::Vec2(1.0, 1.0).norm();
+	/// let to = cvmath::Vec2(-1.0, 1.0).norm();
+	/// let rotation = cvmath::Complex::rotation_between(from, to);
+	///
+	/// let expected = to.cast::<f32>();
+	/// let actual = (rotation * from).cast::<f32>();
+	/// assert_eq!(expected, actual);
+	/// ```
+	#[inline]
+	pub fn rotation_between(from: Vec2<T>, to: Vec2<T>) -> Complex<T> {
+		let im = from.cross(to);
+		let re = from.dot(to);
 		Complex { re, im }
 	}
 }
@@ -193,6 +224,18 @@ impl<T> From<Complex<T>> for Vec2<T> {
 	#[inline]
 	fn from(complex: Complex<T>) -> Vec2<T> {
 		Vec2 { x: complex.re, y: complex.im }
+	}
+}
+impl<T: Float> From<Polar<T>> for Complex<T> {
+	#[inline]
+	fn from(polar: Polar<T>) -> Complex<T> {
+		polar.complex()
+	}
+}
+impl<T: Float> From<Complex<T>> for Polar<T> {
+	#[inline]
+	fn from(complex: Complex<T>) -> Polar<T> {
+		complex.polar()
 	}
 }
 
@@ -419,15 +462,40 @@ impl<T: FromStr + Default> FromStr for Complex<T> {
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		let s = s.trim_ascii();
-		let (re, im) = if let Some((lhs, rhs)) = s.split_once("+") {
-			let Some(rhs) = rhs.trim_ascii_start().strip_suffix("i") else { return Err(ParseComplexError::InvalidFormat) };
-			(lhs.trim_ascii_end().parse::<T>()?, rhs.parse::<T>()?)
+		let (re, im) = if let Some(imag) = s.strip_suffix("i") {
+			let imag = imag.trim_ascii_end();
+			if let Some(index) = split_complex_components(imag) {
+				let (lhs, rhs) = imag.split_at(index);
+				(lhs.trim_ascii_end().parse::<T>()?, parse_signed_component(rhs)?)
+			}
+			else {
+				(T::default(), parse_signed_component(imag)?)
+			}
 		}
 		else {
 			(s.parse::<T>()?, T::default())
 		};
 		Ok(Complex { re, im })
 	}
+}
+
+#[inline]
+fn split_complex_components(s: &str) -> Option<usize> {
+	let mut prev = None;
+	for (index, ch) in s.char_indices().skip(1) {
+		if matches!(ch, '+' | '-') && !matches!(prev, Some('e' | 'E')) {
+			return Some(index);
+		}
+		prev = Some(ch);
+	}
+	None
+}
+
+#[inline]
+fn parse_signed_component<T: FromStr>(s: &str) -> Result<T, T::Err> {
+	let s = s.trim_ascii_start();
+	let s = s.strip_prefix('+').map(str::trim_ascii_start).unwrap_or(s);
+	s.parse()
 }
 
 /// An error which can be returned when parsing a Complex<T>.
@@ -501,8 +569,54 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Complex<T> {
 fn test_fmt() {
 	let mut rng = urandom::new();
 	for _ in 0..100 {
-		let complex = Complexf::new(rng.next_f32(), rng.next_f32());
+		let complex = Complexf::new(rng.next_f32() * 2.0 - 1.0, rng.next_f32() * 2.0 - 1.0);
 		let parsed: Complex<f32> = format!("{complex:E}").parse().unwrap();
 		assert_eq!(complex, parsed);
 	}
+}
+
+#[test]
+fn test_parse_negative_imaginary() {
+	// Negative imaginary
+	assert_eq!("1-2i".parse::<Complexf>().unwrap(), Complexf::new(1.0, -2.0));
+	assert_eq!("1 -2i".parse::<Complexf>().unwrap(), Complexf::new(1.0, -2.0));
+	assert_eq!("1+-2i".parse::<Complexf>().unwrap(), Complexf::new(1.0, -2.0));
+	assert!("1 - 2i".parse::<Complexf>().is_err());
+
+	// Pure imaginary
+	assert_eq!("2i".parse::<Complexf>().unwrap(), Complexf::new(0.0, 2.0));
+	assert_eq!("+2i".parse::<Complexf>().unwrap(), Complexf::new(0.0, 2.0));
+	assert_eq!("-2i".parse::<Complexf>().unwrap(), Complexf::new(0.0, -2.0));
+	assert_eq!("2.5E-1i".parse::<Complexf>().unwrap(), Complexf::new(0.0, 0.25));
+
+	// Positive imaginary
+	assert_eq!("1+2i".parse::<Complexf>().unwrap(), Complexf::new(1.0, 2.0));
+	assert_eq!("1 +2i".parse::<Complexf>().unwrap(), Complexf::new(1.0, 2.0));
+	assert_eq!("1 + 2i".parse::<Complexf>().unwrap(), Complexf::new(1.0, 2.0));
+	assert_eq!("1+2.5E-1i".parse::<Complexf>().unwrap(), Complexf::new(1.0, 0.25));
+}
+
+#[test]
+fn test_rotate_zero_angle() {
+	assert_eq!(Complexf::rotation(Anglef::ZERO), Complexf::UNIT);
+}
+
+#[test]
+fn test_rotation_between() {
+	let from = Vec2(1.0, 1.0).norm();
+	let to = Vec2(-1.0, 1.0).norm();
+	let matrix = Complexd::rotation_between(from, to);
+	let actual = (matrix * from).cast::<f32>();
+	let expected = to.cast::<f32>();
+	assert_eq!(expected, actual);
+}
+
+#[test]
+fn test_rotation_between_opposite() {
+	let from = Vec2d::X;
+	let to = -Vec2d::X;
+	let matrix = Complexd::rotation_between(from, to);
+	let actual = (matrix * from).cast::<f32>();
+	let expected = to.cast::<f32>();
+	assert_eq!(expected, actual);
 }
