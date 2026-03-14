@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="cvmath::mat::mat2::Mat2&lt;f32&gt;" Priority="High">
+    <DisplayString>[[{a11,g} {a12,g}] [{a21,g} {a22,g}]]</DisplayString>
+    <Expand>
+      <Synthetic Name="Row1">
+        <DisplayString>[{a11,g} {a12,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Row2">
+        <DisplayString>[{a21,g} {a22,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisX">
+        <DisplayString>[{a11,g} {a21,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisY">
+        <DisplayString>[{a12,g} {a22,g}]</DisplayString>
+      </Synthetic>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::mat::mat2::Mat2&lt;f64&gt;" Priority="High">
+    <DisplayString>[[{a11,g} {a12,g}] [{a21,g} {a22,g}]]</DisplayString>
+    <Expand>
+      <Synthetic Name="Row1">
+        <DisplayString>[{a11,g} {a12,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Row2">
+        <DisplayString>[{a21,g} {a22,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisX">
+        <DisplayString>[{a11,g} {a21,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisY">
+        <DisplayString>[{a12,g} {a22,g}]</DisplayString>
+      </Synthetic>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::mat::mat2::Mat2&lt;*&gt;" Priority="MediumLow">
+    <DisplayString>[[{a11} {a12}] [{a21} {a22}]]</DisplayString>
+    <Expand>
+      <Synthetic Name="Row1">
+        <DisplayString>[{a11} {a12}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Row2">
+        <DisplayString>[{a21} {a22}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisX">
+        <DisplayString>[{a11} {a21}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisY">
+        <DisplayString>[{a12} {a22}]</DisplayString>
+      </Synthetic>
+    </Expand>
+  </Type>
+</AutoVisualizer>

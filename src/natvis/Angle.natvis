@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="cvmath::angle::Angle&lt;f32&gt;" Priority="High">
+    <DisplayString>{radians * 57.29577951308232,g}°</DisplayString>
+    <Expand>
+      <Synthetic Name="Degrees">
+        <DisplayString>{radians * 57.29577951308232,g}°</DisplayString>
+      </Synthetic>
+      <Item Name="Radians">radians,g</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::angle::Angle&lt;f64&gt;" Priority="High">
+    <DisplayString>{radians * 57.29577951308232,g}°</DisplayString>
+    <Expand>
+      <Synthetic Name="Degrees">
+        <DisplayString>{radians * 57.29577951308232,g}°</DisplayString>
+      </Synthetic>
+      <Item Name="Radians">radians,g</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::angle::Angle&lt;*&gt;" Priority="MediumLow">
+    <DisplayString>{radians}</DisplayString>
+    <Expand>
+      <Item Name="Radians">radians</Item>
+    </Expand>
+  </Type>
+</AutoVisualizer>

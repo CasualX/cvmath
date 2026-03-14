@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="cvmath::quat::Quat&lt;f32&gt;" Priority="High">
+    <DisplayString>{a,g} + ({b,g}, {c,g}, {d,g})</DisplayString>
+    <Expand>
+      <Item Name="Scalar">a,g</Item>
+      <Synthetic Name="Imaginary">
+        <DisplayString>({b,g}, {c,g}, {d,g})</DisplayString>
+      </Synthetic>
+      <Item Name="X">b,g</Item>
+      <Item Name="Y">c,g</Item>
+      <Item Name="Z">d,g</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::quat::Quat&lt;f64&gt;" Priority="High">
+    <DisplayString>{a,g} + ({b,g}, {c,g}, {d,g})</DisplayString>
+    <Expand>
+      <Item Name="Scalar">a,g</Item>
+      <Synthetic Name="Imaginary">
+        <DisplayString>({b,g}, {c,g}, {d,g})</DisplayString>
+      </Synthetic>
+      <Item Name="X">b,g</Item>
+      <Item Name="Y">c,g</Item>
+      <Item Name="Z">d,g</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::quat::Quat&lt;*&gt;" Priority="MediumLow">
+    <DisplayString>{a} ({b} {c} {d})</DisplayString>
+    <Expand>
+      <Item Name="Scalar">a</Item>
+      <Synthetic Name="Imaginary">
+        <DisplayString>({b} {c} {d})</DisplayString>
+      </Synthetic>
+      <Item Name="X">b</Item>
+      <Item Name="Y">c</Item>
+      <Item Name="Z">d</Item>
+    </Expand>
+  </Type>
+</AutoVisualizer>

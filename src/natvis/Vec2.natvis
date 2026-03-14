@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="cvmath::vec::Vec2&lt;f32&gt;" Priority="High">
+    <Intrinsic Name="abs_x" Expression="x &lt; 0.0f ? -x : x" />
+    <Intrinsic Name="abs_y" Expression="y &lt; 0.0f ? -y : y" />
+    <Intrinsic Name="max_c" Expression="abs_x() &gt; abs_y() ? abs_x() : abs_y()" />
+    <Intrinsic Name="min_c" Expression="abs_x() &gt; abs_y() ? abs_y() : abs_x()" />
+    <Intrinsic Name="sum_abs" Expression="abs_x() + abs_y()" />
+    <Intrinsic Name="len_sq" Expression="x * x + y * y" />
+    <Intrinsic Name="len_guess" Expression="max_c() + 0.41421356237f * min_c()" />
+    <Intrinsic Name="len_step1" Expression="len_guess() == 0.0f ? 0.0f : 0.5f * (len_guess() + len_sq() / len_guess())" />
+    <Intrinsic Name="len_step2" Expression="len_step1() == 0.0f ? 0.0f : 0.5f * (len_step1() + len_sq() / len_step1())" />
+    <Intrinsic Name="len" Expression="len_step2() == 0.0f ? 0.0f : 0.5f * (len_step2() + len_sq() / len_step2())" />
+    <Intrinsic Name="angle_deg_raw" Expression="sum_abs() == 0.0f ? 0.0f : (y &lt; 0.0f ? -1.0f : 1.0f) * (x &gt;= 0.0f ? 45.0f - 45.0f * ((x - abs_y()) / (x + abs_y())) : 135.0f - 45.0f * ((x + abs_y()) / (abs_y() - x)))" />
+    <Intrinsic Name="angle_deg" Expression="angle_deg_raw() &gt;= 0.0f ? (float)((int)(angle_deg_raw() * 10.0f + 0.5f)) / 10.0f : (float)((int)(angle_deg_raw() * 10.0f - 0.5f)) / 10.0f" />
+    <DisplayString>[{x,g} {y,g}] len≈{len(),g} angle={angle_deg(),g}°</DisplayString>
+    <Expand>
+      <Item Name="x">x,g</Item>
+      <Item Name="y">y,g</Item>
+      <Item Name="[len]">len(),g</Item>
+      <Synthetic Name="[angle]">
+        <DisplayString>{angle_deg(),g}°</DisplayString>
+      </Synthetic>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::vec::Vec2&lt;f64&gt;" Priority="High">
+    <Intrinsic Name="abs_x" Expression="x &lt; 0.0 ? -x : x" />
+    <Intrinsic Name="abs_y" Expression="y &lt; 0.0 ? -y : y" />
+    <Intrinsic Name="max_c" Expression="abs_x() &gt; abs_y() ? abs_x() : abs_y()" />
+    <Intrinsic Name="min_c" Expression="abs_x() &gt; abs_y() ? abs_y() : abs_x()" />
+    <Intrinsic Name="sum_abs" Expression="abs_x() + abs_y()" />
+    <Intrinsic Name="len_sq" Expression="x * x + y * y" />
+    <Intrinsic Name="len_guess" Expression="max_c() + 0.4142135623730951 * min_c()" />
+    <Intrinsic Name="len_step1" Expression="len_guess() == 0.0 ? 0.0 : 0.5 * (len_guess() + len_sq() / len_guess())" />
+    <Intrinsic Name="len_step2" Expression="len_step1() == 0.0 ? 0.0 : 0.5 * (len_step1() + len_sq() / len_step1())" />
+    <Intrinsic Name="len" Expression="len_step2() == 0.0 ? 0.0 : 0.5 * (len_step2() + len_sq() / len_step2())" />
+    <Intrinsic Name="angle_deg_raw" Expression="sum_abs() == 0.0 ? 0.0 : (y &lt; 0.0 ? -1.0 : 1.0) * (x &gt;= 0.0 ? 45.0 - 45.0 * ((x - abs_y()) / (x + abs_y())) : 135.0 - 45.0 * ((x + abs_y()) / (abs_y() - x)))" />
+    <Intrinsic Name="angle_deg" Expression="angle_deg_raw() &gt;= 0.0 ? (double)((int)(angle_deg_raw() * 10.0 + 0.5)) / 10.0 : (double)((int)(angle_deg_raw() * 10.0 - 0.5)) / 10.0" />
+    <DisplayString>[{x,g} {y,g}] len≈{len(),g} angle={angle_deg(),g}°</DisplayString>
+    <Expand>
+      <Item Name="x">x,g</Item>
+      <Item Name="y">y,g</Item>
+      <Item Name="[len]">len(),g</Item>
+      <Synthetic Name="[angle]">
+        <DisplayString>{angle_deg(),g}°</DisplayString>
+      </Synthetic>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::vec::Vec2&lt;*&gt;" Priority="MediumLow">
+    <DisplayString>[{x} {y}]</DisplayString>
+    <Expand>
+      <Item Name="x">x</Item>
+      <Item Name="y">y</Item>
+    </Expand>
+  </Type>
+</AutoVisualizer>

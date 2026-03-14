@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="cvmath::polar::Polar&lt;f32&gt;" Priority="High">
+    <DisplayString>{radius,g} ∠ {theta.radians * 57.29577951308232,g}°</DisplayString>
+    <Expand>
+      <Item Name="Radius">radius,g</Item>
+      <Synthetic Name="Theta">
+        <DisplayString>{theta.radians * 57.29577951308232,g}°</DisplayString>
+      </Synthetic>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::polar::Polar&lt;f64&gt;" Priority="High">
+    <DisplayString>{radius,g} ∠ {theta.radians * 57.29577951308232,g}°</DisplayString>
+    <Expand>
+      <Item Name="Radius">radius,g</Item>
+      <Synthetic Name="Theta">
+        <DisplayString>{theta.radians * 57.29577951308232,g}°</DisplayString>
+      </Synthetic>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::polar::Polar&lt;*&gt;" Priority="MediumLow">
+    <DisplayString>radius={radius} theta={theta}</DisplayString>
+    <Expand>
+      <Item Name="Radius">radius</Item>
+      <Item Name="Theta">theta</Item>
+    </Expand>
+  </Type>
+</AutoVisualizer>

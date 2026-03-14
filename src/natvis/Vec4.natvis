@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="cvmath::vec::Vec4&lt;f32&gt;" Priority="High">
+    <Intrinsic Name="abs_x" Expression="x &lt; 0.0f ? -x : x" />
+    <Intrinsic Name="abs_y" Expression="y &lt; 0.0f ? -y : y" />
+    <Intrinsic Name="abs_z" Expression="z &lt; 0.0f ? -z : z" />
+    <Intrinsic Name="abs_w" Expression="w &lt; 0.0f ? -w : w" />
+    <Intrinsic Name="len_sq" Expression="x * x + y * y + z * z + w * w" />
+    <Intrinsic Name="len_guess" Expression="abs_x() + abs_y() + abs_z() + abs_w()" />
+    <Intrinsic Name="len_step1" Expression="len_guess() == 0.0f ? 0.0f : 0.5f * (len_guess() + len_sq() / len_guess())" />
+    <Intrinsic Name="len_step2" Expression="len_step1() == 0.0f ? 0.0f : 0.5f * (len_step1() + len_sq() / len_step1())" />
+    <Intrinsic Name="len" Expression="len_step2() == 0.0f ? 0.0f : 0.5f * (len_step2() + len_sq() / len_step2())" />
+    <DisplayString>[{x,g} {y,g} {z,g} {w,g}] len≈{len(),g}</DisplayString>
+    <Expand>
+      <Item Name="x">x,g</Item>
+      <Item Name="y">y,g</Item>
+      <Item Name="z">z,g</Item>
+      <Item Name="w">w,g</Item>
+      <Item Name="[len]">len(),g</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::vec::Vec4&lt;f64&gt;" Priority="High">
+    <Intrinsic Name="abs_x" Expression="x &lt; 0.0 ? -x : x" />
+    <Intrinsic Name="abs_y" Expression="y &lt; 0.0 ? -y : y" />
+    <Intrinsic Name="abs_z" Expression="z &lt; 0.0 ? -z : z" />
+    <Intrinsic Name="abs_w" Expression="w &lt; 0.0 ? -w : w" />
+    <Intrinsic Name="len_sq" Expression="x * x + y * y + z * z + w * w" />
+    <Intrinsic Name="len_guess" Expression="abs_x() + abs_y() + abs_z() + abs_w()" />
+    <Intrinsic Name="len_step1" Expression="len_guess() == 0.0 ? 0.0 : 0.5 * (len_guess() + len_sq() / len_guess())" />
+    <Intrinsic Name="len_step2" Expression="len_step1() == 0.0 ? 0.0 : 0.5 * (len_step1() + len_sq() / len_step1())" />
+    <Intrinsic Name="len" Expression="len_step2() == 0.0 ? 0.0 : 0.5 * (len_step2() + len_sq() / len_step2())" />
+    <DisplayString>[{x,g} {y,g} {z,g} {w,g}] len≈{len(),g}</DisplayString>
+    <Expand>
+      <Item Name="x">x,g</Item>
+      <Item Name="y">y,g</Item>
+      <Item Name="z">z,g</Item>
+      <Item Name="w">w,g</Item>
+      <Item Name="[len]">len(),g</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::vec::Vec4&lt;*&gt;" Priority="MediumLow">
+    <DisplayString>[{x} {y} {z} {w}]</DisplayString>
+    <Expand>
+      <Item Name="x">x</Item>
+      <Item Name="y">y</Item>
+      <Item Name="z">z</Item>
+      <Item Name="w">w</Item>
+    </Expand>
+  </Type>
+</AutoVisualizer>

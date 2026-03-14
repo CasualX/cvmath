@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="cvmath::mat::mat4::Mat4&lt;f32&gt;" Priority="High">
+    <DisplayString>[[{a11,g} {a12,g} {a13,g} {a14,g}] [{a21,g} {a22,g} {a23,g} {a24,g}] [{a31,g} {a32,g} {a33,g} {a34,g}] [{a41,g} {a42,g} {a43,g} {a44,g}]]</DisplayString>
+    <Expand>
+      <Synthetic Name="Row1">
+        <DisplayString>[{a11,g} {a12,g} {a13,g} {a14,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Row2">
+        <DisplayString>[{a21,g} {a22,g} {a23,g} {a24,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Row3">
+        <DisplayString>[{a31,g} {a32,g} {a33,g} {a34,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Row4">
+        <DisplayString>[{a41,g} {a42,g} {a43,g} {a44,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisX">
+        <DisplayString>[{a11,g} {a21,g} {a31,g} {a41,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisY">
+        <DisplayString>[{a12,g} {a22,g} {a32,g} {a42,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisZ">
+        <DisplayString>[{a13,g} {a23,g} {a33,g} {a43,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisW">
+        <DisplayString>[{a14,g} {a24,g} {a34,g} {a44,g}]</DisplayString>
+      </Synthetic>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::mat::mat4::Mat4&lt;f64&gt;" Priority="High">
+    <DisplayString>[[{a11,g} {a12,g} {a13,g} {a14,g}] [{a21,g} {a22,g} {a23,g} {a24,g}] [{a31,g} {a32,g} {a33,g} {a34,g}] [{a41,g} {a42,g} {a43,g} {a44,g}]]</DisplayString>
+    <Expand>
+      <Synthetic Name="Row1">
+        <DisplayString>[{a11,g} {a12,g} {a13,g} {a14,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Row2">
+        <DisplayString>[{a21,g} {a22,g} {a23,g} {a24,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Row3">
+        <DisplayString>[{a31,g} {a32,g} {a33,g} {a34,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Row4">
+        <DisplayString>[{a41,g} {a42,g} {a43,g} {a44,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisX">
+        <DisplayString>[{a11,g} {a21,g} {a31,g} {a41,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisY">
+        <DisplayString>[{a12,g} {a22,g} {a32,g} {a42,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisZ">
+        <DisplayString>[{a13,g} {a23,g} {a33,g} {a43,g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisW">
+        <DisplayString>[{a14,g} {a24,g} {a34,g} {a44,g}]</DisplayString>
+      </Synthetic>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::mat::mat4::Mat4&lt;*&gt;" Priority="MediumLow">
+    <DisplayString>[[{a11} {a12} {a13} {a14}] [{a21} {a22} {a23} {a24}] [{a31} {a32} {a33} {a34}] [{a41} {a42} {a43} {a44}]]</DisplayString>
+    <Expand>
+      <Synthetic Name="Row1">
+        <DisplayString>[{a11} {a12} {a13} {a14}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Row2">
+        <DisplayString>[{a21} {a22} {a23} {a24}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Row3">
+        <DisplayString>[{a31} {a32} {a33} {a34}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Row4">
+        <DisplayString>[{a41} {a42} {a43} {a44}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisX">
+        <DisplayString>[{a11} {a21} {a31} {a41}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisY">
+        <DisplayString>[{a12} {a22} {a32} {a42}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisZ">
+        <DisplayString>[{a13} {a23} {a33} {a43}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="BasisW">
+        <DisplayString>[{a14} {a24} {a34} {a44}]</DisplayString>
+      </Synthetic>
+    </Expand>
+  </Type>
+</AutoVisualizer>

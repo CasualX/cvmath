@@ -3,6 +3,20 @@ Computer Vector Graphics Math Library
 =====================================
 */
 
+#![debugger_visualizer(natvis_file = "natvis/Angle.natvis")]
+#![debugger_visualizer(natvis_file = "natvis/Complex.natvis")]
+#![debugger_visualizer(natvis_file = "natvis/Polar.natvis")]
+#![debugger_visualizer(natvis_file = "natvis/Quat.natvis")]
+#![debugger_visualizer(natvis_file = "natvis/RotationVector.natvis")]
+#![debugger_visualizer(natvis_file = "natvis/Mat2.natvis")]
+#![debugger_visualizer(natvis_file = "natvis/Mat3.natvis")]
+#![debugger_visualizer(natvis_file = "natvis/Mat4.natvis")]
+#![debugger_visualizer(natvis_file = "natvis/Transform2.natvis")]
+#![debugger_visualizer(natvis_file = "natvis/Transform3.natvis")]
+#![debugger_visualizer(natvis_file = "natvis/Vec2.natvis")]
+#![debugger_visualizer(natvis_file = "natvis/Vec3.natvis")]
+#![debugger_visualizer(natvis_file = "natvis/Vec4.natvis")]
+
 use std::{fmt, mem, ops, slice};
 use std::error::Error;
 use std::str::FromStr;

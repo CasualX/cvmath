@@ -58,6 +58,10 @@ Types involved in ray casting and intersection:
 - `Hit2<T>`, `Hit3<T>` — Intersection results (distance, normal, index)
 - `Trace2<T>`, `Trace3<T>` — Traits for types that support ray tracing
 
+### Debugger Visualizers
+
+On Windows MSVC targets, [Natvis](https://code.visualstudio.com/docs/cpp/natvis) visualizers make common math types easier to inspect in the debugger.
+
 🔓 License
 ----------
 

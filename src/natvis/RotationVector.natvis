@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="cvmath::rotvec::RotationVector&lt;f32&gt;" Priority="High">
+    <Intrinsic Name="abs_x" Expression="v.x &lt; 0.0f ? -v.x : v.x" />
+    <Intrinsic Name="abs_y" Expression="v.y &lt; 0.0f ? -v.y : v.y" />
+    <Intrinsic Name="abs_z" Expression="v.z &lt; 0.0f ? -v.z : v.z" />
+    <Intrinsic Name="len_sq" Expression="v.x * v.x + v.y * v.y + v.z * v.z" />
+    <Intrinsic Name="len_guess" Expression="abs_x() + abs_y() + abs_z()" />
+    <Intrinsic Name="len_step1" Expression="len_guess() == 0.0f ? 0.0f : 0.5f * (len_guess() + len_sq() / len_guess())" />
+    <Intrinsic Name="len_step2" Expression="len_step1() == 0.0f ? 0.0f : 0.5f * (len_step1() + len_sq() / len_step1())" />
+    <Intrinsic Name="len" Expression="len_step2() == 0.0f ? 0.0f : 0.5f * (len_step2() + len_sq() / len_step2())" />
+    <Intrinsic Name="axis_x" Expression="len() == 0.0f ? 0.0f : v.x / len()" />
+    <Intrinsic Name="axis_y" Expression="len() == 0.0f ? 0.0f : v.y / len()" />
+    <Intrinsic Name="axis_z" Expression="len() == 0.0f ? 0.0f : v.z / len()" />
+    <Intrinsic Name="angle_deg_raw" Expression="len() * 57.29577951308232f" />
+    <Intrinsic Name="angle_deg" Expression="angle_deg_raw() &gt;= 0.0f ? (float)((int)(angle_deg_raw() * 10.0f + 0.5f)) / 10.0f : (float)((int)(angle_deg_raw() * 10.0f - 0.5f)) / 10.0f" />
+    <DisplayString>axis=[{axis_x(),g} {axis_y(),g} {axis_z(),g}] angle≈{angle_deg(),g}°</DisplayString>
+    <Expand>
+      <Synthetic Name="Axis">
+        <DisplayString>[{axis_x(),g} {axis_y(),g} {axis_z(),g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Angle">
+        <DisplayString>{angle_deg(),g}°</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Vector">
+        <DisplayString>[{v.x,g} {v.y,g} {v.z,g}]</DisplayString>
+      </Synthetic>
+      <Item Name="[len]">len(),g</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::rotvec::RotationVector&lt;f64&gt;" Priority="High">
+    <Intrinsic Name="abs_x" Expression="v.x &lt; 0.0 ? -v.x : v.x" />
+    <Intrinsic Name="abs_y" Expression="v.y &lt; 0.0 ? -v.y : v.y" />
+    <Intrinsic Name="abs_z" Expression="v.z &lt; 0.0 ? -v.z : v.z" />
+    <Intrinsic Name="len_sq" Expression="v.x * v.x + v.y * v.y + v.z * v.z" />
+    <Intrinsic Name="len_guess" Expression="abs_x() + abs_y() + abs_z()" />
+    <Intrinsic Name="len_step1" Expression="len_guess() == 0.0 ? 0.0 : 0.5 * (len_guess() + len_sq() / len_guess())" />
+    <Intrinsic Name="len_step2" Expression="len_step1() == 0.0 ? 0.0 : 0.5 * (len_step1() + len_sq() / len_step1())" />
+    <Intrinsic Name="len" Expression="len_step2() == 0.0 ? 0.0 : 0.5 * (len_step2() + len_sq() / len_step2())" />
+    <Intrinsic Name="axis_x" Expression="len() == 0.0 ? 0.0 : v.x / len()" />
+    <Intrinsic Name="axis_y" Expression="len() == 0.0 ? 0.0 : v.y / len()" />
+    <Intrinsic Name="axis_z" Expression="len() == 0.0 ? 0.0 : v.z / len()" />
+    <Intrinsic Name="angle_deg_raw" Expression="len() * 57.29577951308232" />
+    <Intrinsic Name="angle_deg" Expression="angle_deg_raw() &gt;= 0.0 ? (double)((int)(angle_deg_raw() * 10.0 + 0.5)) / 10.0 : (double)((int)(angle_deg_raw() * 10.0 - 0.5)) / 10.0" />
+    <DisplayString>axis=[{axis_x(),g} {axis_y(),g} {axis_z(),g}] angle≈{angle_deg(),g}°</DisplayString>
+    <Expand>
+      <Synthetic Name="Axis">
+        <DisplayString>[{axis_x(),g} {axis_y(),g} {axis_z(),g}]</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Angle">
+        <DisplayString>{angle_deg(),g}°</DisplayString>
+      </Synthetic>
+      <Synthetic Name="Vector">
+        <DisplayString>[{v.x,g} {v.y,g} {v.z,g}]</DisplayString>
+      </Synthetic>
+      <Item Name="[len]">len(),g</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="cvmath::rotvec::RotationVector&lt;*&gt;" Priority="MediumLow">
+    <DisplayString>[{v.x} {v.y} {v.z}]</DisplayString>
+    <Expand>
+      <Item Name="X">v.x</Item>
+      <Item Name="Y">v.y</Item>
+      <Item Name="Z">v.z</Item>
+    </Expand>
+  </Type>
+</AutoVisualizer>
