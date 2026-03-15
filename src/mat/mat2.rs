@@ -484,6 +484,62 @@ impl<T: Scalar> Mat2<T> {
 //----------------------------------------------------------------
 // Operators
 
+impl<T: ops::Neg<Output = T>> ops::Neg for Mat2<T> {
+	type Output = Mat2<T>;
+	#[inline]
+	fn neg(self) -> Mat2<T> {
+		Mat2 {
+			a11: -self.a11,
+			a12: -self.a12,
+			a21: -self.a21,
+			a22: -self.a22,
+		}
+	}
+}
+
+impl<T: Copy + ops::Add<Output = T>> ops::Add<Mat2<T>> for Mat2<T> {
+	type Output = Mat2<T>;
+	#[inline]
+	fn add(self, rhs: Mat2<T>) -> Mat2<T> {
+		Mat2 {
+			a11: self.a11 + rhs.a11,
+			a12: self.a12 + rhs.a12,
+			a21: self.a21 + rhs.a21,
+			a22: self.a22 + rhs.a22,
+		}
+	}
+}
+impl<T: Copy + ops::AddAssign> ops::AddAssign<Mat2<T>> for Mat2<T> {
+	#[inline]
+	fn add_assign(&mut self, rhs: Mat2<T>) {
+		self.a11 += rhs.a11;
+		self.a12 += rhs.a12;
+		self.a21 += rhs.a21;
+		self.a22 += rhs.a22;
+	}
+}
+impl<T: Copy + ops::Sub<Output = T>> ops::Sub<Mat2<T>> for Mat2<T> {
+	type Output = Mat2<T>;
+	#[inline]
+	fn sub(self, rhs: Mat2<T>) -> Mat2<T> {
+		Mat2 {
+			a11: self.a11 - rhs.a11,
+			a12: self.a12 - rhs.a12,
+			a21: self.a21 - rhs.a21,
+			a22: self.a22 - rhs.a22,
+		}
+	}
+}
+impl<T: Copy + ops::SubAssign> ops::SubAssign<Mat2<T>> for Mat2<T> {
+	#[inline]
+	fn sub_assign(&mut self, rhs: Mat2<T>) {
+		self.a11 -= rhs.a11;
+		self.a12 -= rhs.a12;
+		self.a21 -= rhs.a21;
+		self.a22 -= rhs.a22;
+	}
+}
+
 impl<T: Copy + ops::Mul<Output = T>> ops::Mul<T> for Mat2<T> {
 	type Output = Mat2<T>;
 	#[inline]
@@ -551,6 +607,9 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Mat2<
 	}
 }
 
+impl_mat_neg!(Mat2);
+impl_mat_add_mat!(Mat2);
+impl_mat_sub_mat!(Mat2);
 impl_mat_mul_scalar!(Mat2);
 impl_mat_mul_vec!(Mat2, Vec2);
 impl_mat_mul_mat!(Mat2);
@@ -623,6 +682,54 @@ fn test_fmt_width_behavior() {
 	let mat = Mat2(1.15, 2.0, 3.3, 4.4);
 	assert_eq!(format!("{mat:8.2}"), "Mat2([    1.15,     2.00], [    3.30,     4.40])");
 	assert_eq!(format!("{mat:#8.2}"), "Mat2(\n [1.15,    2],\n [ 3.3,  4.4])");
+}
+
+#[test]
+fn test_add() {
+	let lhs = Mat2(1, 2, 3, 4);
+	let rhs = Mat2(10, 20, 30, 40);
+	let expected = Mat2(11, 22, 33, 44);
+
+	assert_eq!(lhs + rhs, expected);
+	assert_eq!(lhs + &rhs, expected);
+	assert_eq!(&lhs + rhs, expected);
+	assert_eq!(&lhs + &rhs, expected);
+
+	let mut value = lhs;
+	value += rhs;
+	assert_eq!(value, expected);
+
+	let mut value = lhs;
+	value += &rhs;
+	assert_eq!(value, expected);
+}
+
+#[test]
+fn test_sub() {
+	let lhs = Mat2(11, 22, 33, 44);
+	let rhs = Mat2(10, 20, 30, 40);
+	let expected = Mat2(1, 2, 3, 4);
+
+	assert_eq!(lhs - rhs, expected);
+	assert_eq!(lhs - &rhs, expected);
+	assert_eq!(&lhs - rhs, expected);
+	assert_eq!(&lhs - &rhs, expected);
+
+	let mut value = lhs;
+	value -= rhs;
+	assert_eq!(value, expected);
+
+	let mut value = lhs;
+	value -= &rhs;
+	assert_eq!(value, expected);
+}
+
+#[test]
+fn test_neg() {
+	let value = Mat2(1, -2, 3, -4);
+	let expected = Mat2(-1, 2, -3, 4);
+	assert_eq!(-value, expected);
+	assert_eq!(-&value, expected);
 }
 
 #[test]

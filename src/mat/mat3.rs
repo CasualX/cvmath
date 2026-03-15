@@ -506,6 +506,57 @@ impl<T: Copy + ops::MulAssign> ops::MulAssign<T> for Mat3<T> {
 	}
 }
 
+impl<T: ops::Neg<Output = T>> ops::Neg for Mat3<T> {
+	type Output = Mat3<T>;
+	#[inline]
+	fn neg(self) -> Mat3<T> {
+		Mat3 {
+			a11: -self.a11, a12: -self.a12, a13: -self.a13,
+			a21: -self.a21, a22: -self.a22, a23: -self.a23,
+			a31: -self.a31, a32: -self.a32, a33: -self.a33,
+		}
+	}
+}
+
+impl<T: Copy + ops::Add<Output = T>> ops::Add<Mat3<T>> for Mat3<T> {
+	type Output = Mat3<T>;
+	#[inline]
+	fn add(self, rhs: Mat3<T>) -> Mat3<T> {
+		Mat3 {
+			a11: self.a11 + rhs.a11, a12: self.a12 + rhs.a12, a13: self.a13 + rhs.a13,
+			a21: self.a21 + rhs.a21, a22: self.a22 + rhs.a22, a23: self.a23 + rhs.a23,
+			a31: self.a31 + rhs.a31, a32: self.a32 + rhs.a32, a33: self.a33 + rhs.a33,
+		}
+	}
+}
+impl<T: Copy + ops::AddAssign> ops::AddAssign<Mat3<T>> for Mat3<T> {
+	#[inline]
+	fn add_assign(&mut self, rhs: Mat3<T>) {
+		self.a11 += rhs.a11; self.a12 += rhs.a12; self.a13 += rhs.a13;
+		self.a21 += rhs.a21; self.a22 += rhs.a22; self.a23 += rhs.a23;
+		self.a31 += rhs.a31; self.a32 += rhs.a32; self.a33 += rhs.a33;
+	}
+}
+impl<T: Copy + ops::Sub<Output = T>> ops::Sub<Mat3<T>> for Mat3<T> {
+	type Output = Mat3<T>;
+	#[inline]
+	fn sub(self, rhs: Mat3<T>) -> Mat3<T> {
+		Mat3 {
+			a11: self.a11 - rhs.a11, a12: self.a12 - rhs.a12, a13: self.a13 - rhs.a13,
+			a21: self.a21 - rhs.a21, a22: self.a22 - rhs.a22, a23: self.a23 - rhs.a23,
+			a31: self.a31 - rhs.a31, a32: self.a32 - rhs.a32, a33: self.a33 - rhs.a33,
+		}
+	}
+}
+impl<T: Copy + ops::SubAssign> ops::SubAssign<Mat3<T>> for Mat3<T> {
+	#[inline]
+	fn sub_assign(&mut self, rhs: Mat3<T>) {
+		self.a11 -= rhs.a11; self.a12 -= rhs.a12; self.a13 -= rhs.a13;
+		self.a21 -= rhs.a21; self.a22 -= rhs.a22; self.a23 -= rhs.a23;
+		self.a31 -= rhs.a31; self.a32 -= rhs.a32; self.a33 -= rhs.a33;
+	}
+}
+
 impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::Mul<Vec3<T>> for Mat3<T> {
 	type Output = Vec3<T>;
 	#[inline]
@@ -570,6 +621,9 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Trans
 	}
 }
 
+impl_mat_neg!(Mat3);
+impl_mat_add_mat!(Mat3);
+impl_mat_sub_mat!(Mat3);
 impl_mat_mul_scalar!(Mat3);
 impl_mat_mul_vec!(Mat3, Vec3);
 impl_mat_mul_mat!(Mat3);
@@ -626,4 +680,52 @@ fn test_inverse() {
 		let error = (unprojected - p).len();
 		assert!(error < 1e-6, "Failed for mat: {mat:?}, p: {p:?}, error: {error}");
 	}
+}
+
+#[test]
+fn test_add() {
+	let lhs = Mat3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+	let rhs = Mat3(10, 20, 30, 40, 50, 60, 70, 80, 90);
+	let expected = Mat3(11, 22, 33, 44, 55, 66, 77, 88, 99);
+
+	assert_eq!(lhs + rhs, expected);
+	assert_eq!(lhs + &rhs, expected);
+	assert_eq!(&lhs + rhs, expected);
+	assert_eq!(&lhs + &rhs, expected);
+
+	let mut value = lhs;
+	value += rhs;
+	assert_eq!(value, expected);
+
+	let mut value = lhs;
+	value += &rhs;
+	assert_eq!(value, expected);
+}
+
+#[test]
+fn test_sub() {
+	let lhs = Mat3(11, 22, 33, 44, 55, 66, 77, 88, 99);
+	let rhs = Mat3(10, 20, 30, 40, 50, 60, 70, 80, 90);
+	let expected = Mat3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+	assert_eq!(lhs - rhs, expected);
+	assert_eq!(lhs - &rhs, expected);
+	assert_eq!(&lhs - rhs, expected);
+	assert_eq!(&lhs - &rhs, expected);
+
+	let mut value = lhs;
+	value -= rhs;
+	assert_eq!(value, expected);
+
+	let mut value = lhs;
+	value -= &rhs;
+	assert_eq!(value, expected);
+}
+
+#[test]
+fn test_neg() {
+	let value = Mat3(1, -2, 3, -4, 5, -6, 7, -8, 9);
+	let expected = Mat3(-1, 2, -3, 4, -5, 6, -7, 8, -9);
+	assert_eq!(-value, expected);
+	assert_eq!(-&value, expected);
 }

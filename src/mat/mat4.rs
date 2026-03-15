@@ -436,6 +436,62 @@ impl<T: Scalar> Mat4<T> {
 //----------------------------------------------------------------
 // Operators
 
+impl<T: ops::Neg<Output = T>> ops::Neg for Mat4<T> {
+	type Output = Mat4<T>;
+	#[inline]
+	fn neg(self) -> Mat4<T> {
+		Mat4 {
+			a11: -self.a11, a12: -self.a12, a13: -self.a13, a14: -self.a14,
+			a21: -self.a21, a22: -self.a22, a23: -self.a23, a24: -self.a24,
+			a31: -self.a31, a32: -self.a32, a33: -self.a33, a34: -self.a34,
+			a41: -self.a41, a42: -self.a42, a43: -self.a43, a44: -self.a44,
+		}
+	}
+}
+
+impl<T: Copy + ops::Add<Output = T>> ops::Add<Mat4<T>> for Mat4<T> {
+	type Output = Mat4<T>;
+	#[inline]
+	fn add(self, rhs: Mat4<T>) -> Mat4<T> {
+		Mat4 {
+			a11: self.a11 + rhs.a11, a12: self.a12 + rhs.a12, a13: self.a13 + rhs.a13, a14: self.a14 + rhs.a14,
+			a21: self.a21 + rhs.a21, a22: self.a22 + rhs.a22, a23: self.a23 + rhs.a23, a24: self.a24 + rhs.a24,
+			a31: self.a31 + rhs.a31, a32: self.a32 + rhs.a32, a33: self.a33 + rhs.a33, a34: self.a34 + rhs.a34,
+			a41: self.a41 + rhs.a41, a42: self.a42 + rhs.a42, a43: self.a43 + rhs.a43, a44: self.a44 + rhs.a44,
+		}
+	}
+}
+impl<T: Copy + ops::AddAssign> ops::AddAssign<Mat4<T>> for Mat4<T> {
+	#[inline]
+	fn add_assign(&mut self, rhs: Mat4<T>) {
+		self.a11 += rhs.a11; self.a12 += rhs.a12; self.a13 += rhs.a13; self.a14 += rhs.a14;
+		self.a21 += rhs.a21; self.a22 += rhs.a22; self.a23 += rhs.a23; self.a24 += rhs.a24;
+		self.a31 += rhs.a31; self.a32 += rhs.a32; self.a33 += rhs.a33; self.a34 += rhs.a34;
+		self.a41 += rhs.a41; self.a42 += rhs.a42; self.a43 += rhs.a43; self.a44 += rhs.a44;
+	}
+}
+impl<T: Copy + ops::Sub<Output = T>> ops::Sub<Mat4<T>> for Mat4<T> {
+	type Output = Mat4<T>;
+	#[inline]
+	fn sub(self, rhs: Mat4<T>) -> Mat4<T> {
+		Mat4 {
+			a11: self.a11 - rhs.a11, a12: self.a12 - rhs.a12, a13: self.a13 - rhs.a13, a14: self.a14 - rhs.a14,
+			a21: self.a21 - rhs.a21, a22: self.a22 - rhs.a22, a23: self.a23 - rhs.a23, a24: self.a24 - rhs.a24,
+			a31: self.a31 - rhs.a31, a32: self.a32 - rhs.a32, a33: self.a33 - rhs.a33, a34: self.a34 - rhs.a34,
+			a41: self.a41 - rhs.a41, a42: self.a42 - rhs.a42, a43: self.a43 - rhs.a43, a44: self.a44 - rhs.a44,
+		}
+	}
+}
+impl<T: Copy + ops::SubAssign> ops::SubAssign<Mat4<T>> for Mat4<T> {
+	#[inline]
+	fn sub_assign(&mut self, rhs: Mat4<T>) {
+		self.a11 -= rhs.a11; self.a12 -= rhs.a12; self.a13 -= rhs.a13; self.a14 -= rhs.a14;
+		self.a21 -= rhs.a21; self.a22 -= rhs.a22; self.a23 -= rhs.a23; self.a24 -= rhs.a24;
+		self.a31 -= rhs.a31; self.a32 -= rhs.a32; self.a33 -= rhs.a33; self.a34 -= rhs.a34;
+		self.a41 -= rhs.a41; self.a42 -= rhs.a42; self.a43 -= rhs.a43; self.a44 -= rhs.a44;
+	}
+}
+
 impl<T: Copy + ops::Mul<Output = T>> ops::Mul<T> for Mat4<T> {
 	type Output = Mat4<T>;
 	#[inline]
@@ -615,6 +671,9 @@ fn glu_invert<T: Float>(this: &Mat4<T>) -> Option<Mat4<T>> {
 	})
 }
 
+impl_mat_neg!(Mat4);
+impl_mat_add_mat!(Mat4);
+impl_mat_sub_mat!(Mat4);
 impl_mat_mul_scalar!(Mat4);
 impl_mat_mul_vec!(Mat4, Vec4);
 impl_mat_mul_mat!(Mat4);
@@ -696,4 +755,52 @@ fn test_ortho_inverse() {
 
 	let error = (identity.flat_norm_sqr() - 4.0).abs();
 	assert!(error.abs() < 1e-6, "Inverse projection matrix does not yield identity: error = {error}");
+}
+
+#[test]
+fn test_add() {
+	let lhs = Mat4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+	let rhs = Mat4(10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160);
+	let expected = Mat4(11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 121, 132, 143, 154, 165, 176);
+
+	assert_eq!(lhs + rhs, expected);
+	assert_eq!(lhs + &rhs, expected);
+	assert_eq!(&lhs + rhs, expected);
+	assert_eq!(&lhs + &rhs, expected);
+
+	let mut value = lhs;
+	value += rhs;
+	assert_eq!(value, expected);
+
+	let mut value = lhs;
+	value += &rhs;
+	assert_eq!(value, expected);
+}
+
+#[test]
+fn test_sub() {
+	let lhs = Mat4(11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 121, 132, 143, 154, 165, 176);
+	let rhs = Mat4(10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160);
+	let expected = Mat4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+
+	assert_eq!(lhs - rhs, expected);
+	assert_eq!(lhs - &rhs, expected);
+	assert_eq!(&lhs - rhs, expected);
+	assert_eq!(&lhs - &rhs, expected);
+
+	let mut value = lhs;
+	value -= rhs;
+	assert_eq!(value, expected);
+
+	let mut value = lhs;
+	value -= &rhs;
+	assert_eq!(value, expected);
+}
+
+#[test]
+fn test_neg() {
+	let value = Mat4(1, -2, 3, -4, 5, -6, 7, -8, 9, -10, 11, -12, 13, -14, 15, -16);
+	let expected = Mat4(-1, 2, -3, 4, -5, 6, -7, 8, -9, 10, -11, 12, -13, 14, -15, 16);
+	assert_eq!(-value, expected);
+	assert_eq!(-&value, expected);
 }
