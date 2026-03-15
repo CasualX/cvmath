@@ -11,7 +11,7 @@ struct State {
 	bool4: Bool4,
 	angle: Angle<f32>,
 	complex: Complex<f64>,
-	polar: Polar<f64>,
+	polar: Polar<f32>,
 	quat: Quat<f32>,
 	mat2: Mat2<f32>,
 	mat3: Mat3<f32>,
