@@ -92,7 +92,7 @@ impl<T: Float> Angle<T> {
 	/// Converts the angle to polar coordinates.
 	#[inline]
 	pub fn polar(self, radius: T) -> Polar<T> {
-		Polar::new(radius, self)
+		Polar { radius, theta: self }
 	}
 
 	#[inline]

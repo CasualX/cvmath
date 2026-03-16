@@ -30,7 +30,7 @@ impl<T> Line3<T> {
 	#[inline]
 	pub const fn pinch(self, pt: Point3<T>) -> (Line3<T>, Line3<T>) where T: Copy {
 		let Line3 { start, end } = self;
-		(Line3::new(start, pt), Line3::new(pt, end))
+		(Line3(start, pt), Line3(pt, end))
 	}
 }
 

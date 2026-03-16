@@ -1590,7 +1590,7 @@ vec!(Vec3 3 { x 0 T U X, y 1 T U Y, z 2 T U Z } {
 	/// ```
 	/// use cvmath::Vec3;
 	///
-	/// let v: Vec3<f64> = Vec3::new(0.0, 0.0, 1.0);
+	/// let v: Vec3<f64> = Vec3(0.0, 0.0, 1.0);
 	/// let perp = v.any_perp();
 	///
 	/// // Dot product is (close to) zero, meaning perpendicular:
@@ -1600,8 +1600,8 @@ vec!(Vec3 3 { x 0 T U X, y 1 T U Y, z 2 T U Z } {
 	#[inline]
 	#[must_use]
 	pub fn any_perp(self) -> Vec3<T> where T: Float {
-		let v = if self.x != T::ZERO || self.y != T::ZERO { Vec3::new(-self.y, self.x, T::ZERO) }
-		else { Vec3::new(T::ZERO, -self.z, self.y) };
+		let v = if self.x != T::ZERO || self.y != T::ZERO { Vec3(-self.y, self.x, T::ZERO) }
+		else { Vec3(T::ZERO, -self.z, self.y) };
 		v.norm()
 	}
 	/// Homogeneous divide.

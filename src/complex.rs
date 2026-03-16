@@ -569,7 +569,7 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Complex<T> {
 fn test_fmt() {
 	let mut rng = urandom::new();
 	for _ in 0..100 {
-		let complex = Complexf::new(rng.next_f32() * 2.0 - 1.0, rng.next_f32() * 2.0 - 1.0);
+		let complex = Complex(rng.next_f32() * 2.0 - 1.0, rng.next_f32() * 2.0 - 1.0);
 		let parsed: Complex<f32> = format!("{complex:E}").parse().unwrap();
 		assert_eq!(complex, parsed);
 	}
@@ -578,22 +578,22 @@ fn test_fmt() {
 #[test]
 fn test_parse_negative_imaginary() {
 	// Negative imaginary
-	assert_eq!("1-2i".parse::<Complexf>().unwrap(), Complexf::new(1.0, -2.0));
-	assert_eq!("1 -2i".parse::<Complexf>().unwrap(), Complexf::new(1.0, -2.0));
-	assert_eq!("1+-2i".parse::<Complexf>().unwrap(), Complexf::new(1.0, -2.0));
+	assert_eq!("1-2i".parse::<Complexf>().unwrap(), Complex(1.0, -2.0));
+	assert_eq!("1 -2i".parse::<Complexf>().unwrap(), Complex(1.0, -2.0));
+	assert_eq!("1+-2i".parse::<Complexf>().unwrap(), Complex(1.0, -2.0));
 	assert!("1 - 2i".parse::<Complexf>().is_err());
 
 	// Pure imaginary
-	assert_eq!("2i".parse::<Complexf>().unwrap(), Complexf::new(0.0, 2.0));
-	assert_eq!("+2i".parse::<Complexf>().unwrap(), Complexf::new(0.0, 2.0));
-	assert_eq!("-2i".parse::<Complexf>().unwrap(), Complexf::new(0.0, -2.0));
-	assert_eq!("2.5E-1i".parse::<Complexf>().unwrap(), Complexf::new(0.0, 0.25));
+	assert_eq!("2i".parse::<Complexf>().unwrap(), Complex(0.0, 2.0));
+	assert_eq!("+2i".parse::<Complexf>().unwrap(), Complex(0.0, 2.0));
+	assert_eq!("-2i".parse::<Complexf>().unwrap(), Complex(0.0, -2.0));
+	assert_eq!("2.5E-1i".parse::<Complexf>().unwrap(), Complex(0.0, 0.25));
 
 	// Positive imaginary
-	assert_eq!("1+2i".parse::<Complexf>().unwrap(), Complexf::new(1.0, 2.0));
-	assert_eq!("1 +2i".parse::<Complexf>().unwrap(), Complexf::new(1.0, 2.0));
-	assert_eq!("1 + 2i".parse::<Complexf>().unwrap(), Complexf::new(1.0, 2.0));
-	assert_eq!("1+2.5E-1i".parse::<Complexf>().unwrap(), Complexf::new(1.0, 0.25));
+	assert_eq!("1+2i".parse::<Complexf>().unwrap(), Complex(1.0, 2.0));
+	assert_eq!("1 +2i".parse::<Complexf>().unwrap(), Complex(1.0, 2.0));
+	assert_eq!("1 + 2i".parse::<Complexf>().unwrap(), Complex(1.0, 2.0));
+	assert_eq!("1+2.5E-1i".parse::<Complexf>().unwrap(), Complex(1.0, 0.25));
 }
 
 #[test]

@@ -41,8 +41,8 @@ fn trace_inside() {
 #[test]
 fn ray_hits_off_center() {
 	let ray = Ray3 {
-		origin: Point3::new(0.5, 0.0, -5.0),
-		direction: Vec3::new(0.0, 0.0, 1.0),
+		origin: Point3(0.5, 0.0, -5.0),
+		direction: Vec3(0.0, 0.0, 1.0),
 		distance: Interval(0.0, f64::INFINITY),
 	};
 	let sphere = Sphere { center: Point3::ZERO, radius: 1.0 };

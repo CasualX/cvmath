@@ -39,30 +39,30 @@ pub fn raytracer() -> (&'static str, Scene) {
 
 	let mut materials = Vec::new();
 	let ground_material = add_material(&mut materials, Material {
-		texture: Texture::Color(Vec3::new(0.6, 0.6, 0.6)),
+		texture: Texture::Color(Vec3(0.6, 0.6, 0.6)),
 		reflectivity: 0.3,
 		..M
 	});
 	let sphere1_material = add_material(&mut materials, Material {
-		texture: Texture::Color(Vec3::new(1.0, 0.2, 0.2)),
+		texture: Texture::Color(Vec3(1.0, 0.2, 0.2)),
 		reflectivity: 0.5,
 		..M
 	});
 	let sphere2_material = add_material(&mut materials, Material {
-		texture: Texture::Color(Vec3::new(0.2, 0.2, 1.0)),
+		texture: Texture::Color(Vec3(0.2, 0.2, 1.0)),
 		reflectivity: 0.8,
 		..M
 	});
 	let bounds_material = add_material(&mut materials, Material {
-		texture: Texture::Color(Vec3::new(1.0, 1.0, 0.2)),
+		texture: Texture::Color(Vec3(1.0, 1.0, 0.2)),
 		reflectivity: 0.0,
 		..M
 	});
 
 	let ground_shape = Plane3(-Vec3f::Y, 0.0);
-	let sphere1_shape = Sphere { center: Point3::new(-1.5, 1.0, -5.0), radius: 1.0 };
-	let sphere2_shape = Sphere { center: Point3::new(1.5, 2.0, -4.0), radius: 1.5 };
-	let bounds_shape = Bounds3::point(Point3::new(2.8, 1.0, -0.5), Point3::dup(1.0));
+	let sphere1_shape = Sphere { center: Point3(-1.5, 1.0, -5.0), radius: 1.0 };
+	let sphere2_shape = Sphere { center: Point3(1.5, 2.0, -4.0), radius: 1.5 };
+	let bounds_shape = Bounds3::point(Point3(2.8, 1.0, -0.5), Point3::dup(1.0));
 
 	let world = World {
 		ambient_light: 0.1,

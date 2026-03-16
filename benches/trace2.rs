@@ -26,8 +26,8 @@ fn bench_trace2_random_bounds(b: &mut Bencher) {
 		let ty = rng.range(bounds.mins.y..bounds.maxs.y);
 		let target = Point2(tx, ty);
 
-		let (vy, vx) = Angle::deg(rng.range(0.0..360.0)).sin_cos();
-		let origin = Vec2(vx, vy) * rng.range(200.0..1000.0);
+		let dir = Angle::deg(rng.range(0.0..360.0)).vec2();
+		let origin = dir * rng.range(200.0..1000.0);
 
 		let direction = (target - origin).norm();
 		let ray = Ray2 { origin, direction, distance: Interval(0.0, f64::INFINITY) };
@@ -61,8 +61,8 @@ fn bench_trace2_random_circles(b: &mut Bencher) {
 			return None;
 		}
 
-		let (vy, vx) = Angle::deg(rng.range(0.0..360.0)).sin_cos();
-		let origin = Vec2(vx, vy) * rng.range(200.0..1000.0);
+		let dir = Angle::deg(rng.range(0.0..360.0)).vec2();
+		let origin = dir * rng.range(200.0..1000.0);
 
 		let direction = (target - origin).norm();
 		let ray = Ray2 { origin, direction, distance: Interval(0.0, f64::INFINITY) };

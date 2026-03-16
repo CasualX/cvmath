@@ -88,72 +88,72 @@ fn main() {
 		bool4: Bool4(rng.value(), rng.value(), rng.value(), rng.value()),
 		angle: rng.value(),
 		complex: Complex(rng.value(), rng.value()),
-		polar: Polar::new(rng.value(), rng.value()),
-		quat: Quat::new(rng.value(), rng.value(), rng.value(), rng.value()),
-		mat2: Mat2::new(
+		polar: Polar(rng.value(), rng.value()),
+		quat: Quat(rng.value(), rng.value(), rng.value(), rng.value()),
+		mat2: Mat2(
 			rng.value(), rng.value(),
 			rng.value(), rng.value(),
 		),
-		mat3: Mat3::new(
+		mat3: Mat3(
 			rng.value(), rng.value(), rng.value(),
 			rng.value(), rng.value(), rng.value(),
 			rng.value(), rng.value(), rng.value(),
 		),
-		mat4: Mat4::new(
+		mat4: Mat4(
 			rng.value(), rng.value(), rng.value(), rng.value(),
 			rng.value(), rng.value(), rng.value(), rng.value(),
 			rng.value(), rng.value(), rng.value(), rng.value(),
 			rng.value(), rng.value(), rng.value(), rng.value(),
 		),
-		transform2: Transform2::new(
+		transform2: Transform2(
 			rng.value(), rng.value(), rng.value(),
 			rng.value(), rng.value(), rng.value(),
 		),
-		transform3: Transform3::new(
+		transform3: Transform3(
 			rng.value(), rng.value(), rng.value(), rng.value(),
 			rng.value(), rng.value(), rng.value(), rng.value(),
 			rng.value(), rng.value(), rng.value(), rng.value(),
 		),
 		point2: Point2(rng.value(), rng.value()),
 		point3: Point3(rng.value(), rng.value(), rng.value()),
-		bounds2: Bounds2::new(
+		bounds2: Bounds2(
 			Point2(rng.value(), rng.value()),
 			Point2(rng.value(), rng.value()),
 		),
-		bounds3: Bounds3::new(
+		bounds3: Bounds3(
 			Point3(rng.value(), rng.value(), rng.value()),
 			Point3(rng.value(), rng.value(), rng.value()),
 		),
-		line2: Line2::new(
+		line2: Line2(
 			Point2(rng.value(), rng.value()),
 			Point2(rng.value(), rng.value()),
 		),
-		line3: Line3::new(
+		line3: Line3(
 			Point3(rng.value(), rng.value(), rng.value()),
 			Point3(rng.value(), rng.value(), rng.value()),
 		),
-		circle: Circle::new(
+		circle: Circle(
 			Point2(rng.value(), rng.value()),
 			rng.value(),
 		),
-		sphere: Sphere::new(
+		sphere: Sphere(
 			Point3(rng.value(), rng.value(), rng.value()),
 			rng.value(),
 		),
-		plane2: Plane2::new(
+		plane2: Plane2(
 			Vec2(rng.value(), rng.value()),
 			rng.value(),
 		),
-		plane3: Plane3::new(
+		plane3: Plane3(
 			Vec3(rng.value(), rng.value(), rng.value()),
 			rng.value(),
 		),
-		triangle2: Triangle2::new(
+		triangle2: Triangle2(
 			Point2(rng.value(), rng.value()),
 			Point2(rng.value(), rng.value()),
 			Point2(rng.value(), rng.value()),
 		),
-		triangle3: Triangle3::new(
+		triangle3: Triangle3(
 			Point3(rng.value(), rng.value(), rng.value()),
 			Point3(rng.value(), rng.value(), rng.value()),
 			Point3(rng.value(), rng.value(), rng.value()),

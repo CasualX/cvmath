@@ -34,7 +34,7 @@ impl<T> Line2<T> {
 	#[inline]
 	pub const fn pinch(self, pt: Point2<T>) -> (Line2<T>, Line2<T>) where T: Copy {
 		let Line2 { start, end } = self;
-		(Line2::new(start, pt), Line2::new(pt, end))
+		(Line2(start, pt), Line2(pt, end))
 	}
 
 	/// Line direction.

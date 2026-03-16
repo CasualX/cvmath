@@ -13,10 +13,10 @@ fn test_trace_simple() {
 
 #[test]
 fn test_trace_triangle_centroid() {
-	let tri = Triangle2::new(Point2(0.0, 0.0), Point2(1.0, 0.0), Point2(0.0, 1.0));
+	let tri = Triangle2(Point2(0.0, 0.0), Point2(1.0, 0.0), Point2(0.0, 1.0));
 	let origin = Point2(-1.0, -1.0);
 	let (direction, distance) = (tri.centroid() - origin).norm_len();
-	let ray = Ray2::new(origin, direction, Interval(0.0, distance));
+	let ray = Ray2(origin, direction, Interval(0.0, distance));
 
 	let hit = tri.trace(&ray).expect("Ray should hit the triangle at centroid");
 	assert!((hit.distance - (2.0).sqrt()).abs() < 1e-6, "Intersection distance should match");
@@ -24,13 +24,13 @@ fn test_trace_triangle_centroid() {
 
 #[test]
 fn test_trace_triangle_vertices() {
-	let tri = Triangle2::new(Point2(0.0, 0.0), Point2(1.0, 0.0), Point2(0.0, 1.0));
+	let tri = Triangle2(Point2(0.0, 0.0), Point2(1.0, 0.0), Point2(0.0, 1.0));
 	let vertices = [Point2(0.0, 0.0), Point2(1.0, 0.0), Point2(0.0, 1.0)];
 	let targets = [Point2(0.5, 0.5), Point2(0.0, 0.5), Point2(0.5, 0.0)];
 
 	for (origin, target) in vertices.iter().zip(targets.iter()) {
 		let (direction, distance) = (*target - *origin).norm_len();
-		let ray = Ray2::new(*origin, direction, Interval(0.0, distance + 0.1));
+		let ray = Ray2(*origin, direction, Interval(0.0, distance + 0.1));
 		assert!(tri.trace(&ray).is_some(), "Ray from {:?} to {:?} should hit", origin, target);
 	}
 }
@@ -52,7 +52,7 @@ fn test_trace_random_triangles() {
 		let origin = Point2(-2.0, -2.0);
 		let (direction, distance) = (target - origin).norm_len();
 
-		let mut ray = Ray2::new(origin, direction, Interval(0.0, distance + 0.1));
+		let mut ray = Ray2(origin, direction, Interval(0.0, distance + 0.1));
 		assert!(tri.trace(&ray).is_some(), "{ray:?} to {target:?} should hit triangle");
 
 		ray.direction = -ray.direction;
