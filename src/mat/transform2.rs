@@ -150,38 +150,68 @@ impl<T: Float> Transform2<T> {
 		}
 	}
 
-	/// Reflection matrix.
-	///
-	/// Reflects around the given axis.
-	/// If axis is the zero vector, returns a point reflection around the origin.
-	///
-	/// ```
-	/// let mat = cvmath::Transform2::reflection(cvmath::Vec2::<f64>::Y);
-	/// let value = mat * cvmath::Vec2(2.0, 3.0);
-	/// let expected = cvmath::Vec2(-2.0, 3.0);
-	/// assert_eq!(expected, value);
-	/// ```
-	#[inline]
-	pub fn reflection(line: Vec2<T>) -> Transform2<T> {
-		Mat2::reflection(line).transform2()
-	}
-
 	/// Projection matrix.
 	///
-	/// Projects onto the given axis.
-	/// If axis is the zero vector, returns the zero matrix.
+	/// Projects onto the given plane, returning the zero matrix if the plane normal is zero.
 	///
 	/// ```
-	/// let mat = cvmath::Transform2::projection(cvmath::Vec2::<f64>::X);
+	/// let plane = cvmath::Plane2(cvmath::Vec2::Y, 0.0);
+	/// let mat = cvmath::Transform2::projection(plane);
 	/// let value = mat * cvmath::Vec2(2.0, 3.0);
 	/// let expected = cvmath::Vec2(2.0, 0.0);
 	/// assert_eq!(expected, value);
 	/// ```
 	#[inline]
-	pub fn projection(line: Vec2<T>) -> Transform2<T> {
-		Mat2::projection(line).transform2()
+	pub fn projection(plane: Plane2<T>) -> Transform2<T> {
+		let Plane2 { normal, distance } = plane;
+		let denom = normal.dot(normal);
+		if denom > T::EPSILON {
+			let n = normal * (T::ONE / denom);
+			let a11 = T::ONE - n.x * normal.x;
+			let a12 = -n.x * normal.y;
+			let a13 = -n.x * distance;
+			let a21 = -n.y * normal.x;
+			let a22 = T::ONE - n.y * normal.y;
+			let a23 = -n.y * distance;
+			Transform2 { a11, a12, a13, a21, a22, a23 }
+		}
+		else {
+			Transform2::ZERO
+		}
 	}
 
+	/// Reflection matrix.
+	///
+	/// Reflects across the given plane, returning a point reflection around the origin if the plane normal is zero.
+	///
+	/// ```
+	/// let plane = cvmath::Plane2(cvmath::Vec2::Y, 0.0);
+	/// let mat = cvmath::Transform2::reflection(plane);
+	/// let value = mat * cvmath::Vec2(2.0, 3.0);
+	/// let expected = cvmath::Vec2(2.0, -3.0);
+	/// assert_eq!(expected, value);
+	/// ```
+	#[inline]
+	pub fn reflection(plane: Plane2<T>) -> Transform2<T> {
+		let Plane2 { normal, distance } = plane;
+		let denom = normal.dot(normal);
+		if denom > T::EPSILON {
+			let n = normal * (T::TWO / denom);
+			let a11 = T::ONE - n.x * normal.x;
+			let a12 = -n.x * normal.y;
+			let a13 = -n.x * distance;
+			let a21 = -n.y * normal.x;
+			let a22 = T::ONE - n.y * normal.y;
+			let a23 = -n.y * distance;
+			Transform2 { a11, a12, a13, a21, a22, a23 }
+		}
+		else {
+			Transform2::scaling(-Vec2::<T>::ONE)
+		}
+	}
+}
+
+impl<T: Float> Transform2<T> {
 	/// Fit matrix.
 	///
 	/// Fits coordinates from a source rect into a target rect.
@@ -734,4 +764,17 @@ fn test_inverse() {
 		let error = (unprojected - p).len();
 		assert!(error < 1e-6, "Failed for mat: {mat:?}, p: {p:?}, error: {error}");
 	}
+}
+
+#[test]
+fn test_projection_reflection() {
+	let plane = Plane2(Vec2(0.0, 2.0), -4.0);
+	let value1 = Transform2::projection(plane) * Vec2(2.0, 7.0);
+	let value2 = Transform2::reflection(plane) * Vec2(2.0, 7.0);
+	assert_eq!(Vec2(2.0, 2.0), value1);
+	assert_eq!(Vec2(2.0, -3.0), value2);
+
+	let zero = Plane2(Vec2d::ZERO, 4.0);
+	assert_eq!(Transform2::ZERO, Transform2::projection(zero));
+	assert_eq!(Transform2::scaling(-Vec2d::ONE), Transform2::reflection(zero));
 }

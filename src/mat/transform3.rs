@@ -133,6 +133,52 @@ impl<T: Float> Transform3<T> {
 	pub fn rotation_between(from: Vec3<T>, to: Vec3<T>) -> Transform3<T> {
 		Mat3::rotation_between(from, to).transform3()
 	}
+
+	/// Projection matrix.
+	///
+	/// Projects onto the given plane, returning the zero matrix if the plane normal is zero.
+	///
+	/// ```
+	/// let plane = cvmath::Plane3(cvmath::Vec3(0.0f64, 0.0, 2.0), -4.0);
+	/// let value = cvmath::Transform3::projection(plane) * cvmath::Vec3(2.0, 3.0, 7.0);
+	/// let expected = cvmath::Vec3(2.0, 3.0, 2.0);
+	/// assert_eq!(expected, value);
+	/// ```
+	#[inline]
+	pub fn projection(plane: Plane3<T>) -> Transform3<T> {
+		let Plane3 { normal, distance } = plane;
+		let denom = Vec3::dot(normal, normal);
+		if denom > T::EPSILON {
+			let project3 = Mat3::IDENTITY - Mat3::outer_product(normal, normal) * (T::ONE / denom);
+			project3.translate(normal * -(distance * (T::ONE / denom)))
+		}
+		else {
+			Transform3::ZERO
+		}
+	}
+
+	/// Reflection matrix.
+	///
+	/// Reflects across the given plane, returning a point reflection around the origin if the plane normal is zero.
+	///
+	/// ```
+	/// let plane = cvmath::Plane3(cvmath::Vec3(0.0f64, 0.0, 2.0), -4.0);
+	/// let value = cvmath::Transform3::reflection(plane) * cvmath::Vec3(2.0, 3.0, 7.0);
+	/// let expected = cvmath::Vec3(2.0, 3.0, -3.0);
+	/// assert_eq!(expected, value);
+	/// ```
+	#[inline]
+	pub fn reflection(plane: Plane3<T>) -> Transform3<T> {
+		let Plane3 { normal, distance } = plane;
+		let denom = Vec3::dot(normal, normal);
+		if denom > T::EPSILON {
+			let reflect3 = Mat3::IDENTITY - Mat3::outer_product(normal, normal) * (T::TWO / denom);
+			reflect3.translate(normal * -(distance * (T::TWO / denom)))
+		}
+		else {
+			Transform3::scaling(-Vec3::<T>::ONE)
+		}
+	}
 }
 
 impl<T: Float> Transform3<T> {
@@ -842,4 +888,13 @@ fn test_ortho() {
 	assert_approx_eq(p1, ortho, Vec3f(-1.0, -1.0, 0.0));
 	assert_approx_eq(p2, ortho, Vec3f(1.0, 1.0, 1.0));
 	assert_approx_eq(c, ortho, Vec3f(0.0, 0.0, 0.5));
+}
+
+#[test]
+fn test_projection_reflection() {
+	let plane = Plane3(Vec3(0.0f64, 0.0, 2.0), -4.0);
+	let projected = Transform3::projection(plane) * Vec3(2.0, 3.0, 7.0);
+	let reflected = Transform3::reflection(plane) * Vec3(2.0, 3.0, 7.0);
+	assert_eq!(Vec3(2.0, 3.0, 2.0), projected);
+	assert_eq!(Vec3(2.0, 3.0, -3.0), reflected);
 }

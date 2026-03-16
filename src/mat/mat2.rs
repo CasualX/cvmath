@@ -148,59 +148,54 @@ impl<T: Float> Mat2<T> {
 		}
 	}
 
-	/// Reflection matrix.
-	///
-	/// Reflects around the given axis.
-	/// If axis is the zero vector, returns a point reflection around the origin.
-	///
-	/// ```
-	/// let mat = cvmath::Mat2::reflection(cvmath::Vec2d::Y);
-	/// let value = mat * cvmath::Vec2(2.0, 3.0);
-	/// let expected = cvmath::Vec2(-2.0, 3.0);
-	/// assert_eq!(expected, value);
-	/// ```
+	/// Outer product of two vectors.
 	#[inline]
-	pub fn reflection(axis: Vec2<T>) -> Mat2<T> {
-		let ls = axis.dot(axis);
-		if ls > T::EPSILON {
-			let Vec2 { x, y } = axis;
-			let ls = T::ONE / ls;
-			Mat2 {
-				a11: ls * (x * x - y * y), a12: ls * (x * y + x * y),
-				a21: ls * (x * y + x * y), a22: ls * (y * y - x * x),
-			}
-		}
-		else {
-			// Do something like point reflection instead of NaN
-			Mat2::scaling(Vec2::dup(-T::ONE))
+	pub fn outer_product(column: Vec2<T>, row: Vec2<T>) -> Mat2<T> {
+		Mat2 {
+			a11: column.x * row.x, a12: column.x * row.y,
+			a21: column.y * row.x, a22: column.y * row.y,
 		}
 	}
 
 	/// Projection matrix.
 	///
-	/// Projects onto the given axis.
-	/// If axis is the zero vector, returns the zero matrix.
+	/// Projects onto the plane defined by the given normal, returning the zero matrix if the normal is zero.
 	///
 	/// ```
-	/// let mat = cvmath::Mat2::projection(cvmath::Vec2d::X);
+	/// let mat = cvmath::Mat2::projection(cvmath::Vec2d::Y);
 	/// let value = mat * cvmath::Vec2(2.0, 3.0);
 	/// let expected = cvmath::Vec2(2.0, 0.0);
 	/// assert_eq!(expected, value);
 	/// ```
 	#[inline]
-	pub fn projection(axis: Vec2<T>) -> Mat2<T> {
-		let ls = axis.dot(axis);
-		if ls > T::EPSILON {
-			let Vec2 { x, y } = axis;
-			let ls = T::ONE / ls;
-			Mat2 {
-				a11: ls * x * x, a12: ls * x * y,
-				a21: ls * x * y, a22: ls * y * y,
-			}
+	pub fn projection(normal: Vec2<T>) -> Mat2<T> {
+		let denom = normal.dot(normal);
+		if denom > T::EPSILON {
+			Mat2::IDENTITY - Mat2::outer_product(normal, normal) * (T::ONE / denom)
 		}
 		else {
-			// Do something like absorb all
 			Mat2::ZERO
+		}
+	}
+
+	/// Reflection matrix.
+	///
+	/// Reflects across the plane defined by the given normal, returning a point reflection around the origin if the normal is zero.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2::reflection(cvmath::Vec2d::Y);
+	/// let value = mat * cvmath::Vec2(2.0, 3.0);
+	/// let expected = cvmath::Vec2(2.0, -3.0);
+	/// assert_eq!(expected, value);
+	/// ```
+	#[inline]
+	pub fn reflection(normal: Vec2<T>) -> Mat2<T> {
+		let denom = normal.dot(normal);
+		if denom > T::EPSILON {
+			Mat2::IDENTITY - Mat2::outer_product(normal, normal) * (T::TWO / denom)
+		}
+		else {
+			Mat2::scaling(Vec2::dup(-T::ONE))
 		}
 	}
 }
@@ -817,4 +812,13 @@ fn test_fibbonacci_pow() {
 	let fib5 = mat.powi(5) * Vec2(1.0, 0.0);
 	let expected = Vec2(8.0, 5.0);
 	assert_eq!(expected, fib5);
+}
+
+#[test]
+fn test_projection_reflection() {
+	let normal = Vec2(0.0f64, 2.0);
+	let projected = Mat2::projection(normal) * Vec2(2.0, 3.0);
+	let reflected = Mat2::reflection(normal) * Vec2(2.0, 3.0);
+	assert_eq!(Vec2(2.0, 0.0), projected);
+	assert_eq!(Vec2(2.0, -3.0), reflected);
 }

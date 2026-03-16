@@ -144,6 +144,66 @@ impl<T: Float> Mat3<T> {
 			a31: z * x * k - y, a32: z * y * k + x, a33: z * z * k + c,
 		}
 	}
+
+	/// Outer product of two vectors.
+	///
+	/// ```
+	/// let column = cvmath::Vec3(1.0, 2.0, 3.0);
+	/// let row = cvmath::Vec3(4.0, 5.0, 6.0);
+	/// let mat = cvmath::Mat3::outer_product(column, row);
+	/// let expected = cvmath::Mat3(4.0, 5.0, 6.0, 8.0, 10.0, 12.0, 12.0, 15.0, 18.0);
+	/// assert_eq!(expected, mat);
+	/// ```
+	#[inline]
+	pub fn outer_product(column: Vec3<T>, row: Vec3<T>) -> Mat3<T> {
+		Mat3 {
+			a11: column.x * row.x, a12: column.x * row.y, a13: column.x * row.z,
+			a21: column.y * row.x, a22: column.y * row.y, a23: column.y * row.z,
+			a31: column.z * row.x, a32: column.z * row.y, a33: column.z * row.z,
+		}
+	}
+
+	/// Projection matrix.
+	///
+	/// Projects onto the plane defined by the given normal, returning the zero matrix if the normal is zero.
+	///
+	/// ```
+	/// let mat = cvmath::Mat3::projection(cvmath::Vec3(0.0f64, 0.0, 2.0));
+	/// let value = mat * cvmath::Vec3(2.0, 3.0, 4.0);
+	/// let expected = cvmath::Vec3(2.0, 3.0, 0.0);
+	/// assert_eq!(expected, value);
+	/// ```
+	#[inline]
+	pub fn projection(normal: Vec3<T>) -> Mat3<T> {
+		let denom = Vec3::dot(normal, normal);
+		if denom > T::EPSILON {
+			Mat3::IDENTITY - Mat3::outer_product(normal, normal) * (T::ONE / denom)
+		}
+		else {
+			Mat3::ZERO
+		}
+	}
+
+	/// Reflection matrix.
+	///
+	/// Reflects across the plane defined by the given normal, returning a point reflection around the origin if the normal is zero.
+	///
+	/// ```
+	/// let mat = cvmath::Mat3::reflection(cvmath::Vec3(0.0f64, 0.0, 2.0));
+	/// let value = mat * cvmath::Vec3(2.0, 3.0, 4.0);
+	/// let expected = cvmath::Vec3(2.0, 3.0, -4.0);
+	/// assert_eq!(expected, value);
+	/// ```
+	#[inline]
+	pub fn reflection(normal: Vec3<T>) -> Mat3<T> {
+		let denom = Vec3::dot(normal, normal);
+		if denom > T::EPSILON {
+			Mat3::IDENTITY - Mat3::outer_product(normal, normal) * (T::TWO / denom)
+		}
+		else {
+			Mat3::scaling(-Vec3::<T>::ONE)
+		}
+	}
 }
 
 impl<T: Zero + One> From<Transform2<T>> for Mat3<T> {
