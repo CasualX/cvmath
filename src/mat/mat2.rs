@@ -209,6 +209,17 @@ impl<T: Float> Mat2<T> {
 // Conversions
 
 impl<T> Mat2<T> {
+	/// Casts to a matrix of different type with the same dimensions.
+	#[inline]
+	pub fn cast<U>(self) -> Mat2<U> where T: CastTo<U> {
+		Mat2 {
+			a11: self.a11.cast_to(), a12: self.a12.cast_to(),
+			a21: self.a21.cast_to(), a22: self.a22.cast_to(),
+		}
+	}
+}
+
+impl<T> Mat2<T> {
 	/// Converts to a Transform2 matrix.
 	///
 	/// ```
@@ -478,6 +489,44 @@ impl<T: Scalar> Mat2<T> {
 		let to_origin = Transform2::translation(-origin);
 		let from_origin = Transform2::translation(origin);
 		from_origin * self * to_origin
+	}
+}
+
+//----------------------------------------------------------------
+// Exponentiation
+
+impl<T: Float> Mat2<T> {
+	/// Raises the matrix to an integer power.
+	///
+	/// ```
+	/// let mat = cvmath::Mat2::rotation(cvmath::Angle::deg(45.0));
+	/// let value = mat.powi(3).cast::<f32>();
+	/// let expected = cvmath::Mat2::rotation(cvmath::Angle::deg(45.0) * 3.0).cast::<f32>();
+	/// assert_eq!(expected, value);
+	/// ```
+	pub fn powi(self, exp: i32) -> Mat2<T> {
+		if exp == 0 {
+			return Mat2::IDENTITY;
+		}
+
+		let mut base = self;
+		let mut exp = if exp < 0 {
+			base = base.inverse();
+			exp.unsigned_abs()
+		} else {
+			exp as u32
+		};
+
+		let mut result = base;
+		exp -= 1;
+		while exp > 0 {
+			if exp & 1 == 1 {
+				result = result * base;
+			}
+			base = base * base;
+			exp >>= 1;
+		}
+		result
 	}
 }
 
@@ -760,4 +809,12 @@ fn test_rotation_between_opposite() {
 	let value = (rot * from).cast::<f32>();
 	let expected = to.cast::<f32>();
 	assert_eq!(expected, value);
+}
+
+#[test]
+fn test_fibbonacci_pow() {
+	let mat = Mat2(1.0, 1.0, 1.0, 0.0);
+	let fib5 = mat.powi(5) * Vec2(1.0, 0.0);
+	let expected = Vec2(8.0, 5.0);
+	assert_eq!(expected, fib5);
 }

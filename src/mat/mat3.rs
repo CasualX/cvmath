@@ -161,6 +161,18 @@ impl<T: Zero + One> From<Transform2<T>> for Mat3<T> {
 // Conversions
 
 impl<T> Mat3<T> {
+	/// Casts to a matrix of different type with the same dimensions.
+	#[inline]
+	pub fn cast<U>(self) -> Mat3<U> where T: CastTo<U> {
+		Mat3 {
+			a11: self.a11.cast_to(), a12: self.a12.cast_to(), a13: self.a13.cast_to(),
+			a21: self.a21.cast_to(), a22: self.a22.cast_to(), a23: self.a23.cast_to(),
+			a31: self.a31.cast_to(), a32: self.a32.cast_to(), a33: self.a33.cast_to(),
+		}
+	}
+}
+
+impl<T> Mat3<T> {
 	/// Converts to a Mat2 matrix.
 	///
 	/// ```
@@ -480,6 +492,45 @@ impl<T: Scalar> Mat3<T> {
 		let to_origin = Transform3::translation(-origin);
 		let from_origin = Transform3::translation(origin);
 		from_origin * self * to_origin
+	}
+}
+
+//----------------------------------------------------------------
+// Exponentiation
+
+impl<T: Float> Mat3<T> {
+	/// Raises the matrix to an integer power.
+	///
+	/// ```
+	/// let axis = cvmath::Vec3(1.0, 2.0, 3.0).norm();
+	/// let mat = cvmath::Mat3::rotation(axis, cvmath::Angle::deg(60.0));
+	/// let value = mat.powi(-2).cast::<f32>();
+	/// let expected = cvmath::Mat3::rotation(axis, cvmath::Angle::deg(60.0) * -2.0).cast::<f32>();
+	/// assert_eq!(expected, value);
+	/// ```
+	pub fn powi(self, exp: i32) -> Mat3<T> {
+		if exp == 0 {
+			return Mat3::IDENTITY;
+		}
+
+		let mut base = self;
+		let mut exp = if exp < 0 {
+			base = base.inverse();
+			exp.unsigned_abs()
+		} else {
+			exp as u32
+		};
+
+		let mut result = base;
+		exp -= 1;
+		while exp > 0 {
+			if exp & 1 == 1 {
+				result = result * base;
+			}
+			base = base * base;
+			exp >>= 1;
+		}
+		result
 	}
 }
 

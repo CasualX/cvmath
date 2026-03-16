@@ -248,6 +248,19 @@ impl<T: Float> Mat4<T> {
 // Conversions
 
 impl<T> Mat4<T> {
+	/// Casts to a matrix of different type with the same dimensions.
+	#[inline]
+	pub fn cast<U>(self) -> Mat4<U> where T: CastTo<U> {
+		Mat4 {
+			a11: self.a11.cast_to(), a12: self.a12.cast_to(), a13: self.a13.cast_to(), a14: self.a14.cast_to(),
+			a21: self.a21.cast_to(), a22: self.a22.cast_to(), a23: self.a23.cast_to(), a24: self.a24.cast_to(),
+			a31: self.a31.cast_to(), a32: self.a32.cast_to(), a33: self.a33.cast_to(), a34: self.a34.cast_to(),
+			a41: self.a41.cast_to(), a42: self.a42.cast_to(), a43: self.a43.cast_to(), a44: self.a44.cast_to(),
+		}
+	}
+}
+
+impl<T> Mat4<T> {
 	/// Converts to a Mat3 matrix.
 	#[inline]
 	pub fn mat3(self) -> Mat3<T> {
@@ -430,6 +443,37 @@ impl<T: Scalar> Mat4<T> {
 			a43: self.a43 + (rhs.a43 - self.a43) * t,
 			a44: self.a44 + (rhs.a44 - self.a44) * t,
 		}
+	}
+}
+
+//----------------------------------------------------------------
+// Exponentiation
+
+impl<T: Float> Mat4<T> {
+	/// Raises the matrix to an integer power.
+	pub fn powi(self, exp: i32) -> Mat4<T> {
+		if exp == 0 {
+			return Mat4::IDENTITY;
+		}
+
+		let mut base = self;
+		let mut exp = if exp < 0 {
+			base = base.inverse();
+			exp.unsigned_abs()
+		} else {
+			exp as u32
+		};
+
+		let mut result = base;
+		exp -= 1;
+		while exp > 0 {
+			if exp & 1 == 1 {
+				result = result * base;
+			}
+			base = base * base;
+			exp >>= 1;
+		}
+		result
 	}
 }
 
