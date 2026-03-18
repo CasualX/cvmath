@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>cvmotion timeline</title>
+	<style>
+		:root {
+			color-scheme: dark;
+			--bg: #081019;
+			--panel: rgba(13, 23, 35, 0.9);
+			--panel-border: rgba(123, 224, 255, 0.18);
+			--accent: #7be0ff;
+			--accent-2: #9fe870;
+			--ink: #f8fafc;
+			--muted: #9db7cb;
+			--danger: #ff8f70;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			margin: 0;
+			min-height: 100vh;
+			font-family: "Iosevka Aile", "IBM Plex Sans", "Segoe UI Variable Text", sans-serif;
+			background:
+				radial-gradient(circle at top, rgba(123, 224, 255, 0.12), transparent 32%),
+				linear-gradient(180deg, #0b1623 0%, #081019 100%);
+			color: var(--ink);
+		}
+
+		main {
+			width: min(1120px, calc(100vw - 32px));
+			margin: 12px auto;
+			display: grid;
+			gap: 12px;
+		}
+
+		.panel {
+			background: var(--panel);
+			border: 1px solid var(--panel-border);
+			border-radius: 10px;
+			backdrop-filter: blur(18px);
+			box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+		}
+
+		.header {
+			padding: 14px 18px;
+		}
+
+		.header h1 {
+			margin: 0;
+			font-size: clamp(1.35rem, 2vw, 2rem);
+			letter-spacing: 0.02em;
+		}
+
+		.controls {
+			padding: 12px 18px 14px;
+			display: grid;
+			gap: 8px;
+		}
+
+		.row {
+			display: flex;
+			gap: 8px;
+			align-items: center;
+			flex-wrap: wrap;
+		}
+
+		button {
+			border: 0;
+			border-radius: 7px;
+			padding: 9px 12px;
+			font: inherit;
+			font-weight: 600;
+			cursor: pointer;
+			color: #04131b;
+			background: linear-gradient(135deg, var(--accent), #d9fbff);
+		}
+
+		button.secondary {
+			background: linear-gradient(135deg, #d0d8e1, #8ea3b6);
+		}
+
+		button:disabled {
+			opacity: 0.55;
+			cursor: wait;
+		}
+
+		select {
+			border: 1px solid rgba(255, 255, 255, 0.08);
+			border-radius: 7px;
+			padding: 9px 12px;
+			font: inherit;
+			color: var(--ink);
+			background: rgba(6, 17, 27, 0.92);
+		}
+
+		select:disabled {
+			opacity: 0.55;
+			cursor: wait;
+		}
+
+		.output {
+			padding: 12px;
+		}
+
+		#stage {
+			min-height: min(56vh, 540px);
+			height: min(56vh, 540px);
+			border-radius: 8px;
+			overflow: hidden;
+			background: rgba(3, 8, 13, 0.55);
+			border: 1px solid rgba(255, 255, 255, 0.04);
+			display: grid;
+			place-items: center;
+		}
+
+		#stage svg {
+			display: block;
+			width: auto;
+			height: auto;
+			max-width: 100%;
+			max-height: 100%;
+		}
+
+		input[type="range"] {
+			flex: 1 1 340px;
+			accent-color: var(--accent-2);
+		}
+
+		.meter {
+			min-width: 160px;
+			font-family: "Iosevka", "Cascadia Code", monospace;
+			color: var(--muted);
+		}
+
+		#status {
+			font-size: 0.95rem;
+			color: var(--muted);
+		}
+
+		#status.error {
+			color: var(--danger);
+		}
+
+		@media (max-width: 720px) {
+			main {
+				width: min(100vw - 20px, 1120px);
+				margin: 8px auto 14px;
+			}
+
+			.header,
+			.controls,
+			.output {
+				padding-left: 16px;
+				padding-right: 16px;
+			}
+
+			#stage {
+				min-height: min(52vh, 420px);
+				height: min(52vh, 420px);
+			}
+
+			.row {
+				align-items: stretch;
+			}
+
+			button {
+				flex: 1 1 120px;
+			}
+
+			.meter {
+				min-width: 0;
+				width: 100%;
+			}
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<section class="panel output">
+			<div id="stage"></div>
+		</section>
+
+		<section class="panel">
+			<div class="header">
+				<h1>cvmotion timeline</h1>
+			</div>
+			<div class="controls">
+				<div class="row">
+					<button id="playButton" disabled>Play</button>
+					<button id="resetButton" class="secondary" disabled>Reset</button>
+					<select id="scenePicker" disabled>
+						<option value="A">Scene A</option>
+						<option value="B" selected>Scene B</option>
+					</select>
+					<div class="meter" id="timeLabel">t = 0.00s / 6.00s</div>
+				</div>
+				<div class="row">
+					<input id="timeSlider" type="range" min="0" max="6" step="0.001" value="0" disabled />
+				</div>
+				<div id="status">Loading wasm module...</div>
+			</div>
+		</section>
+	</main>
+
+	<script>
+		const DURATION = 6.0;
+		const decoder = new TextDecoder();
+		const stage = document.getElementById("stage");
+		const scenePicker = document.getElementById("scenePicker");
+		const playButton = document.getElementById("playButton");
+		const resetButton = document.getElementById("resetButton");
+		const timeSlider = document.getElementById("timeSlider");
+		const timeLabel = document.getElementById("timeLabel");
+		const status = document.getElementById("status");
+
+		let wasm = null;
+		let scene = 0;
+		let playing = false;
+		let currentTime = 0;
+		let lastFrame = 0;
+		let pendingSvg = "";
+
+		function setStatus(message, isError = false) {
+			status.textContent = message;
+			status.classList.toggle("error", isError);
+		}
+
+		function updateTimeLabel() {
+			timeLabel.textContent = `t = ${currentTime.toFixed(2)}s / ${DURATION.toFixed(2)}s`;
+			timeSlider.value = currentTime.toFixed(3);
+		}
+
+		function renderFrame() {
+			if (!wasm || !scene) {
+				return;
+			}
+
+			pendingSvg = "";
+			wasm.sceneDraw(scene, currentTime);
+			if (pendingSvg) {
+				stage.innerHTML = pendingSvg;
+			}
+			updateTimeLabel();
+		}
+
+		function stopPlayback() {
+			playing = false;
+			playButton.textContent = "Play";
+		}
+
+		function destroyScene() {
+			if (wasm && scene) {
+				wasm.sceneDestroy(scene);
+				scene = 0;
+			}
+		}
+
+		function createScene(kind) {
+			if (!wasm) {
+				return false;
+			}
+
+			const constructorName = kind === "A" ? "sceneCreateA" : "sceneCreateB";
+			const constructor = wasm[constructorName];
+			if (typeof constructor !== "function") {
+				throw new Error(`${constructorName} is not available in the wasm module`);
+			}
+
+			stopPlayback();
+			destroyScene();
+			currentTime = 0;
+			lastFrame = 0;
+			scene = constructor();
+			if (!scene) {
+				throw new Error(`${constructorName} returned a null pointer`);
+			}
+
+			renderFrame();
+			return true;
+		}
+
+		function tick(now) {
+			if (!playing) {
+				lastFrame = now;
+				return;
+			}
+
+			if (!lastFrame) {
+				lastFrame = now;
+			}
+
+			const dt = (now - lastFrame) / 1000;
+			lastFrame = now;
+			currentTime += dt;
+
+			if (currentTime >= DURATION) {
+				currentTime = DURATION;
+				stopPlayback();
+			}
+
+			renderFrame();
+			requestAnimationFrame(tick);
+		}
+
+		function startPlayback() {
+			if (playing) {
+				stopPlayback();
+				return;
+			}
+
+			if (currentTime >= DURATION) {
+				currentTime = 0;
+			}
+
+			playing = true;
+			lastFrame = 0;
+			playButton.textContent = "Pause";
+			requestAnimationFrame(tick);
+		}
+
+		async function instantiateWasm() {
+			const imports = {
+				timeline: {
+					sceneDrawResult(ptr, len) {
+						const bytes = new Uint8Array(wasm.memory.buffer, ptr, len);
+						pendingSvg = decoder.decode(bytes.slice());
+					},
+				},
+			};
+
+			const response = await fetch("./cvmotion.wasm");
+			if (!response.ok) {
+				throw new Error(`failed to fetch wasm: ${response.status} ${response.statusText}`);
+			}
+
+			const contentType = response.headers.get("content-type") || "";
+			if (contentType.includes("application/wasm") && WebAssembly.instantiateStreaming) {
+				const result = await WebAssembly.instantiateStreaming(response, imports);
+				return result.instance.exports;
+			}
+
+			const bytes = await response.arrayBuffer();
+			const result = await WebAssembly.instantiate(bytes, imports);
+			return result.instance.exports;
+		}
+
+		playButton.addEventListener("click", startPlayback);
+		resetButton.addEventListener("click", () => {
+			stopPlayback();
+			currentTime = 0;
+			renderFrame();
+		});
+
+		scenePicker.addEventListener("change", () => {
+			try {
+				createScene(scenePicker.value);
+				setStatus(`Wasm loaded. Showing Scene ${scenePicker.value}. Use Play or scrub the timeline.`);
+			} catch (error) {
+				console.error(error);
+				setStatus(`Scene switch failed: ${error.message}`, true);
+			}
+		});
+
+		timeSlider.addEventListener("input", () => {
+			currentTime = Number(timeSlider.value);
+			renderFrame();
+		});
+
+		window.addEventListener("beforeunload", () => {
+			destroyScene();
+		});
+
+		(async () => {
+			try {
+				wasm = await instantiateWasm();
+				createScene(scenePicker.value);
+
+				scenePicker.disabled = false;
+				playButton.disabled = false;
+				resetButton.disabled = false;
+				timeSlider.disabled = false;
+				setStatus(`Wasm loaded. Showing Scene ${scenePicker.value}. Use Play or scrub the timeline.`);
+			} catch (error) {
+				console.error(error);
+				setStatus(`Load failed: ${error.message}. Serve this directory over HTTP so fetch() can load the wasm file.`, true);
+			}
+		})();
+	</script>
+</body>
+</html>
