@@ -32,6 +32,16 @@ impl<T: Zero + One> Bounds2<T> {
 	pub const UNIT: Bounds2<T> = Bounds2 { mins: Point2::ZERO, maxs: Point2::ONE };
 }
 
+impl<T: Float> Bounds2<T> {
+	/// Empty bounds represented by inverted infinities.
+	///
+	/// Useful as the initial accumulator for [include](Bounds2::include) or [union](Bounds2::union).
+	pub const EMPTY: Bounds2<T> = Bounds2 {
+		mins: Point2 { x: T::INFINITY, y: T::INFINITY },
+		maxs: Point2 { x: T::NEG_INFINITY, y: T::NEG_INFINITY },
+	};
+}
+
 impl<T> Bounds2<T> {
 	/// Constructs a new bounds.
 	#[inline]

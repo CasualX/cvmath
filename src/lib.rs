@@ -74,6 +74,8 @@ pub use crate::vec::{Vec2f, Vec3f, Vec4f, Vec2d, Vec3d, Vec4d, Vec2i, Vec3i, Vec
 #[doc(hidden)]
 pub use crate::complex::{Complexf, Complexd};
 #[doc(hidden)]
+pub use crate::polar::{Polarf, Polard};
+#[doc(hidden)]
 pub use crate::mat::{Mat2f, Mat3f, Mat4f, Transform2f, Transform3f, Mat2d, Mat3d, Mat4d, Transform2d, Transform3d};
 #[doc(hidden)]
 pub use crate::quat::{Quatf, Quatd};

@@ -34,6 +34,16 @@ impl<T: Zero + One> Bounds3<T> {
 	pub const UNIT: Bounds3<T> = Bounds3 { mins: Point3::ZERO, maxs: Point3::ONE };
 }
 
+impl<T: Float> Bounds3<T> {
+	/// Empty bounds represented by inverted infinities.
+	///
+	/// Useful as the initial accumulator for [include](Bounds3::include) or [union](Bounds3::union).
+	pub const EMPTY: Bounds3<T> = Bounds3 {
+		mins: Point3 { x: T::INFINITY, y: T::INFINITY, z: T::INFINITY },
+		maxs: Point3 { x: T::NEG_INFINITY, y: T::NEG_INFINITY, z: T::NEG_INFINITY },
+	};
+}
+
 impl<T> Bounds3<T> {
 	/// Constructs a new bounds.
 	#[inline]

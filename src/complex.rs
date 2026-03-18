@@ -158,33 +158,30 @@ impl<T: Float> Complex<T> {
 	}
 	/// Raises the complex number to an integer power.
 	#[inline]
-	pub fn powi(self, mut n: i32) -> Complex<T> {
-		if n == 0 {
+	pub fn powi(self, exp: i32) -> Complex<T> {
+		if exp == 0 {
 			return Self::UNIT;
 		}
 
 		let mut base = self;
-		let mut result = Self::UNIT;
-
-		let negative = n < 0;
-		if negative {
-			n = -n;
+		let mut exp = if exp < 0 {
+			base = base.recip();
+			exp.unsigned_abs()
 		}
+		else {
+			exp as u32
+		};
 
-		while n > 0 {
-			if n % 2 == 1 {
+		let mut result = base;
+		exp -= 1;
+		while exp > 0 {
+			if exp & 1 == 1 {
 				result = result * base;
 			}
 			base = base * base;
-			n /= 2;
+			exp >>= 1;
 		}
-
-		if negative {
-			result.recip()
-		}
-		else {
-			result
-		}
+		result
 	}
 	/// Calculates the natural logarithm.
 	#[inline]
@@ -599,6 +596,11 @@ fn test_parse_negative_imaginary() {
 #[test]
 fn test_rotate_zero_angle() {
 	assert_eq!(Complexf::rotation(Anglef::ZERO), Complexf::UNIT);
+}
+
+#[test]
+fn test_powi_i32_min() {
+	assert_eq!(Complexf::UNIT.powi(i32::MIN), Complexf::UNIT);
 }
 
 #[test]

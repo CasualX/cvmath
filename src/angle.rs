@@ -36,11 +36,17 @@ impl<T: Float> Angle<T> {
 	}
 
 	/// Constant 360° angle or 2π radians.
-	pub const TURN: Angle<T> = Angle(T::TAU);
+	pub const TAU: Angle<T> = Angle(T::TAU);
 	/// Constant 180° angle or π radians.
+	pub const PI: Angle<T> = Angle(T::PI);
+	#[doc(hidden)]
+	pub const TURN: Angle<T> = Angle(T::TAU);
+	#[doc(hidden)]
 	pub const HALF: Angle<T> = Angle(T::PI);
 	/// Constant 90° angle or π/2 radians.
 	pub const QUARTER: Angle<T> = Angle(T::FRAC_PI_2);
+	/// Constant 0° angle or 0 radians.
+	pub const ZERO: Angle<T> = Angle(T::ZERO);
 
 	/// Normalizes the angle to range -180°, 180° or -π rad, π rad.
 	#[inline]
@@ -369,7 +375,7 @@ mod tests {
 
 	#[test]
 	fn parse() {
-		assert_eq!(Angle::<f32>::TURN, "360°".parse().unwrap());
+		assert_eq!(Angle::<f32>::TAU, "360°".parse().unwrap());
 		assert_eq!(Angle(1.5f32), "1.5 rad".parse().unwrap());
 		assert_eq!(Angle(2.5f64), "2.5".parse().unwrap());
 		assert_eq!(Deg(180f32), "180°".parse().unwrap());

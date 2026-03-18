@@ -138,7 +138,7 @@ impl<T: Float> Mat4<T> {
 	/// - `flags`: Projection handedness and clip space settings.
 	#[inline]
 	pub fn ortho_perspective(focus_depth: T, fov_y: Angle<T>, aspect_ratio: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
-		debug_assert!(fov_y > Angle::ZERO && fov_y < Angle::HALF, "fov_y must be in (0, 180)");
+		debug_assert!(fov_y > Angle::ZERO && fov_y < Angle::PI, "fov_y must be in (0, 180)");
 		debug_assert!(aspect_ratio > T::ZERO, "aspect_ratio must be strictly positive");
 		debug_assert!(T::ZERO < near && near < far);
 
@@ -192,7 +192,7 @@ impl<T: Float> Mat4<T> {
 	/// - `flags`: Projection handedness and clip space settings.
 	#[inline]
 	pub fn perspective(fov_y: Angle<T>, aspect_ratio: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
-		debug_assert!(fov_y > Angle::ZERO && fov_y < Angle::HALF, "fov_y must be in (0, 180)");
+		debug_assert!(fov_y > Angle::ZERO && fov_y < Angle::PI, "fov_y must be in (0, 180)");
 		debug_assert!(aspect_ratio > T::ZERO, "aspect_ratio must be strictly positive");
 		debug_assert!(T::ZERO < near && near < far);
 
@@ -218,7 +218,7 @@ impl<T: Float> Mat4<T> {
 	/// - `near`, `far`: Depth clipping planes.
 	/// - `flags`: Projection handedness and clip space settings.
 	pub fn blend_ortho_perspective(blend: T, focus_depth: T, fov_y: Angle<T>, aspect_ratio: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
-		debug_assert!(fov_y > Angle::ZERO && fov_y < Angle::HALF, "fov_y must be in (0, 180)");
+		debug_assert!(fov_y > Angle::ZERO && fov_y < Angle::PI, "fov_y must be in (0, 180)");
 		debug_assert!(aspect_ratio > T::ZERO, "aspect_ratio must be strictly positive");
 		debug_assert!(T::ZERO < near && near < far);
 		debug_assert!(blend >= T::ZERO && blend <= T::ONE, "fraction must be in [0, 1]");

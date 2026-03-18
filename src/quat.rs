@@ -203,7 +203,7 @@ impl<T: Float> Quat<T> {
 		// Find an orthogonal axis to self's vector part
 		if cos_theta <= -(T::ONE - T::EPSILON) {
 			let axis = self.imag().any_perp();
-			let orthogonal = Quat::from_axis_angle(axis, Angle::HALF);
+			let orthogonal = Quat::from_axis_angle(axis, Angle::PI);
 			return (self * (Quat::UNIT + (orthogonal - Quat::UNIT) * t)).norm();
 		}
 

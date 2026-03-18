@@ -9,7 +9,7 @@ pub struct SvgWriter(String);
 
 impl SvgWriter {
 	pub fn new(width: f32, height: f32) -> SvgWriter {
-		SvgWriter(format!(r#"<svg width="{}" height="{}" font-family="monospace" xmlns="http://www.w3.org/2000/svg">"#, width, height))
+		SvgWriter(format!(r#"<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" preserveAspectRatio="xMidYMid meet" font-family="monospace" xmlns="http://www.w3.org/2000/svg">"#))
 	}
 	pub fn circle(&mut self, circle: Circle<f32>) -> Attributes<'_, &'static str> {
 		self.0 += &format!(r#"<circle cx="{}" cy="{}" r="{}""#, circle.center.x, circle.center.y, circle.radius);
@@ -39,6 +39,22 @@ impl SvgWriter {
 	}
 	pub fn arc(&mut self, start: Point2<f32>, end: Point2<f32>, radius: f32) -> Attributes<'_, &'static str> {
 		self.0 += &format!(r#"<path fill="none" d="M{} {} A{} {} 0 0 1 {} {}""#, start.x, start.y, radius, radius, end.x, end.y);
+		Attributes { svg: &mut self.0, closing: " />" }
+	}
+	pub fn circle_arc(&mut self, circle: Circle<f32>, start: Angle<f32>, sweep: Angle<f32>) -> Attributes<'_, &'static str> {
+		if sweep.abs() >= Angle::TAU {
+			return self.circle(circle);
+		}
+
+		let Vec2 { x: start_x, y: start_y } = circle.center + start.vec2() * circle.radius;
+		let Vec2 { x: end_x, y: end_y } = circle.center + (start + sweep).vec2() * circle.radius;
+
+		let radius = circle.radius;
+		let large_arc = if sweep.abs() > Angle::PI { 1 } else { 0 };
+		let sweep_flag = if sweep >= Angle::ZERO { 1 } else { 0 };
+
+		self.0 += &format!(r#"<path fill="none" d="M{start_x} {start_y} A{radius} {radius} 0 {large_arc} {sweep_flag} {end_x} {end_y}""#);
+
 		Attributes { svg: &mut self.0, closing: " />" }
 	}
 	pub fn text(&mut self, p: Point2<f32>, text: &str) -> Attributes<'_, String> {
