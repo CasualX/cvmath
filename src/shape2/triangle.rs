@@ -127,6 +127,19 @@ impl<T: Float> Triangle2<T> {
 	}
 }
 
+impl<T: Scalar> Lerp for Triangle2<T> {
+	type T = T;
+
+	#[inline]
+	fn lerp(self, other: Self, t: T) -> Self {
+		Triangle2 {
+			p: lerp(self.p, other.p, t),
+			u: lerp(self.u, other.u, t),
+			v: lerp(self.v, other.v, t),
+		}
+	}
+}
+
 //----------------------------------------------------------------
 
 #[cfg(feature = "urandom")]

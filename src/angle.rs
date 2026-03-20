@@ -118,6 +118,12 @@ impl<T: Float> Angle<T> {
 		Angle(y.atan2(x))
 	}
 
+	/// Linear interpolation between the angles, prefers the shorter path.
+	#[inline]
+	pub fn lerp_shortest(self, target: Self, t: T) -> Self {
+		self + (target - self).norm() * t
+	}
+
 	/// Converts to degrees.
 	#[inline]
 	pub fn to_deg(self) -> T {
@@ -249,6 +255,15 @@ impl<T: ops::SubAssign> ops::SubAssign for Angle<T> {
 	}
 }
 
+impl<T: Float> Lerp for Angle<T> {
+	type T = T;
+
+	#[inline]
+	fn lerp(self, other: Self, t: T) -> Self {
+		self + (other - self) * t
+	}
+}
+
 //----------------------------------------------------------------
 // Random
 
@@ -339,8 +354,7 @@ impl<'de, T: serde::Deserialize<'de> + 'static> serde::Deserialize<'de> for Angl
 mod tests {
 	use super::*;
 
-	#[allow(non_snake_case)]
-	fn Deg<T: Float>(degrees: T) -> Angle<T> {
+	fn deg<T: Float>(degrees: T) -> Angle<T> {
 		Angle::deg(degrees)
 	}
 
@@ -351,26 +365,33 @@ mod tests {
 
 	#[test]
 	fn normalize() {
-		assert_eq(Deg(179.0), Deg(-181.0).norm());
-		assert_eq(Deg(-179.0), Deg(181.0).norm());
-		assert_eq(Deg(0.125), Deg(360.125).norm());
-		assert_eq(Deg(180.0), Deg(-180.0).norm());
-		assert_eq(Deg(-180.0), Deg(180.0).norm());
+		assert_eq(deg(179.0), deg(-181.0).norm());
+		assert_eq(deg(-179.0), deg(181.0).norm());
+		assert_eq(deg(0.125), deg(360.125).norm());
+		assert_eq(deg(180.0), deg(-180.0).norm());
+		assert_eq(deg(-180.0), deg(180.0).norm());
 	}
 
 	#[test]
 	fn normalize_abs() {
-		assert_eq(Deg(179.0), Deg(-181.0).norm_abs());
-		assert_eq(Deg(181.0), Deg(181.0).norm_abs());
-		assert_eq(Deg(1.0), Deg(361.0).norm_abs());
-		assert_eq(Deg(180.0), Deg(-180.0).norm_abs());
-		assert_eq(Deg(359.0), Deg(359.0).norm_abs());
+		assert_eq(deg(179.0), deg(-181.0).norm_abs());
+		assert_eq(deg(181.0), deg(181.0).norm_abs());
+		assert_eq(deg(1.0), deg(361.0).norm_abs());
+		assert_eq(deg(180.0), deg(-180.0).norm_abs());
+		assert_eq(deg(359.0), deg(359.0).norm_abs());
+	}
+
+	#[test]
+	fn lerps() {
+		assert_eq(deg(45.0), deg(0.0).lerp_shortest(deg(90.0), 0.5));
+		assert_eq(deg(-90.0), deg(0.0).lerp_shortest(deg(180.0), 0.5));
+		assert_eq(deg(0.0), deg(0.0).lerp_shortest(deg(360.0), 0.5));
 	}
 
 	#[test]
 	fn formatting() {
-		assert_eq!("12°", format!("{:.0}", Deg(12.1f32)));
-		assert_eq!(" 12.0°", format!("{:>5.1}", Deg(12.0)));
+		assert_eq!("12°", format!("{:.0}", deg(12.1f32)));
+		assert_eq!(" 12.0°", format!("{:>5.1}", deg(12.0)));
 	}
 
 	#[test]
@@ -378,7 +399,7 @@ mod tests {
 		assert_eq!(Angle::<f32>::TAU, "360°".parse().unwrap());
 		assert_eq!(Angle(1.5f32), "1.5 rad".parse().unwrap());
 		assert_eq!(Angle(2.5f64), "2.5".parse().unwrap());
-		assert_eq!(Deg(180f32), "180°".parse().unwrap());
-		assert_eq!(Deg(90f32), "90deg".parse().unwrap());
+		assert_eq!(deg(180f32), "180°".parse().unwrap());
+		assert_eq!(deg(90f32), "90deg".parse().unwrap());
 	}
 }

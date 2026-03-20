@@ -30,13 +30,14 @@ impl<T> Sphere<T> {
 	}
 }
 
-impl<T: Scalar> Sphere<T> {
-	/// Linear interpolation between the shapes.
+impl<T: Scalar> Lerp for Sphere<T> {
+	type T = T;
+
 	#[inline]
-	pub fn lerp(self, target: Sphere<T>, t: T) -> Sphere<T> {
+	fn lerp(self, target: Sphere<T>, t: T) -> Sphere<T> {
 		Sphere {
-			center: self.center.lerp(target.center, t),
-			radius: self.radius + (target.radius - self.radius) * t,
+			center: lerp(self.center, target.center, t),
+			radius: lerp(self.radius, target.radius, t),
 		}
 	}
 }

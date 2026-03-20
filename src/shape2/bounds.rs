@@ -305,6 +305,18 @@ impl<T: Copy + ops::SubAssign<T>> ops::SubAssign<Vec2<T>> for Bounds2<T> {
 	}
 }
 
+impl<T: Scalar> Lerp for Bounds2<T> {
+	type T = T;
+
+	#[inline]
+	fn lerp(self, target: Bounds2<T>, t: T) -> Bounds2<T> {
+		Bounds2 {
+			mins: lerp(self.mins, target.mins, t),
+			maxs: lerp(self.maxs, target.maxs, t),
+		}
+	}
+}
+
 impl<T> AsRef<[Point2<T>; 2]> for Bounds2<T> {
 	#[inline]
 	fn as_ref(&self) -> &[Point2<T>; 2] {
@@ -429,14 +441,6 @@ impl<T: Scalar> Bounds2<T> {
 	#[inline]
 	pub fn aspect_ratio(&self) -> T where T: Float {
 		self.width() / self.height()
-	}
-	/// Linear interpolation between the shapes.
-	#[inline]
-	pub fn lerp(self, target: Bounds2<T>, t: T) -> Bounds2<T> where T: Scalar {
-		Bounds2 {
-			mins: self.mins.lerp(target.mins, t),
-			maxs: self.maxs.lerp(target.maxs, t),
-		}
 	}
 	/// Transform of the unit square.
 	#[inline]

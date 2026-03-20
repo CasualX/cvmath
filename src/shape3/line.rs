@@ -54,13 +54,16 @@ impl<T: Float> Line3<T> {
 	pub fn distance(self, pt: Point3<T>) -> T {
 		self.project(pt).distance(pt)
 	}
+}
 
-	/// Linear interpolation between the shapes.
+impl<T: Scalar> Lerp for Line3<T> {
+	type T = T;
+
 	#[inline]
-	pub fn lerp(self, target: Line3<T>, t: T) -> Line3<T> {
+	fn lerp(self, target: Line3<T>, t: T) -> Line3<T> {
 		Line3 {
-			start: self.start.lerp(target.start, t),
-			end: self.end.lerp(target.end, t),
+			start: lerp(self.start, target.start, t),
+			end: lerp(self.end, target.end, t),
 		}
 	}
 }

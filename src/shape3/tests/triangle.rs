@@ -112,3 +112,15 @@ fn test_trace_random_triangles() {
 		}
 	}
 }
+
+#[test]
+fn test_lerp() {
+	let triangle = lerp(
+		Triangle3::points(Point3(0.0, 0.0, 0.0), Point3(2.0, 0.0, 0.0), Point3(0.0, 2.0, 0.0)),
+		Triangle3::points(Point3(2.0, 2.0, 2.0), Point3(6.0, 2.0, 2.0), Point3(2.0, 6.0, 2.0)),
+		0.5,
+	);
+	assert_eq!(triangle.p1(), Point3(1.0, 1.0, 1.0));
+	assert_eq!(triangle.p2(), Point3(4.0, 1.0, 1.0));
+	assert_eq!(triangle.p3(), Point3(1.0, 4.0, 1.0));
+}

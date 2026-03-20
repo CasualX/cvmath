@@ -123,13 +123,16 @@ impl<T: Float> Line2<T> {
 		let p = rhs.delta() * self.start.cross(self.start + self.delta()) - self.delta() * rhs.start.cross(rhs.start + rhs.delta());
 		Some(p / denom)
 	}
+}
 
-	/// Linear interpolation between the shapes.
+impl<T: Scalar> Lerp for Line2<T> {
+	type T = T;
+
 	#[inline]
-	pub fn lerp(self, target: Line2<T>, t: T) -> Line2<T> {
+	fn lerp(self, target: Line2<T>, t: T) -> Line2<T> {
 		Line2 {
-			start: self.start.lerp(target.start, t),
-			end: self.end.lerp(target.end, t),
+			start: lerp(self.start, target.start, t),
+			end: lerp(self.end, target.end, t),
 		}
 	}
 }

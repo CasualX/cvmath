@@ -31,15 +31,6 @@ impl<T> Circle<T> {
 }
 
 impl<T: Scalar> Circle<T> {
-	/// Linear interpolation between the shapes.
-	#[inline]
-	pub fn lerp(self, target: Circle<T>, t: T) -> Circle<T> {
-		Circle {
-			center: self.center.lerp(target.center, t),
-			radius: self.radius + (target.radius - self.radius) * t,
-		}
-	}
-
 	/// Bounds of the circle.
 	#[inline]
 	pub fn bounds(&self) -> Bounds2<T> {
@@ -47,6 +38,18 @@ impl<T: Scalar> Circle<T> {
 		Bounds2 {
 			mins: self.center - half,
 			maxs: self.center + half,
+		}
+	}
+}
+
+impl<T: Scalar> Lerp for Circle<T> {
+	type T = T;
+
+	#[inline]
+	fn lerp(self, target: Circle<T>, t: T) -> Circle<T> {
+		Circle {
+			center: lerp(self.center, target.center, t),
+			radius: lerp(self.radius, target.radius, t),
 		}
 	}
 }

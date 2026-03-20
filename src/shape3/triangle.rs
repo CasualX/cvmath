@@ -138,6 +138,19 @@ impl<T: Float> ops::Mul<Triangle3<T>> for Transform3<T> {
 	}
 }
 
+impl<T: Scalar> Lerp for Triangle3<T> {
+	type T = T;
+
+	#[inline]
+	fn lerp(self, other: Self, t: T) -> Self {
+		Triangle3 {
+			p: lerp(self.p, other.p, t),
+			u: lerp(self.u, other.u, t),
+			v: lerp(self.v, other.v, t),
+		}
+	}
+}
+
 //----------------------------------------------------------------
 
 #[cfg(feature = "urandom")]

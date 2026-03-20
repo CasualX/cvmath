@@ -17,6 +17,15 @@ pub const fn RotationVector<T>(v: Vec3<T>) -> RotationVector<T> {
 	RotationVector { v }
 }
 
+impl<T: Float> Lerp for RotationVector<T> {
+	type T = T;
+
+	#[inline]
+	fn lerp(self, other: Self, t: T) -> Self {
+		RotationVector { v: lerp(self.v, other.v, t) }
+	}
+}
+
 impl<T: Float> RotationVector<T> {
 	#[inline]
 	pub fn mat3(self) -> Mat3<T> {

@@ -419,31 +419,6 @@ impl<T: Scalar> Mat4<T> {
 			a41: self.a14, a42: self.a24, a43: self.a34, a44: self.a44,
 		}
 	}
-	/// Linear interpolation between the matrix elements.
-	#[inline]
-	pub fn lerp(self, rhs: Mat4<T>, t: T) -> Mat4<T> where T: Float {
-		Mat4 {
-			a11: self.a11 + (rhs.a11 - self.a11) * t,
-			a12: self.a12 + (rhs.a12 - self.a12) * t,
-			a13: self.a13 + (rhs.a13 - self.a13) * t,
-			a14: self.a14 + (rhs.a14 - self.a14) * t,
-
-			a21: self.a21 + (rhs.a21 - self.a21) * t,
-			a22: self.a22 + (rhs.a22 - self.a22) * t,
-			a23: self.a23 + (rhs.a23 - self.a23) * t,
-			a24: self.a24 + (rhs.a24 - self.a24) * t,
-
-			a31: self.a31 + (rhs.a31 - self.a31) * t,
-			a32: self.a32 + (rhs.a32 - self.a32) * t,
-			a33: self.a33 + (rhs.a33 - self.a33) * t,
-			a34: self.a34 + (rhs.a34 - self.a34) * t,
-
-			a41: self.a41 + (rhs.a41 - self.a41) * t,
-			a42: self.a42 + (rhs.a42 - self.a42) * t,
-			a43: self.a43 + (rhs.a43 - self.a43) * t,
-			a44: self.a44 + (rhs.a44 - self.a44) * t,
-		}
-	}
 }
 
 //----------------------------------------------------------------
@@ -713,6 +688,35 @@ fn glu_invert<T: Float>(this: &Mat4<T>) -> Option<Mat4<T>> {
 		a31: inv[8] * inv_det, a32: inv[9] * inv_det, a33: inv[10] * inv_det, a34: inv[11] * inv_det,
 		a41: inv[12] * inv_det, a42: inv[13] * inv_det, a43: inv[14] * inv_det, a44: inv[15] * inv_det,
 	})
+}
+
+impl<T: Scalar> Lerp for Mat4<T> {
+	type T = T;
+
+	#[inline]
+	fn lerp(self, rhs: Mat4<T>, t: T) -> Mat4<T> {
+		Mat4 {
+			a11: self.a11 + (rhs.a11 - self.a11) * t,
+			a12: self.a12 + (rhs.a12 - self.a12) * t,
+			a13: self.a13 + (rhs.a13 - self.a13) * t,
+			a14: self.a14 + (rhs.a14 - self.a14) * t,
+
+			a21: self.a21 + (rhs.a21 - self.a21) * t,
+			a22: self.a22 + (rhs.a22 - self.a22) * t,
+			a23: self.a23 + (rhs.a23 - self.a23) * t,
+			a24: self.a24 + (rhs.a24 - self.a24) * t,
+
+			a31: self.a31 + (rhs.a31 - self.a31) * t,
+			a32: self.a32 + (rhs.a32 - self.a32) * t,
+			a33: self.a33 + (rhs.a33 - self.a33) * t,
+			a34: self.a34 + (rhs.a34 - self.a34) * t,
+
+			a41: self.a41 + (rhs.a41 - self.a41) * t,
+			a42: self.a42 + (rhs.a42 - self.a42) * t,
+			a43: self.a43 + (rhs.a43 - self.a43) * t,
+			a44: self.a44 + (rhs.a44 - self.a44) * t,
+		}
+	}
 }
 
 impl_mat_neg!(Mat4);

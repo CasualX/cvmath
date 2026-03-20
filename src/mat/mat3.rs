@@ -515,29 +515,6 @@ impl<T: Scalar> Mat3<T> {
 			a33: self.a11 * self.a22 - self.a12 * self.a21,
 		}
 	}
-	/// Linear interpolation between the matrix elements.
-	///
-	/// ```
-	/// let source = cvmath::Mat3::IDENTITY;
-	/// let target = cvmath::Mat3::scaling(cvmath::Vec3(3.0, 5.0, 9.0));
-	/// let value = source.lerp(target, 0.5);
-	/// let expected = cvmath::Mat3(2.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 5.0);
-	/// assert_eq!(expected, value);
-	/// ```
-	#[inline]
-	pub fn lerp(self, rhs: Mat3<T>, t: T) -> Mat3<T> where T: Float {
-		Mat3 {
-			a11: self.a11 + (rhs.a11 - self.a11) * t,
-			a12: self.a12 + (rhs.a12 - self.a12) * t,
-			a13: self.a13 + (rhs.a13 - self.a13) * t,
-			a21: self.a21 + (rhs.a21 - self.a21) * t,
-			a22: self.a22 + (rhs.a22 - self.a22) * t,
-			a23: self.a23 + (rhs.a23 - self.a23) * t,
-			a31: self.a31 + (rhs.a31 - self.a31) * t,
-			a32: self.a32 + (rhs.a32 - self.a32) * t,
-			a33: self.a33 + (rhs.a33 - self.a33) * t,
-		}
-	}
 	/// Applies the transformation around a given origin.
 	///
 	/// ```
@@ -729,6 +706,25 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Trans
 	#[inline]
 	fn mul_assign(&mut self, rhs: Transform2<T>) {
 		*self = *self * rhs;
+	}
+}
+
+impl<T: Scalar> Lerp for Mat3<T> {
+	type T = T;
+
+	#[inline]
+	fn lerp(self, rhs: Mat3<T>, t: T) -> Mat3<T> {
+		Mat3 {
+			a11: self.a11 + (rhs.a11 - self.a11) * t,
+			a12: self.a12 + (rhs.a12 - self.a12) * t,
+			a13: self.a13 + (rhs.a13 - self.a13) * t,
+			a21: self.a21 + (rhs.a21 - self.a21) * t,
+			a22: self.a22 + (rhs.a22 - self.a22) * t,
+			a23: self.a23 + (rhs.a23 - self.a23) * t,
+			a31: self.a31 + (rhs.a31 - self.a31) * t,
+			a32: self.a32 + (rhs.a32 - self.a32) * t,
+			a33: self.a33 + (rhs.a33 - self.a33) * t,
+		}
 	}
 }
 

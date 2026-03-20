@@ -1153,7 +1153,7 @@ macro_rules! vec {
 				let self_len = self.len();
 				let rhs_len = rhs.len();
 				let len = self_len + (rhs_len - self_len) * t;
-				self.lerp(rhs, t).resize(len)
+				lerp(self, rhs, t).resize(len)
 			}
 			/// Exponential decay smoothing.
 			///
@@ -1178,6 +1178,15 @@ macro_rules! vec {
 			#[must_use]
 			pub fn exp_decay(self, rhs: $vec<T>, decay: T, dt: T) -> $vec<T> where T: Float {
 				rhs + (self - rhs) * (-decay * dt).exp()
+			}
+		}
+
+		impl<T: Scalar> Lerp for $vec<T> {
+			type T = T;
+
+			#[inline]
+			fn lerp(self, rhs: $vec<T>, t: T) -> $vec<T> {
+				self + (rhs - self) * t
 			}
 		}
 

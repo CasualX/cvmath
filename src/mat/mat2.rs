@@ -452,24 +452,6 @@ impl<T: Scalar> Mat2<T> {
 			a21: -self.a21, a22:  self.a11,
 		}
 	}
-	/// Linear interpolation between the matrix elements.
-	///
-	/// ```
-	/// let source = cvmath::Mat2::IDENTITY;
-	/// let target = cvmath::Mat2::scaling(cvmath::Vec2(3.0, 5.0));
-	/// let value = source.lerp(target, 0.5);
-	/// let expected = cvmath::Mat2(2.0, 0.0, 0.0, 3.0);
-	/// assert_eq!(expected, value);
-	/// ```
-	#[inline]
-	pub fn lerp(self, rhs: Mat2<T>, t: T) -> Mat2<T> where T: Float {
-		Mat2 {
-			a11: self.a11 + (rhs.a11 - self.a11) * t,
-			a12: self.a12 + (rhs.a12 - self.a12) * t,
-			a21: self.a21 + (rhs.a21 - self.a21) * t,
-			a22: self.a22 + (rhs.a22 - self.a22) * t,
-		}
-	}
 	/// Applies the transformation around a given origin.
 	///
 	/// ```
@@ -648,6 +630,20 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Mat2<
 	#[inline]
 	fn mul_assign(&mut self, rhs: Mat2<T>) {
 		*self = *self * rhs;
+	}
+}
+
+impl<T: Scalar> Lerp for Mat2<T> {
+	type T = T;
+
+	#[inline]
+	fn lerp(self, rhs: Mat2<T>, t: T) -> Mat2<T> {
+		Mat2 {
+			a11: self.a11 + (rhs.a11 - self.a11) * t,
+			a12: self.a12 + (rhs.a12 - self.a12) * t,
+			a21: self.a21 + (rhs.a21 - self.a21) * t,
+			a22: self.a22 + (rhs.a22 - self.a22) * t,
+		}
 	}
 }
 

@@ -584,34 +584,6 @@ impl<T: Scalar> Transform3<T> {
 	pub fn inverse(self) -> Transform3<T> where T: Float {
 		self.try_invert().unwrap_or(Transform3::ZERO)
 	}
-	/// Linear interpolation between the matrix elements.
-	///
-	/// ```
-	/// let source = cvmath::Transform3::IDENTITY;
-	/// let target = cvmath::Transform3::translation(cvmath::Vec3(8.0, 10.0, 12.0));
-	/// let value = source.lerp(target, 0.5);
-	/// let expected = cvmath::Transform3(1.0, 0.0, 0.0, 4.0, 0.0, 1.0, 0.0, 5.0, 0.0, 0.0, 1.0, 6.0);
-	/// assert_eq!(expected, value);
-	/// ```
-	#[inline]
-	pub fn lerp(self, rhs: Transform3<T>, t: T) -> Transform3<T> where T: Float {
-		Transform3 {
-			a11: self.a11 + (rhs.a11 - self.a11) * t,
-			a12: self.a12 + (rhs.a12 - self.a12) * t,
-			a13: self.a13 + (rhs.a13 - self.a13) * t,
-			a14: self.a14 + (rhs.a14 - self.a14) * t,
-
-			a21: self.a21 + (rhs.a21 - self.a21) * t,
-			a22: self.a22 + (rhs.a22 - self.a22) * t,
-			a23: self.a23 + (rhs.a23 - self.a23) * t,
-			a24: self.a24 + (rhs.a24 - self.a24) * t,
-
-			a31: self.a31 + (rhs.a31 - self.a31) * t,
-			a32: self.a32 + (rhs.a32 - self.a32) * t,
-			a33: self.a33 + (rhs.a33 - self.a33) * t,
-			a34: self.a34 + (rhs.a34 - self.a34) * t,
-		}
-	}
 	/// Solves a linear system of equations represented by the matrix.
 	///
 	/// Interprets the affine transform rows as the system:
@@ -791,6 +763,30 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Trans
 	#[inline]
 	fn mul_assign(&mut self, rhs: Transform3<T>) {
 		*self = *self * rhs;
+	}
+}
+
+impl<T: Scalar> Lerp for Transform3<T> {
+	type T = T;
+
+	#[inline]
+	fn lerp(self, rhs: Transform3<T>, t: T) -> Transform3<T> {
+		Transform3 {
+			a11: self.a11 + (rhs.a11 - self.a11) * t,
+			a12: self.a12 + (rhs.a12 - self.a12) * t,
+			a13: self.a13 + (rhs.a13 - self.a13) * t,
+			a14: self.a14 + (rhs.a14 - self.a14) * t,
+
+			a21: self.a21 + (rhs.a21 - self.a21) * t,
+			a22: self.a22 + (rhs.a22 - self.a22) * t,
+			a23: self.a23 + (rhs.a23 - self.a23) * t,
+			a24: self.a24 + (rhs.a24 - self.a24) * t,
+
+			a31: self.a31 + (rhs.a31 - self.a31) * t,
+			a32: self.a32 + (rhs.a32 - self.a32) * t,
+			a33: self.a33 + (rhs.a33 - self.a33) * t,
+			a34: self.a34 + (rhs.a34 - self.a34) * t,
+		}
 	}
 }
 

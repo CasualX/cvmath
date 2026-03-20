@@ -531,26 +531,6 @@ impl<T: Scalar> Transform2<T> {
 	pub fn inverse(self) -> Transform2<T> where T: Float {
 		self.try_invert().unwrap_or(Transform2::ZERO)
 	}
-	/// Linear interpolation between the matrix elements.
-	///
-	/// ```
-	/// let source = cvmath::Transform2::IDENTITY;
-	/// let target = cvmath::Transform2::translation(cvmath::Vec2(8.0, 10.0));
-	/// let value = source.lerp(target, 0.5);
-	/// let expected = cvmath::Transform2(1.0, 0.0, 4.0, 0.0, 1.0, 5.0);
-	/// assert_eq!(expected, value);
-	/// ```
-	#[inline]
-	pub fn lerp(self, other: Transform2<T>, t: T) -> Transform2<T> where T: Float {
-		Transform2 {
-			a11: self.a11 + (other.a11 - self.a11) * t,
-			a12: self.a12 + (other.a12 - self.a12) * t,
-			a13: self.a13 + (other.a13 - self.a13) * t,
-			a21: self.a21 + (other.a21 - self.a21) * t,
-			a22: self.a22 + (other.a22 - self.a22) * t,
-			a23: self.a23 + (other.a23 - self.a23) * t,
-		}
-	}
 	/// Solves a linear system of equations represented by the matrix.
 	///
 	/// Interprets the affine transform rows as the system:
@@ -703,6 +683,22 @@ impl<T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>> ops::MulAssign<Mat2<
 	#[inline]
 	fn mul_assign(&mut self, rhs: Mat2<T>) {
 		*self = *self * rhs;
+	}
+}
+
+impl<T: Scalar> Lerp for Transform2<T> {
+	type T = T;
+
+	#[inline]
+	fn lerp(self, other: Transform2<T>, t: T) -> Transform2<T> {
+		Transform2 {
+			a11: self.a11 + (other.a11 - self.a11) * t,
+			a12: self.a12 + (other.a12 - self.a12) * t,
+			a13: self.a13 + (other.a13 - self.a13) * t,
+			a21: self.a21 + (other.a21 - self.a21) * t,
+			a22: self.a22 + (other.a22 - self.a22) * t,
+			a23: self.a23 + (other.a23 - self.a23) * t,
+		}
 	}
 }
 

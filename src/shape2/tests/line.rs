@@ -15,7 +15,7 @@ fn test_trace_random_lines() {
 		}
 
 		let t = rng.range(-0.5..1.5);
-		let target = start.lerp(end, t);
+		let target = lerp(start, end, t);
 
 		let origin = Point2(rng.next_f64(), rng.next_f64());
 		let origin = origin * 10.0;
@@ -42,4 +42,14 @@ fn test_trace_random_lines() {
 		ray.direction = -ray.direction;
 		assert!(ray.trace(&line).is_none(), "Ray should not hit the line when moving away");
 	}
+}
+
+#[test]
+fn test_lerp() {
+	let line = lerp(
+		Line2(Point2(0.0, 0.0), Point2(8.0, 4.0)),
+		Line2(Point2(4.0, 8.0), Point2(12.0, 12.0)),
+		0.5,
+	);
+	assert_eq!(line, Line2(Point2(2.0, 4.0), Point2(10.0, 8.0)));
 }

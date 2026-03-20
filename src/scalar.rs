@@ -4,6 +4,15 @@ Scalar functions.
 
 use super::*;
 
+impl<T: Scalar> Lerp for T {
+	type T = T;
+
+	#[inline]
+	fn lerp(self, other: Self, t: T) -> Self {
+		self + (other - self) * t
+	}
+}
+
 /// Linear interpolation between scalars.
 ///
 /// - The `t` parameter is not clamped.

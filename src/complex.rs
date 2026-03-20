@@ -43,6 +43,7 @@ impl<T: Zero + One> Complex<T> {
 		im: T::ZERO,
 	};
 }
+
 impl<T: Float> Complex<T> {
 	/// Rotating complex number.
 	#[inline]
@@ -270,6 +271,18 @@ impl<T> AsMut<[T; 2]> for Complex<T> {
 
 //----------------------------------------------------------------
 // Operators
+
+impl<T: Scalar> Lerp for Complex<T> {
+	type T = T;
+
+	#[inline]
+	fn lerp(self, other: Self, t: T) -> Self {
+		Complex {
+			re: lerp(self.re, other.re, t),
+			im: lerp(self.im, other.im, t),
+		}
+	}
+}
 
 impl<T: ops::Add<Output = T>> ops::Add for Complex<T> {
 	type Output = Complex<T>;
@@ -601,6 +614,12 @@ fn test_rotate_zero_angle() {
 #[test]
 fn test_powi_i32_min() {
 	assert_eq!(Complexf::UNIT.powi(i32::MIN), Complexf::UNIT);
+}
+
+#[test]
+fn test_lerp() {
+	let complex = lerp(Complex(2.0_f32, -4.0), Complex(6.0, 8.0), 0.25);
+	assert_eq!(complex, Complex(3.0, -1.0));
 }
 
 #[test]

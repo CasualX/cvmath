@@ -91,7 +91,7 @@ fn bench_trace2_random_lines(b: &mut Bencher) {
 		}
 
 		let t = rng.range(-0.5..1.5);
-		let target = start.lerp(end, t);
+		let target = lerp(start, end, t);
 
 		let origin = Point2(rng.next_f64() * 50.0, rng.next_f64() * 50.0);
 

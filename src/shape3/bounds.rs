@@ -193,6 +193,18 @@ impl<T: Copy + ops::SubAssign<T>> ops::SubAssign<Vec3<T>> for Bounds3<T> {
 	}
 }
 
+impl<T: Scalar> Lerp for Bounds3<T> {
+	type T = T;
+
+	#[inline]
+	fn lerp(self, rhs: Bounds3<T>, t: T) -> Bounds3<T> {
+		Bounds3 {
+			mins: lerp(self.mins, rhs.mins, t),
+			maxs: lerp(self.maxs, rhs.maxs, t),
+		}
+	}
+}
+
 impl<T> AsRef<[Point3<T>; 2]> for Bounds3<T> {
 	#[inline]
 	fn as_ref(&self) -> &[Point3<T>; 2] {
@@ -263,14 +275,6 @@ impl<T: Scalar> Bounds3<T> {
 	#[inline]
 	pub fn center(&self) -> Point3<T> {
 		(self.mins + self.maxs) / (T::ONE + T::ONE)
-	}
-	/// Linear interpolation between the bounds.
-	#[inline]
-	pub fn lerp(self, rhs: Bounds3<T>, t: T) -> Bounds3<T> where T: Scalar {
-		Bounds3 {
-			mins: self.mins.lerp(rhs.mins, t),
-			maxs: self.maxs.lerp(rhs.maxs, t),
-		}
 	}
 	/// Transform of the unit cube.
 	#[inline]

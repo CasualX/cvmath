@@ -36,3 +36,9 @@ fn test_trace_random_circles() {
 		assert!(hit.is_none(), "{ray:?} should miss {circle:?}");
 	}
 }
+
+#[test]
+fn test_lerp() {
+	let circle = lerp(Circle(Point2(1.0, 3.0), 2.0), Circle(Point2(5.0, 7.0), 6.0), 0.5);
+	assert_eq!(circle, Circle(Point2(3.0, 5.0), 4.0));
+}
