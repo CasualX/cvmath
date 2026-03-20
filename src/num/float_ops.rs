@@ -8,6 +8,8 @@ pub trait FloatOps: Copy {
 	#[must_use]
 	fn is_infinite(self) -> bool;
 	#[must_use]
+	fn is_nan(self) -> bool;
+	#[must_use]
 	fn signum(self) -> Self;
 	#[must_use]
 	fn sqrt(self) -> Self;
@@ -67,6 +69,10 @@ macro_rules! impl_float_ops {
 			#[inline]
 			fn is_infinite(self) -> bool {
 				self.is_infinite()
+			}
+			#[inline]
+			fn is_nan(self) -> bool {
+				self.is_nan()
 			}
 			#[inline]
 			fn signum(self) -> $ty {

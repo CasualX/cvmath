@@ -30,6 +30,14 @@ impl<T> Sphere<T> {
 	}
 }
 
+impl<T: Scalar> Sphere<T> {
+	/// Bounds of the sphere.
+	#[inline]
+	pub fn bounds(&self) -> Bounds3<T> {
+		Bounds3::point(self.center, Vec3::dup(self.radius))
+	}
+}
+
 impl<T: Scalar> Lerp for Sphere<T> {
 	type T = T;
 

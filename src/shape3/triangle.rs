@@ -79,6 +79,16 @@ impl<T> ops::Neg for Triangle3<T> {
 	}
 }
 
+impl<T: Scalar> Triangle3<T> {
+	/// Bounds of the triangle.
+	#[inline]
+	pub fn bounds(&self) -> Bounds3<T> {
+		let mins = self.p.min(self.p + self.u).min(self.p + self.v);
+		let maxs = self.p.max(self.p + self.u).max(self.p + self.v);
+		Bounds3 { mins, maxs }
+	}
+}
+
 impl<T: Float> Triangle3<T> {
 	/// Returns the plane defined by the triangle.
 	#[inline]

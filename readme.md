@@ -57,6 +57,7 @@ Types involved in ray casting and intersection:
 - `Ray2<T>`, `Ray3<T>` — Rays defined by origin, direction, and max distance
 - `Hit2<T>`, `Hit3<T>` — Intersection results (distance, normal, index)
 - `Trace2<T>`, `Trace3<T>` — Traits for types that support ray tracing
+- `Bvh2<T>`, `Bvh3<T>` — Bounding Volume Hierarchies for efficient ray tracing
 
 ### Debugger Visualizers
 

@@ -1,5 +1,18 @@
 use super::*;
 
+struct WorldBuilder {
+	env_light: Option<EnvironmentLighting>,
+	materials: Vec<Material>,
+	objects: Vec<Object>,
+}
+
+impl WorldBuilder {
+	fn build(self) -> World {
+		let bvh = Bvh3::build(self.objects.iter().map(Object::bounds).enumerate());
+		World { env_light: self.env_light, materials: self.materials, objects: self.objects, bvh }
+	}
+}
+
 pub fn pathtracing() -> (&'static str, Scene) {
 	let scene = Scene {
 		image: ImageSettings {
@@ -18,7 +31,7 @@ pub fn pathtracing() -> (&'static str, Scene) {
 			aperture_radius: 0.05,
 			focus_distance: 2.0,
 		},
-		world: World {
+		world: WorldBuilder {
 			env_light: Some(EnvironmentLighting {
 				sky_color_horizon: Vec3(0.5, 0.7, 1.0),
 				sky_color_zenith: Vec3(0.2, 0.2, 0.5),
@@ -96,7 +109,7 @@ pub fn pathtracing() -> (&'static str, Scene) {
 					material: 4,
 				},
 			],
-		},
+		}.build(),
 	};
 	("pathtracing.ppm", scene)
 }
@@ -149,7 +162,7 @@ pub fn random_spheres() -> (&'static str, Scene) {
 		};
 		objects.push(object);
 	}
-	let scene = Scene { image, camera, world: World { env_light: Some(env_light), materials, objects } };
+	let scene = Scene { image, camera, world: WorldBuilder { env_light: Some(env_light), materials, objects }.build() };
 	("random_spheres.ppm", scene)
 }
 
@@ -208,7 +221,7 @@ pub fn cornell_box() -> (&'static str, Scene) {
 		Material { color: Vec3f::ONE, emissive: Vec3f::ZERO, roughness: 0.0, metallic: 1.0 },
 	);
 
-	let scene = Scene { image, camera, world: World { env_light: None, materials, objects } };
+	let scene = Scene { image, camera, world: WorldBuilder { env_light: None, materials, objects }.build() };
 	("cornell_box.ppm", scene)
 }
 

@@ -159,3 +159,88 @@ fn bench_trace2_random_triangles(b: &mut Bencher) {
 		black_box(black_box(ray).trace(black_box(tri)));
 	});
 }
+
+#[derive(Copy, Clone, Debug)]
+struct CircleFieldConfig {
+	unit: f32,
+	circle_count: usize,
+	radius: f32,
+	ray_count: usize,
+	seed: u64,
+}
+
+#[derive(Clone, Debug)]
+struct CircleField {
+	circles: Vec<Circle<f32>>,
+	bvh: Bvh2<f32>,
+	rays: Vec<Ray2<f32>>,
+}
+
+impl CircleField {
+	fn new(config: CircleFieldConfig) -> CircleField {
+		let mut rng = urandom::seeded(config.seed);
+		let unit = config.unit;
+		let region = Bounds2(Point2(unit, -unit), Point2(unit * 3.0, unit));
+		let circles = (0..config.circle_count)
+			.map(|_| Circle {
+				center: Point2(
+					rng.range(region.mins.x + config.radius..region.maxs.x - config.radius),
+					rng.range(region.mins.y + config.radius..region.maxs.y - config.radius),
+				),
+				radius: config.radius,
+			})
+			.collect::<Vec<_>>();
+		let bvh = Bvh2::build(circles.iter().map(Circle::bounds).enumerate());
+		let rays = (0..config.ray_count)
+			.map(|_| {
+				let target = Point2(unit * 3.0, rng.range(-unit * 0.5..unit * 0.5));
+				Ray2::new(Point2::ZERO, target, Interval(0.0, f32::INFINITY))
+			})
+			.collect();
+
+		CircleField { circles, bvh, rays }
+	}
+
+	fn trace_linear(&self, ray: &Ray2<f32>) -> Option<Hit2<f32>> {
+		ray.trace_collection(&self.circles)
+	}
+
+	fn trace_bvh(&self, ray: &Ray2<f32>) -> Option<Hit2<f32>> {
+		self.bvh.trace(ray, |index, ray| {
+			self.circles[index].trace(ray).map(|hit| Hit2 { index, ..hit })
+		})
+	}
+}
+
+fn circle_field_bench() -> CircleField {
+	CircleField::new(CircleFieldConfig {
+		unit: 100.0,
+		circle_count: 1000,
+		// Chosen so a ray through the 2A-tall field misses roughly half the circles field-wide.
+		radius: 0.07,
+		ray_count: 4096,
+		seed: 41,
+	})
+}
+
+#[bench]
+fn bench_trace2_circle_field_linear(b: &mut Bencher) {
+	let scene = black_box(circle_field_bench());
+	let mut rng = urandom::new();
+
+	b.iter(|| {
+		let ray = rng.choose(&scene.rays).unwrap();
+		black_box(scene.trace_linear(black_box(ray)));
+	});
+}
+
+#[bench]
+fn bench_trace2_circle_field_bvh(b: &mut Bencher) {
+	let scene = black_box(circle_field_bench());
+	let mut rng = urandom::new();
+
+	b.iter(|| {
+		let ray = rng.choose(&scene.rays).unwrap();
+		black_box(scene.trace_bvh(black_box(ray)));
+	});
+}

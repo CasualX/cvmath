@@ -10,6 +10,21 @@ const HEIGHT: f32 = 600.0;
 #[path = "../../src/shape2/tests/svgwriter.rs"]
 mod writer;
 
+struct Collection {
+	shapes: Vec<Shape2<f32>>,
+	bvh: Bvh2<f32>,
+}
+impl Trace2<f32> for Collection {
+	fn inside(&self, pt: Point2<f32>) -> bool {
+		self.bvh.inside(pt, |index, pt| self.shapes[index].inside(pt))
+	}
+	fn trace(&self, ray: &Ray2<f32>) -> Option<Hit2<f32>> {
+		self.bvh.trace(ray, |index, ray| {
+			self.shapes[index].trace(ray).map(|hit| Hit2 { index, ..hit })
+		})
+	}
+}
+
 fn main() {
 	let seed: u32 = urandom::new().next_u32();
 	// let seed: u32 = 0x583d44f0; // Ray starts inside sphere clipped by triangle
@@ -30,26 +45,27 @@ fn main() {
 		maxs: Point2(WIDTH, HEIGHT),
 	}).fill("#222");
 
-	// Add the edges of the playground
-	let mut shapes: Vec<Shape2<f32>> = vec![
-		Shape2::Line(Line2(Point2(0.0, 0.0), Point2(WIDTH, 0.0))),
-		Shape2::Line(Line2(Point2(WIDTH, HEIGHT), Point2(WIDTH, 0.0))),
-		Shape2::Line(Line2(Point2(WIDTH, HEIGHT), Point2(0.0, HEIGHT))),
-		Shape2::Line(Line2(Point2(0.0, 0.0), Point2(0.0, HEIGHT))),
+	let collection = {
+		// Add the edges of the playground
+		let mut shapes: Vec<Shape2<f32>> = vec![
+			Shape2::Line(Line2(Point2(0.0, 0.0), Point2(WIDTH, 0.0))),
+			Shape2::Line(Line2(Point2(WIDTH, HEIGHT), Point2(WIDTH, 0.0))),
+			Shape2::Line(Line2(Point2(WIDTH, HEIGHT), Point2(0.0, HEIGHT))),
+			Shape2::Line(Line2(Point2(0.0, 0.0), Point2(0.0, HEIGHT))),
+		];
 
-		// Shape2::Bounds(Bounds2 {
-		// 	mins: Point2(0.0, 0.0),
-		// 	maxs: Point2(WIDTH, HEIGHT),
-		// }.norm()),
-	];
+		// Add random shapes
+		for _ in 0..NSHAPES {
+			shapes.push(random_shape(&mut rand));
+		}
 
-	// Add random shapes
-	for _ in 0..NSHAPES {
-		shapes.push(random_shape(&mut rand));
-	}
+		// Build a BVH for the shapes
+		let bvh = Bvh2::build(shapes.iter().map(|shape| shape.bounds().expect("Shape must have bounds")).enumerate());
+		Collection { shapes, bvh }
+	};
 
 	// Render the shapes as SVG
-	for shape in &shapes {
+	for shape in &collection.shapes {
 		draw_shape(&mut svg, shape);
 	}
 
@@ -67,7 +83,7 @@ fn main() {
 
 		// Simple bounce loop with reflections
 		for bounce_index in 0..MAX_BOUNCES {
-			if let Some(hit) = ray.trace_collection(&shapes) {
+			if let Some(hit) = collection.trace(&ray) {
 				let alpha = 1.0f32 / (1.0f32 + bounce_index as f32);
 				svg.arrow(hit.point, hit.point + hit.normal * 10.0, 5.0)
 					.stroke(&format!("rgba(255, 255, 255, {})", alpha))
@@ -90,7 +106,7 @@ fn main() {
 		}
 	}
 
-	std::fs::write("rays2d.svg", svg.close()).expect("Unable to write file");
+	svg.save("rays2d.svg").expect("Unable to write file");
 }
 
 fn random_shape(rand: &mut urandom::Random<impl urandom::Rng>) -> Shape2<f32> {

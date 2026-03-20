@@ -32,13 +32,20 @@ impl<T> Line3<T> {
 		let Line3 { start, end } = self;
 		(Line3(start, pt), Line3(pt, end))
 	}
-}
 
-impl<T: ops::Sub<Output = T>> Line3<T> {
 	/// Line direction.
 	#[inline]
-	pub fn direction(self) -> Vec3<T> {
+	pub fn delta(self) -> Vec3<T> where T: ops::Sub<Output = T> {
 		self.end - self.start
+	}
+}
+
+impl<T: Scalar> Line3<T> {
+	/// Bounds of the line.
+	#[inline]
+	pub fn bounds(&self) -> Bounds3<T> {
+		let (mins, maxs) = self.start.min_max(self.end);
+		Bounds3 { mins, maxs }
 	}
 }
 
@@ -46,7 +53,7 @@ impl<T: Float> Line3<T> {
 	/// Projects the point onto the line.
 	#[inline]
 	pub fn project(self, pt: Point3<T>) -> Point3<T> {
-		self.start + (pt - self.start).project(self.direction())
+		self.start + (pt - self.start).project(self.delta())
 	}
 
 	/// Point to line distance.

@@ -90,7 +90,7 @@ fn test_reflect_refract() {
 	}
 
 	let _ = std::fs::create_dir("target/visual");
-	std::fs::write("target/visual/test_reflect_refract.svg", svg.close()).unwrap();
+	svg.save("target/visual/test_reflect_refract.svg").unwrap();
 }
 
 // This test attempts to replicate the 'cosine weighted sampling' for 3D rays in 2D
@@ -126,5 +126,5 @@ fn test_random_direction() {
 	draw(&mut svg, Point2f(WIDTH * (3.0 / 4.0), HEIGHT * (2.0/3.0)), base_dir, 1.0);
 
 	let _ = std::fs::create_dir("target/visual");
-	std::fs::write("target/visual/test_random_direction.svg", svg.close()).unwrap();
+	svg.save("target/visual/test_random_direction.svg").unwrap();
 }

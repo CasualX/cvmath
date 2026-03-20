@@ -26,6 +26,12 @@ pub struct Object {
 	pub material: u32,
 }
 
+impl Object {
+	fn bounds(&self) -> Bounds3<f32> {
+		self.shape.bounds().unwrap_or(Bounds3 { mins: -Vec3::dup(1e6), maxs: Vec3::dup(1e6) })
+	}
+}
+
 pub struct ImageSettings {
 	pub width: i32,
 	pub height: i32,
@@ -48,15 +54,20 @@ pub struct World {
 	pub env_light: Option<EnvironmentLighting>,
 	pub materials: Vec<Material>,
 	pub objects: Vec<Object>,
+	pub bvh: Bvh3<f32>,
 }
 
 impl Trace3<f32> for World {
 	fn inside(&self, pt: Point3<f32>) -> bool {
-		self.objects.iter().any(|object| object.shape.inside(pt))
+		// self.objects.iter().any(|object| object.shape.inside(pt))
+		self.bvh.inside(pt, |index, pt| self.objects[index].shape.inside(pt))
 	}
 
 	fn trace(&self, ray: &Ray3<f32>) -> Option<Hit3<f32>> {
-		ray.trace_collection(self.objects.iter().map(|object| &object.shape))
+		// ray.trace_collection(self.objects.iter().map(|object| &object.shape))
+		self.bvh.trace(ray, |index, ray| {
+			self.objects[index].shape.trace(ray).map(|hit| Hit3 { index, ..hit })
+		})
 	}
 }
 

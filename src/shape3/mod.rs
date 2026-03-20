@@ -4,6 +4,7 @@ use super::*;
 
 mod point;
 mod bounds;
+mod bvh;
 mod line;
 mod plane;
 mod sphere;
@@ -13,6 +14,7 @@ mod shape;
 
 pub use self::point::Point3;
 pub use self::bounds::Bounds3;
+pub use self::bvh::Bvh3;
 pub use self::line::Line3;
 pub use self::plane::Plane3;
 pub use self::sphere::Sphere;

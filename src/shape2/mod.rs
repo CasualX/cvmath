@@ -3,6 +3,7 @@
 use super::*;
 
 mod bounds;
+mod bvh;
 mod line;
 mod plane;
 mod point;
@@ -12,6 +13,7 @@ mod ray;
 mod shape;
 
 pub use self::bounds::Bounds2;
+pub use self::bvh::Bvh2;
 pub use self::point::Point2;
 pub use self::plane::Plane2;
 pub use self::line::Line2;

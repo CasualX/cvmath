@@ -6,8 +6,8 @@ If you are looking for a specific part of the API:
 - Vectors and masks: [struct@Vec2], [struct@Vec3], [struct@Vec4], [tyalias@Bool2], [tyalias@Bool3], [tyalias@Bool4]
 - Angles and rotations: [struct@Angle], [struct@Complex], [struct@Polar], [struct@Quat], [struct@RotationVector]
 - Matrices and transforms: [struct@Mat2], [struct@Mat3], [struct@Mat4], [struct@Transform2], [struct@Transform3], [enum@Hand], [enum@Clip]
-- 2D geometry: [tyalias@Point2], [struct@Bounds2], [struct@Line2], [struct@Plane2], [struct@Circle], [struct@Triangle2], [struct@Ray2], [struct@Hit2], [trait@Trace2], [enum@Shape2]
-- 3D geometry: [tyalias@Point3], [struct@Bounds3], [struct@Line3], [struct@Plane3], [struct@Sphere], [struct@Triangle3], [struct@Ray3], [struct@Hit3], [trait@Trace3], [enum@Shape3]
+- 2D geometry: [tyalias@Point2], [struct@Bounds2], [struct@Line2], [struct@Plane2], [struct@Circle], [struct@Triangle2], [enum@Shape2], [struct@Ray2], [struct@Hit2], [trait@Trace2], [struct@Bvh2]
+- 3D geometry: [tyalias@Point3], [struct@Bounds3], [struct@Line3], [struct@Plane3], [struct@Sphere], [struct@Triangle3], [enum@Shape3], [struct@Ray3], [struct@Hit3], [trait@Trace3], [struct@Bvh3]
 - Ray tracing utilities: [struct@Interval], [enum@HitSide]
 
 Most implementations are generic over scalar types (integers and floats) and floating-point types.

@@ -12,6 +12,23 @@ pub enum Shape3<T> {
 	Triangle(Triangle3<T>),
 }
 
+impl<T: Scalar> Shape3<T> {
+	/// Returns the bounds of this shape, if it has one.
+	///
+	/// Planes return `None`.
+	#[inline]
+	pub fn bounds(&self) -> Option<Bounds3<T>> {
+		match self {
+			Shape3::Point(point) => Some(Bounds3(*point, *point)),
+			Shape3::Bounds(bounds) => Some(*bounds),
+			Shape3::Plane(_) => None,
+			Shape3::Sphere(sphere) => Some(sphere.bounds()),
+			Shape3::Line(line) => Some(line.bounds()),
+			Shape3::Triangle(triangle) => Some(triangle.bounds()),
+		}
+	}
+}
+
 impl<T: Float> Trace3<T> for Shape3<T> {
 	fn inside(&self, pt: Point3<T>) -> bool {
 		match self {

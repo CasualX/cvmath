@@ -1,6 +1,7 @@
 use super::*;
 
 mod bounds;
+mod bvh;
 mod circle;
 mod line;
 mod plane;

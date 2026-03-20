@@ -16,6 +16,10 @@ keywords = ["cg", "cgmath", "matrix"]
 
 license = "MIT"
 
+# Enable debug symbols in release builds for perf traces
+[profile.release]
+debug = true
+
 [dependencies]
 dataview = { version = "1.0", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
