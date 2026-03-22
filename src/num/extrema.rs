@@ -1,4 +1,4 @@
-use std::cmp;
+use super::*;
 
 /// Calculate mins and maxs.
 pub trait Extrema<Rhs = Self>: Sized {
@@ -54,19 +54,19 @@ macro_rules! impl_int {
 }
 
 macro_rules! impl_float {
-	($ty:ty) => {
+	($ty:ty, $fast_min:path, $fast_max:path) => {
 		impl Extrema for $ty {
 			#[inline]
 			fn min(self, rhs: $ty) -> $ty {
-				<$ty>::min(self, rhs)
+				$fast_min(self, rhs)
 			}
 			#[inline]
 			fn max(self, rhs: $ty) -> $ty {
-				<$ty>::max(self, rhs)
+				$fast_max(self, rhs)
 			}
 			#[inline]
 			fn min_max(self, rhs: $ty) -> ($ty, $ty) {
-				if self < rhs { (self, rhs) } else { (rhs, self) }
+				($fast_min(self, rhs), $fast_max(self, rhs))
 			}
 		}
 
@@ -97,5 +97,5 @@ impl_int!(i16);
 impl_int!(i32);
 impl_int!(i64);
 
-impl_float!(f32);
-impl_float!(f64);
+impl_float!(f32, fast_math::min_f32, fast_math::max_f32);
+impl_float!(f64, fast_math::min_f64, fast_math::max_f64);

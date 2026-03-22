@@ -10,6 +10,7 @@ mod cast;
 mod extrema;
 mod abs;
 mod float_ops;
+mod fast_math;
 
 pub use self::zero::Zero;
 pub use self::one::One;
