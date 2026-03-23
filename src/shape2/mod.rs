@@ -9,6 +9,7 @@ mod plane;
 mod point;
 mod circle;
 mod triangle;
+mod capsule;
 mod ray;
 mod shape;
 
@@ -19,6 +20,7 @@ pub use self::plane::Plane2;
 pub use self::line::Line2;
 pub use self::circle::Circle;
 pub use self::triangle::Triangle2;
+pub use self::capsule::Capsule2;
 pub use self::ray::{Ray2, Hit2, Trace2};
 pub use self::shape::Shape2;
 

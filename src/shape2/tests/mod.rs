@@ -2,6 +2,7 @@ use super::*;
 
 mod bounds;
 mod bvh;
+mod capsule;
 mod circle;
 mod line;
 mod plane;

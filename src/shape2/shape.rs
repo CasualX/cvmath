@@ -8,6 +8,7 @@ pub enum Shape2<T> {
 	Bounds(Bounds2<T>),
 	Plane(Plane2<T>),
 	Circle(Circle<T>),
+	Capsule(Capsule2<T>),
 	Line(Line2<T>),
 	Triangle(Triangle2<T>),
 }
@@ -23,6 +24,7 @@ impl<T: Scalar> Shape2<T> {
 			Shape2::Bounds(bounds) => Some(*bounds),
 			Shape2::Plane(_) => None,
 			Shape2::Circle(circle) => Some(circle.bounds()),
+			Shape2::Capsule(capsule) => Some(capsule.bounds()),
 			Shape2::Line(line) => Some(line.bounds()),
 			Shape2::Triangle(triangle) => Some(triangle.bounds()),
 		}
@@ -36,6 +38,7 @@ impl<T: Float> Trace2<T> for Shape2<T> {
 			Shape2::Bounds(bounds) => bounds.inside(pt),
 			Shape2::Plane(plane) => plane.inside(pt),
 			Shape2::Circle(circle) => circle.inside(pt),
+			Shape2::Capsule(capsule) => capsule.inside(pt),
 			Shape2::Line(line) => line.inside(pt),
 			Shape2::Triangle(triangle) => triangle.inside(pt),
 		}
@@ -47,6 +50,7 @@ impl<T: Float> Trace2<T> for Shape2<T> {
 			Shape2::Bounds(bounds) => bounds.trace(ray),
 			Shape2::Plane(plane) => plane.trace(ray),
 			Shape2::Circle(circle) => circle.trace(ray),
+			Shape2::Capsule(capsule) => capsule.trace(ray),
 			Shape2::Line(line) => line.trace(ray),
 			Shape2::Triangle(triangle) => triangle.trace(ray),
 		}
