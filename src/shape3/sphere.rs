@@ -38,6 +38,19 @@ impl<T: Scalar> Sphere<T> {
 	}
 }
 
+impl<T: Float> Sphere<T> {
+	/// Surface area of the sphere.
+	#[inline]
+	pub fn area(&self) -> T {
+		(T::TWO + T::TWO) * T::PI * self.radius * self.radius
+	}
+	/// Volume of the sphere.
+	#[inline]
+	pub fn volume(&self) -> T {
+		(T::TWO + T::TWO) / (T::TWO + T::ONE) * T::PI * self.radius * self.radius * self.radius
+	}
+}
+
 impl<T: Scalar> Lerp for Sphere<T> {
 	type T = T;
 

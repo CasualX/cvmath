@@ -42,6 +42,14 @@ impl<T: Scalar> Circle<T> {
 	}
 }
 
+impl<T: Float> Circle<T> {
+	/// Area of the circle.
+	#[inline]
+	pub fn area(&self) -> T {
+		T::PI * self.radius * self.radius
+	}
+}
+
 impl<T: Scalar> Lerp for Circle<T> {
 	type T = T;
 

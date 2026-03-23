@@ -45,6 +45,15 @@ impl<T: Scalar> Capsule2<T> {
 	}
 }
 
+impl<T: Float> Capsule2<T> {
+	/// Area of the capsule.
+	#[inline]
+	pub fn area(&self) -> T {
+		let axis_len = self.axis.len();
+		T::PI * self.radius * self.radius + (T::TWO * self.radius * axis_len)
+	}
+}
+
 impl<T: Scalar> Lerp for Capsule2<T> {
 	type T = T;
 

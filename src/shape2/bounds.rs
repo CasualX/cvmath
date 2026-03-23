@@ -32,16 +32,6 @@ impl<T: Zero + One> Bounds2<T> {
 	pub const UNIT: Bounds2<T> = Bounds2 { mins: Point2::ZERO, maxs: Point2::ONE };
 }
 
-impl<T: Float> Bounds2<T> {
-	/// Empty bounds represented by inverted infinities.
-	///
-	/// Useful as the initial accumulator for [include](Bounds2::include) or [union](Bounds2::union).
-	pub const EMPTY: Bounds2<T> = Bounds2 {
-		mins: Point2 { x: T::INFINITY, y: T::INFINITY },
-		maxs: Point2 { x: T::NEG_INFINITY, y: T::NEG_INFINITY },
-	};
-}
-
 impl<T> Bounds2<T> {
 	/// Constructs a new bounds.
 	#[inline]
@@ -232,6 +222,38 @@ impl<T> Bounds2<T> {
 		}
 	}
 }
+
+impl<T: Float> Bounds2<T> {
+	/// Empty bounds represented by inverted infinities.
+	///
+	/// Useful as the initial accumulator for [include](Bounds2::include) or [union](Bounds2::union).
+	pub const EMPTY: Bounds2<T> = Bounds2 {
+		mins: Point2 { x: T::INFINITY, y: T::INFINITY },
+		maxs: Point2 { x: T::NEG_INFINITY, y: T::NEG_INFINITY },
+	};
+
+	/// Constructs bounds that enclose all bounds in the given iterator.
+	///
+	/// Returns [`EMPTY`](Bounds2::EMPTY) if the iterator is empty.
+	#[inline]
+	pub fn collection<I: IntoIterator<Item = Bounds2<T>>>(bounds: I) -> Bounds2<T> {
+		<Bounds2<T> as FromIterator<Bounds2<T>>>::from_iter(bounds)
+	}
+}
+
+impl<T: Float> FromIterator<Bounds2<T>> for Bounds2<T> {
+	#[inline]
+	fn from_iter<I: IntoIterator<Item = Bounds2<T>>>(iter: I) -> Self {
+		iter.into_iter().fold(Self::EMPTY, Bounds2::union)
+	}
+}
+impl<T: Float> FromIterator<Point2<T>> for Bounds2<T> {
+	#[inline]
+	fn from_iter<I: IntoIterator<Item = Point2<T>>>(iter: I) -> Self {
+		iter.into_iter().fold(Self::EMPTY, Bounds2::include)
+	}
+}
+
 impl<T> Bounds2<T> {
 	/// Returns whether `rhs` is strictly contained within `self`.
 	///

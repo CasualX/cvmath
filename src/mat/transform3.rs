@@ -216,6 +216,22 @@ impl<T: Float> Transform3<T> {
 		}
 	}
 
+	/// Fit matrix.
+	///
+	/// Fits coordinates from a source rect into a target rect.
+	#[inline]
+	pub fn fit(source: Bounds3<T>, target: Bounds3<T>) -> Transform3<T> {
+		let scale = target.size() / source.size();
+
+		let Vec3 { x: a14, y: a24, z: a34 } = target.mins - source.mins * scale;
+
+		Transform3 {
+			a11: scale.x, a12: T::ZERO, a13: T::ZERO, a14,
+			a21: T::ZERO, a22: scale.y, a23: T::ZERO, a24,
+			a31: T::ZERO, a32: T::ZERO, a33: scale.z, a34,
+		}
+	}
+
 	/// Orthographic projection matrix.
 	///
 	/// Axis conventions relative to the viewer's screen:

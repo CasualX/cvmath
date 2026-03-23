@@ -14,6 +14,7 @@ pub struct EnvironmentLighting {
 	pub ground_color: Vec3<f32>,
 }
 
+#[derive(Copy, Clone)]
 pub struct Material {
 	pub color: Vec3<f32>,
 	pub emissive: Vec3<f32>,
@@ -88,26 +89,16 @@ impl Image {
 		let pixels = vec![0; size];
 		Image { pixels, width, height }
 	}
-	pub fn put(&mut self, x: i32, y: i32, color: Vec3<f32>) {
+	pub fn put(&mut self, x: i32, y: i32, color: Vec3<u8>) {
 		if x < 0 || x >= self.width || y < 0 || y >= self.height {
 			return;
 		}
 		let index = (y * self.width + x) as usize * 3;
 		let Some(buf) = self.pixels.get_mut(index..index + 3) else { return };
-		buf[0] = encode(color.x);
-		buf[1] = encode(color.y);
-		buf[2] = encode(color.z);
+		buf[0] = color.x;
+		buf[1] = color.y;
+		buf[2] = color.z;
 	}
-}
-
-// Gamma encode a color component value
-fn encode(v: f32) -> u8 {
-	let v = v.clamp(0.0, 1.0);
-
-	let gamma_corrected = if v <= 0.0031308 { 12.92 * v }
-	else { 1.055 * v.powf(1.0 / 2.4) - 0.055 };
-
-	(gamma_corrected * 255.0 + 0.5).floor() as u8
 }
 
 fn rng_circle(rng: &mut urandom::Random<impl urandom::Rng>, radius: f32) -> Vec2<f32> {
@@ -183,7 +174,7 @@ fn fresnel_schlick(f0: Vec3f, cos_theta: f32) -> Vec3f {
 	f0 + (Vec3f::ONE - f0) * (1.0 - cos_theta).powi(5)
 }
 
-fn pixel_color(scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
+fn sample(scene: &Scene, x: i32, y: i32) -> Vec3<u8> {
 	let mut rng = urandom::new();
 
 	let mut total_incoming_light = Vec3f::ZERO;
@@ -256,7 +247,52 @@ fn pixel_color(scene: &Scene, x: i32, y: i32) -> Vec3<f32> {
 		total_incoming_light += incoming_light;
 	}
 
-	return total_incoming_light * (1.0 / nsamples as f32);
+	return tonemap(total_incoming_light * (1.0 / nsamples as f32));
+}
+
+// Simple Reinhard tone mapping and gamma correction
+fn tonemap(light: Vec3f) -> Vec3<u8> {
+	// Clamp to zero
+	let clamped = light.max(Vec3f::ZERO);
+
+	// Optional simple tone mapping: simple reinhard
+	let mapped = clamped / (clamped + Vec3f::ONE);
+
+	// Gamma correction (linear -> sRGB)
+	mapped.map(encode)
+}
+
+// Gamma encode a color component value
+fn encode(v: f32) -> u8 {
+	let v = v.clamp(0.0, 1.0);
+
+	let gamma_corrected = if v <= 0.0031308 { 12.92 * v }
+	else { 1.055 * v.powf(1.0 / 2.4) - 0.055 };
+
+	(gamma_corrected * 255.0 + 0.5).floor() as u8
+}
+
+struct FormatTime(f64);
+impl std::fmt::Display for FormatTime {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let seconds = self.0;
+		if !seconds.is_finite() {
+			return f.write_str("--");
+		}
+		if seconds >= 3600.0 {
+			let hr = f64::floor(seconds / 3600.0) as i32;
+			let min = f64::ceil((seconds % 3600.0) / 60.0) as i32;
+			write!(f, "{hr} hr {min} min")
+		}
+		else if seconds >= 60.0 {
+			let min = f64::floor(seconds / 60.0) as i32;
+			let sec = f64::ceil(seconds % 60.0) as i32;
+			write!(f, "{min} min {sec} sec")
+		}
+		else {
+			write!(f, "{seconds:.1} sec")
+		}
+	}
 }
 
 struct ProgressReporter {
@@ -267,12 +303,13 @@ impl ProgressReporter {
 		ProgressReporter { timer: time::Instant::now() }
 	}
 
-	fn report(&self, i: i32, total: i32) {
+	fn report(&self, name: &str, i: i32, total: i32) {
 		if i & 0xfff == 0 || i == total {
 			let progress = i as f64 / total as f64;
-			let elapsed = self.timer.elapsed().as_secs_f64();
-			let remaining = elapsed * (1.0 / progress - 1.0);
-			print!("Rendering: {:.2}% - Elapsed: {:.1} sec - Remaining: {:.1} sec    \r", progress * 100.0, elapsed, remaining);
+			let percent = progress * 100.0;
+			let elapsed = FormatTime(self.timer.elapsed().as_secs_f64());
+			let remaining = FormatTime(elapsed.0 * (1.0 / progress - 1.0));
+			print!("{name}: {percent:.2}% - Elapsed: {elapsed} - Remaining: {remaining}    \r");
 			if i == total {
 				println!();
 			}
@@ -284,24 +321,24 @@ impl ProgressReporter {
 	}
 }
 
-fn scene_render_slow(scene: Scene) -> Image {
+fn scene_render_slow(scene: Scene, name: &str) -> Image {
 	let mut image = Image::new(scene.image.width, scene.image.height);
 	let pr = ProgressReporter::new();
 
 	for y in 0..image.height {
 		for x in 0..image.width {
-			pr.report(y * image.width + x, image.width * image.height);
+			pr.report(name, y * image.width + x, image.width * image.height);
 
-			let color = pixel_color(&scene, x, y);
+			let color = sample(&scene, x, y);
 			image.put(x, y, color);
 		}
 	}
 
-	pr.report(image.width * image.height, image.width * image.height);
+	pr.report(name, image.width * image.height, image.width * image.height);
 	return image;
 }
 
-fn scene_render_fast(scene: Scene) -> Image {
+fn scene_render_fast(scene: Scene, name: &str) -> Image {
 	let (sender, receiver) = mpsc::channel();
 
 	let width = scene.image.width;
@@ -314,7 +351,7 @@ fn scene_render_fast(scene: Scene) -> Image {
 			.for_each_with(sender, |sender, index| {
 				let x = index % width;
 				let y = index / width;
-				let color = pixel_color(&scene, x, y);
+				let color = sample(&scene, x, y);
 				sender.send((x, y, color)).unwrap();
 			});
 	});
@@ -324,13 +361,13 @@ fn scene_render_fast(scene: Scene) -> Image {
 	let pr = ProgressReporter::new();
 
 	for i in 0..width * height {
-		pr.report(i, width * height);
+		pr.report(name, i, width * height);
 
 		let (x, y, color) = receiver.recv().unwrap();
 		image.put(x, y, color);
 	}
 
-	pr.report(width * height, width * height);
+	pr.report(name, width * height, width * height);
 	return image;
 }
 
@@ -350,10 +387,16 @@ fn scene_save(path: &str, image: &Image) -> std::io::Result<()> {
 }
 
 fn main() {
-	// let (file_name, scene) = scenes::cornell_box();
+	let filter = std::env::args().nth(1);
 	for (file_name, scene) in scenes::all() {
+		// If an argument is provided, only render scenes whose file name contains the argument string
+		if let Some(ref filter) = filter {
+			if !file_name.contains(filter) {
+				continue;
+			}
+		}
 		let render = if scene.image.use_rayon { scene_render_fast } else { scene_render_slow };
-		let image = render(scene);
+		let image = render(scene, file_name);
 		scene_save(file_name, &image).unwrap();
 	}
 }

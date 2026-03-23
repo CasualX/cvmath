@@ -225,10 +225,14 @@ pub fn cornell_box() -> (&'static str, Scene) {
 	("cornell_box.ppm", scene)
 }
 
+mod lowpoly_tree;
+pub use lowpoly_tree::scene as lowpoly_tree;
+
 pub fn all() -> Vec<(&'static str, Scene)> {
 	vec![
 		pathtracing(),
 		random_spheres(),
 		cornell_box(),
+		lowpoly_tree(),
 	]
 }

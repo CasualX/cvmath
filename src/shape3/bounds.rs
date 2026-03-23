@@ -34,16 +34,6 @@ impl<T: Zero + One> Bounds3<T> {
 	pub const UNIT: Bounds3<T> = Bounds3 { mins: Point3::ZERO, maxs: Point3::ONE };
 }
 
-impl<T: Float> Bounds3<T> {
-	/// Empty bounds represented by inverted infinities.
-	///
-	/// Useful as the initial accumulator for [include](Bounds3::include) or [union](Bounds3::union).
-	pub const EMPTY: Bounds3<T> = Bounds3 {
-		mins: Point3 { x: T::INFINITY, y: T::INFINITY, z: T::INFINITY },
-		maxs: Point3 { x: T::NEG_INFINITY, y: T::NEG_INFINITY, z: T::NEG_INFINITY },
-	};
-}
-
 impl<T> Bounds3<T> {
 	/// Constructs a new bounds.
 	#[inline]
@@ -128,6 +118,38 @@ impl<T> Bounds3<T> {
 		}
 	}
 }
+
+impl<T: Float> Bounds3<T> {
+	/// Empty bounds represented by inverted infinities.
+	///
+	/// Useful as the initial accumulator for [include](Bounds3::include) or [union](Bounds3::union).
+	pub const EMPTY: Bounds3<T> = Bounds3 {
+		mins: Point3 { x: T::INFINITY, y: T::INFINITY, z: T::INFINITY },
+		maxs: Point3 { x: T::NEG_INFINITY, y: T::NEG_INFINITY, z: T::NEG_INFINITY },
+	};
+
+	/// Constructs bounds that enclose all bounds in the given iterator.
+	///
+	/// Returns [`EMPTY`](Bounds3::EMPTY) if the iterator is empty.
+	#[inline]
+	pub fn collection<I: IntoIterator<Item = Bounds3<T>>>(bounds: I) -> Bounds3<T> {
+		<Bounds3<T> as FromIterator<Bounds3<T>>>::from_iter(bounds)
+	}
+}
+
+impl<T: Float> FromIterator<Bounds3<T>> for Bounds3<T> {
+	#[inline]
+	fn from_iter<I: IntoIterator<Item = Bounds3<T>>>(iter: I) -> Bounds3<T> {
+		iter.into_iter().fold(Self::EMPTY, Bounds3::union)
+	}
+}
+impl<T: Float> FromIterator<Point3<T>> for Bounds3<T> {
+	#[inline]
+	fn from_iter<I: IntoIterator<Item = Point3<T>>>(iter: I) -> Bounds3<T> {
+		iter.into_iter().fold(Bounds3::EMPTY, Bounds3::include)
+	}
+}
+
 impl<T> Bounds3<T> {
 	/// Returns whether `rhs` is strictly contained within `self`.
 	#[inline]
@@ -265,6 +287,12 @@ impl<T: Scalar> Bounds3<T> {
 	#[inline]
 	pub fn depth(&self) -> T {
 		self.maxs.z - self.mins.z
+	}
+	/// Surface area of the Bounds3.
+	#[inline]
+	pub fn area(&self) -> T {
+		let size = self.size();
+		(T::ONE + T::ONE) * (size.x * size.y + size.y * size.z + size.z * size.x)
 	}
 	/// Volume of the Bounds3.
 	#[inline]

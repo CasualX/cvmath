@@ -32,7 +32,7 @@ impl<T> Capsule3<T> {
 	pub fn end(self) -> Point3<T> where T: Copy + ops::Add<Output = T> {
 		self.origin + self.axis
 	}
-	}
+}
 
 impl<T: Scalar> Capsule3<T> {
 	/// Bounds of the capsule.
@@ -42,6 +42,25 @@ impl<T: Scalar> Capsule3<T> {
 		let mins = self.origin.min(self.end()) - half;
 		let maxs = self.origin.max(self.end()) + half;
 		Bounds3 { mins, maxs }
+	}
+}
+
+impl<T: Float> Capsule3<T> {
+	/// Surface area of the capsule.
+	#[inline]
+	pub fn area(&self) -> T {
+		// Cylinder area + 2x hemisphere areas
+		let axis_len = self.axis.len();
+		T::TWO * T::PI * self.radius * axis_len
+			+ (T::TWO + T::TWO) * T::PI * self.radius * self.radius
+	}
+	/// Volume of the capsule.
+	#[inline]
+	pub fn volume(&self) -> T {
+		// Cylinder volume + 2x hemisphere volumes
+		let axis_len = self.axis.len();
+		T::PI * self.radius * self.radius * axis_len +
+			(T::TWO + T::TWO) / (T::TWO + T::ONE) * T::PI * self.radius * self.radius * self.radius
 	}
 }
 

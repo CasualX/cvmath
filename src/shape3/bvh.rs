@@ -327,7 +327,7 @@ fn build_node<T: Float>(nodes: &mut Vec<BvhNode<T>>, items: &mut [BuildItem<T>])
 	if items.len() <= LEAF_CHILD_COUNT {
 		let node_index = nodes.len();
 		nodes.push(BvhNode::Leaf(build_leaf(items)));
-		return (node_index, union_bounds(items));
+		return (node_index, items.iter().map(|item| item.bounds).collect());
 	}
 
 	let node_index = nodes.len();
@@ -368,15 +368,6 @@ fn build_leaf<T>(items: &[BuildItem<T>]) -> BvhLeaf {
 		*slot = encode_leaf_child(item.index);
 	}
 	leaf
-}
-
-#[inline]
-fn union_bounds<T: Float>(items: &[BuildItem<T>]) -> Bounds3<T> {
-	let mut bounds = Bounds3::EMPTY;
-	for item in items {
-		bounds = bounds.union(item.bounds);
-	}
-	bounds
 }
 
 //----------------------------------------------------------------
