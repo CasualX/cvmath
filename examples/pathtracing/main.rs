@@ -29,7 +29,7 @@ pub struct Object {
 
 impl Object {
 	fn bounds(&self) -> Bounds3<f32> {
-		self.shape.bounds().unwrap_or(Bounds3 { mins: -Vec3::dup(1e6), maxs: Vec3::dup(1e6) })
+		self.shape.bounds().unwrap_or(Bounds3!(-1e6, 1e6))
 	}
 }
 
@@ -174,6 +174,11 @@ fn fresnel_schlick(f0: Vec3f, cos_theta: f32) -> Vec3f {
 	f0 + (Vec3f::ONE - f0) * (1.0 - cos_theta).powi(5)
 }
 
+fn random_chance(probability: f32, rng: &mut urandom::Random<impl urandom::Rng>) -> bool {
+	// next_f32() returns in range of [1.0, 2.0)
+	rng.next_f32() - 1.0 < probability
+}
+
 fn sample(scene: &Scene, x: i32, y: i32) -> Vec3<u8> {
 	let mut rng = urandom::new();
 
@@ -204,7 +209,7 @@ fn sample(scene: &Scene, x: i32, y: i32) -> Vec3<u8> {
 				let specular_dir = (-ray.direction).reflect(hit.normal);
 
 				// Fresnel base reflectivity (F0)
-				let f0 = Vec3::lerp(Vec3::dup(0.04), material.color, material.metallic);
+				let f0 = Vec3::lerp(Vec3!(0.04), material.color, material.metallic);
 
 				// Fresnel at this angle
 				// let half_vec = (specular_dir - ray.direction).norm();
@@ -216,7 +221,7 @@ fn sample(scene: &Scene, x: i32, y: i32) -> Vec3<u8> {
 				let diffuse_color = material.color * (1.0 - material.metallic);
 
 				// Sample reflection direction based on Fresnel
-				if rng.next_f32() < 1.0 + fresnel.vmax() {
+				if random_chance(fresnel.vmax(), &mut rng) {
 					// Specular bounce with roughness-based sampling
 					let alpha = material.roughness * material.roughness;
 					let jittered_specular = (specular_dir + random_direction(&mut rng) * alpha).norm();

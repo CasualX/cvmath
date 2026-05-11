@@ -18,6 +18,38 @@ pub const fn Bounds3<T>(mins: Vec3<T>, maxs: Vec3<T>) -> Bounds3<T> {
 	Bounds3 { mins, maxs }
 }
 
+/// Bounds3 constructor.
+///
+/// ```
+/// use cvmath::{Bounds3, Point3};
+///
+/// let explicit = cvmath::Bounds3!(1, 2, 3, 4, 5, 6);
+/// let splat = cvmath::Bounds3!(7, 8);
+/// let zero: Bounds3<i32> = cvmath::Bounds3!();
+///
+/// assert_eq!(explicit, Bounds3(Point3(1, 2, 3), Point3(4, 5, 6)));
+/// assert_eq!(splat, Bounds3(Point3(7, 7, 7), Point3(8, 8, 8)));
+/// assert_eq!(zero, Bounds3::ZERO);
+/// ```
+#[macro_export]
+macro_rules! Bounds3 {
+	($x_min:expr, $y_min:expr, $z_min:expr, $x_max:expr, $y_max:expr, $z_max:expr $(,)?) => {
+		$crate::Bounds3 {
+			mins: $crate::Vec3 { x: $x_min, y: $y_min, z: $z_min },
+			maxs: $crate::Vec3 { x: $x_max, y: $y_max, z: $z_max },
+		}
+	};
+	($mins:expr, $maxs:expr $(,)?) => {
+		$crate::Bounds3 {
+			mins: $crate::Vec3 { x: $mins, y: $mins, z: $mins },
+			maxs: $crate::Vec3 { x: $maxs, y: $maxs, z: $maxs },
+		}
+	};
+	() => {
+		$crate::Bounds3::ZERO
+	};
+}
+
 specialized_type!(Bounds3, Bounds3f, f32, mins: Point3f, maxs: Point3f);
 specialized_type!(Bounds3, Bounds3d, f64, mins: Point3d, maxs: Point3d);
 specialized_type!(Bounds3, Bounds3i, i32, mins: Point3i, maxs: Point3i);
@@ -42,11 +74,9 @@ impl<T> Bounds3<T> {
 	}
 	/// Bounds from the origin to the vector.
 	#[inline]
-	pub fn vec(vec: Vec3<T>) -> Bounds3<T> where T: Default {
-		Bounds3 {
-			mins: Point3::default(),
-			maxs: vec,
-		}
+	pub fn vec(maxs: Vec3<T>) -> Bounds3<T> where T: Default {
+		let mins = Point3::default();
+		Bounds3 { mins, maxs }
 	}
 	/// Creates a bounds at the given point with size.
 	#[inline]
@@ -255,13 +285,6 @@ impl<T> From<Bounds3<T>> for [Point3<T>; 2] {
 //----------------------------------------------------------------
 
 impl<T> Bounds3<T> {
-	/// Bounds3 constructor from components.
-	#[inline]
-	pub const fn c(mins_x: T, mins_y: T, mins_z: T, maxs_x: T, maxs_y: T, maxs_z: T) -> Bounds3<T> {
-		let mins = Point3 { x: mins_x, y: mins_y, z: mins_z };
-		let maxs = Point3 { x: maxs_x, y: maxs_y, z: maxs_z };
-		Bounds3 { mins, maxs }
-	}
 	/// Casts the bounds to a different unit type.
 	#[inline]
 	pub fn cast<U>(self) -> Bounds3<U> where T: CastTo<U> {

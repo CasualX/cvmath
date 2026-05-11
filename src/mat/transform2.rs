@@ -217,8 +217,8 @@ impl<T: Float> Transform2<T> {
 	/// Fits coordinates from a source rect into a target rect.
 	///
 	/// ```
-	/// let source = cvmath::Bounds2::c(10.0, 20.0, 30.0, 40.0);
-	/// let target = cvmath::Bounds2::c(100.0, 200.0, 200.0, 260.0);
+	/// let source = cvmath::Bounds2!(10.0, 20.0, 30.0, 40.0);
+	/// let target = cvmath::Bounds2!(100.0, 200.0, 200.0, 260.0);
 	/// let mat = cvmath::Transform2::fit(source, target);
 	/// let value = mat * cvmath::Point2(10.0, 20.0);
 	/// let expected = cvmath::Point2(100.0, 200.0);
@@ -239,7 +239,7 @@ impl<T: Float> Transform2<T> {
 	/// Fits the coordinates from a rectangle to `x = [-1, 1]` and `y = [1, -1]`.
 	///
 	/// ```
-	/// let rect = cvmath::Bounds2::c(10.0, 20.0, 30.0, 40.0);
+	/// let rect = cvmath::Bounds2!(10.0, 20.0, 30.0, 40.0);
 	/// let mat = cvmath::Transform2::ortho(rect);
 	/// let value = mat * cvmath::Point2(10.0, 20.0);
 	/// let expected = cvmath::Point2(-1.0, 1.0);

@@ -66,8 +66,8 @@ pub fn pathtracing() -> (&'static str, Scene) {
 					metallic: 0.02,
 				},
 				Material {
-					color: Vec3::dup(0.8),
-					emissive: Vec3::dup(10.0),
+					color: Vec3!(0.8),
+					emissive: Vec3!(10.0),
 					roughness: 1.0,
 					metallic: 0.0,
 				},

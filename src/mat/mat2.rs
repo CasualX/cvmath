@@ -195,7 +195,7 @@ impl<T: Float> Mat2<T> {
 			Mat2::IDENTITY - Mat2::outer_product(normal, normal) * (T::TWO / denom)
 		}
 		else {
-			Mat2::scaling(Vec2::dup(-T::ONE))
+			Mat2::scaling(-Vec2::<T>::ONE)
 		}
 	}
 }

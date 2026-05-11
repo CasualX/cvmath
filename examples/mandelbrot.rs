@@ -34,12 +34,12 @@ fn main() {
 	write!(surface, "P3\n{WIDTH} {HEIGHT} 255\n").unwrap();
 
 	// let mat = Transform2::fit(
-	// 	Bounds2::c(0.0, 0.0, WIDTH as f32, HEIGHT as f32),
-	// 	Bounds2::c(-0.8, 0.1, -0.7, -0.1),
+	// 	Bounds2!(0.0, 0.0, WIDTH as f32, HEIGHT as f32),
+	// 	Bounds2!(-0.8, 0.1, -0.7, -0.1),
 	// );
 	let mat = Transform2d::fit(
-		Bounds2::c(0.0, 0.0, WIDTH as f64, HEIGHT as f64),
-		Bounds2::c(-0.743643887037151, 0.13182590420633, -0.743643887036151, 0.13182590420533),
+		Bounds2!(0.0, 0.0, WIDTH as f64, HEIGHT as f64),
+		Bounds2!(-0.743643887037151, 0.13182590420633, -0.743643887036151, 0.13182590420533),
 	);
 
 	for y in 0..HEIGHT {

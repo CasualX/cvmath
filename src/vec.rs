@@ -506,6 +506,69 @@ macro_rules! parse_vec_elems {
 	}};
 }
 
+/// Vector constructor.
+///
+/// ```
+/// use cvmath::Vec2;
+///
+/// let splat = cvmath::Vec2!(3);
+/// let zero: Vec2<i32> = cvmath::Vec2!();
+///
+/// assert_eq!(splat, Vec2(3, 3));
+/// assert_eq!(zero, Vec2::ZERO);
+/// ```
+#[macro_export]
+macro_rules! Vec2 {
+	($value:expr) => {
+		$crate::Vec2 { x: $value, y: $value }
+	};
+	() => {
+		$crate::Vec2::ZERO
+	};
+}
+
+/// Vector constructor.
+///
+/// ```
+/// use cvmath::Vec3;
+///
+/// let splat = cvmath::Vec3!(3);
+/// let zero: Vec3<i32> = cvmath::Vec3!();
+///
+/// assert_eq!(splat, Vec3(3, 3, 3));
+/// assert_eq!(zero, Vec3::ZERO);
+/// ```
+#[macro_export]
+macro_rules! Vec3 {
+	($value:expr) => {
+		$crate::Vec3 { x: $value, y: $value, z: $value }
+	};
+	() => {
+		$crate::Vec3::ZERO
+	};
+}
+
+/// Vector constructor.
+///
+/// ```
+/// use cvmath::Vec4;
+///
+/// let splat = cvmath::Vec4!(3);
+/// let zero: Vec4<i32> = cvmath::Vec4!();
+///
+/// assert_eq!(splat, Vec4(3, 3, 3, 3));
+/// assert_eq!(zero, Vec4::ZERO);
+/// ```
+#[macro_export]
+macro_rules! Vec4 {
+	($value:expr) => {
+		$crate::Vec4 { x: $value, y: $value, z: $value, w: $value }
+	};
+	() => {
+		$crate::Vec4::ZERO
+	};
+}
+
 // This may or may not be horrible abuse of the `macro_rules!` system :)
 macro_rules! vec {
 	(

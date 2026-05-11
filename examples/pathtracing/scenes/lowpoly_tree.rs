@@ -98,15 +98,15 @@ static MATERIALS: [Material; 11] = [
 	Material {
 		color: Vec3f::ONE,
 		emissive: Vec3f::ZERO,
-		roughness: 0.0,
+		roughness: 0.02,
 		metallic: 1.0,
 	},
 	// Gold
 	Material {
 		color: Vec3(0.8, 0.6, 0.2),
 		emissive: Vec3::ZERO,
-		roughness: 0.1,
-		metallic: 0.5,
+		roughness: 0.2,
+		metallic: 1.0,
 	},
 ];
 

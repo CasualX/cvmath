@@ -16,6 +16,38 @@ pub const fn Bounds2<T>(mins: Point2<T>, maxs: Point2<T>) -> Bounds2<T> {
 	Bounds2 { mins, maxs }
 }
 
+/// Bounds2 constructor.
+///
+/// ```
+/// use cvmath::{Bounds2, Point2};
+///
+/// let explicit = cvmath::Bounds2!(1, 2, 3, 4);
+/// let splat = cvmath::Bounds2!(5, 6);
+/// let zero: Bounds2<i32> = cvmath::Bounds2!();
+///
+/// assert_eq!(explicit, Bounds2(Point2(1, 2), Point2(3, 4)));
+/// assert_eq!(splat, Bounds2(Point2(5, 5), Point2(6, 6)));
+/// assert_eq!(zero, Bounds2::ZERO);
+/// ```
+#[macro_export]
+macro_rules! Bounds2 {
+	($x_min:expr, $y_min:expr, $x_max:expr, $y_max:expr $(,)?) => {
+		$crate::Bounds2 {
+			mins: $crate::Point2 { x: $x_min, y: $y_min },
+			maxs: $crate::Point2 { x: $x_max, y: $y_max },
+		}
+	};
+	($mins:expr, $maxs:expr $(,)?) => {
+		$crate::Bounds2 {
+			mins: $crate::Point2 { x: $mins, y: $mins },
+			maxs: $crate::Point2 { x: $maxs, y: $maxs },
+		}
+	};
+	() => {
+		$crate::Bounds2::ZERO
+	};
+}
+
 specialized_type!(Bounds2, Bounds2f, f32, mins: Point2f, maxs: Point2f);
 specialized_type!(Bounds2, Bounds2d, f64, mins: Point2d, maxs: Point2d);
 specialized_type!(Bounds2, Bounds2i, i32, mins: Point2i, maxs: Point2i);
@@ -40,11 +72,9 @@ impl<T> Bounds2<T> {
 	}
 	/// Bounds from the origin to the vector.
 	#[inline]
-	pub fn vec(vec: Vec2<T>) -> Bounds2<T> where T: Default {
-		Bounds2 {
-			mins: Point2::default(),
-			maxs: vec,
-		}
+	pub fn vec(maxs: Vec2<T>) -> Bounds2<T> where T: Default {
+		let mins = Point2::default();
+		Bounds2 { mins, maxs }
 	}
 	/// Creates a bounds at the given point with size.
 	///
@@ -60,13 +90,6 @@ impl<T> Bounds2<T> {
 	#[inline]
 	pub fn point(point: Point2<T>, size: Vec2<T>) -> Bounds2<T> where T: Copy + ops::Add<Output = T> + ops::Sub<Output = T> {
 		Bounds2 { mins: point - size, maxs: point + size }
-	}
-	/// Bounds2 constructor from components.
-	#[inline]
-	pub const fn c(mins_x: T, mins_y: T, maxs_x: T, maxs_y: T) -> Bounds2<T> {
-		let mins = Point2 { x: mins_x, y: mins_y };
-		let maxs = Point2 { x: maxs_x, y: maxs_y };
-		Bounds2 { mins, maxs }
 	}
 	/// Casts the bounds to a different unit type.
 	#[inline]

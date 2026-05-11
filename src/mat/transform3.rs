@@ -299,7 +299,7 @@ impl<T: Float> Transform3<T> {
 	/// Maps NDC coordinates to viewport space.
 	///
 	/// ```
-	/// let bounds = cvmath::Bounds2::c(10.0, 20.0, 110.0, 220.0);
+	/// let bounds = cvmath::Bounds2!(10.0, 20.0, 110.0, 220.0);
 	/// let mat = cvmath::Transform3::viewport(bounds);
 	/// let value = mat * cvmath::Vec3(-1.0, -1.0, 0.0);
 	/// let expected = cvmath::Vec3(10.0, 220.0, 1.0);
