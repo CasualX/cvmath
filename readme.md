@@ -4,7 +4,7 @@ Computer Vector Graphics Math Library
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![crates.io](https://img.shields.io/crates/v/cvmath.svg)](https://crates.io/crates/cvmath)
 [![docs.rs](https://docs.rs/cvmath/badge.svg)](https://docs.rs/cvmath)
-[![Build status](https://github.com/CasualX/cvmath/workflows/CI/badge.svg)](https://github.com/CasualX/cvmath/actions)
+[![Build status](https://github.com/CasualX/cvmath/workflows/Check/badge.svg)](https://github.com/CasualX/cvmath/actions)
 
 > Because reinventing the wheel is half the fun.
 
