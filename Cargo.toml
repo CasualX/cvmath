@@ -1,18 +1,19 @@
 [package]
 name = "cvmath"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["Casper <CasualX@users.noreply.github.com>"]
 edition = "2024"
 
 description = "Computer Graphics Vector Math Library"
 
-# documentation =
-# homepage =
+documentation = "https://docs.rs/cvmath"
+homepage = "https://github.com/CasualX/cvmath"
 repository = "https://github.com/CasualX/cvmath"
 
 readme = "readme.md"
 
-keywords = ["cg", "cgmath", "matrix"]
+keywords = ["cgmath", "math", "vector", "matrix", "geometry"]
+categories = ["mathematics", "graphics", "game-development"]
 
 license = "MIT"
 

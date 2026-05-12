@@ -148,7 +148,7 @@ fn random_shape(rand: &mut urandom::Random<impl urandom::Rng>) -> Shape2<f32> {
 				radius,
 			})
 		}
-		_ => unimplemented!(),
+		_ => unreachable!(),
 	}
 }
 
@@ -166,6 +166,6 @@ fn draw_shape(svg: &mut writer::SvgWriter, &shape: &Shape2<f32>) {
 		Shape2::Triangle(triangle) => {
 			svg.triangle(triangle).fill("#FFC857").stroke("black").stroke_width(0.5);
 		}
-		_ => unimplemented!(),
+		_ => unreachable!(),
 	}
 }
