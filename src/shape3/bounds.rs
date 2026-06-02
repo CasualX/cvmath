@@ -104,6 +104,22 @@ impl<T> Bounds3<T> {
 	pub fn size(self) -> Vec3<T> where T: ops::Sub<Output = T> {
 		self.maxs - self.mins
 	}
+	/// Returns the bounds inflated by the given amount in all directions.
+	///
+	/// ```
+	/// use cvmath::{Bounds3, Point3, Vec3};
+	///
+	/// let bounds = Bounds3(Point3(1, 2, 3), Point3(4, 5, 6));
+	/// let inflated = bounds.inflate(Vec3(1, 2, 3));
+	/// assert_eq!(Bounds3(Point3(0, 0, 0), Point3(5, 7, 9)), inflated);
+	/// ```
+	#[inline]
+	pub fn inflate(self, amount: Vec3<T>) -> Bounds3<T> where T: Copy + ops::Sub<Output = T> + ops::Add<Output = T> {
+		Bounds3 {
+			mins: self.mins - amount,
+			maxs: self.maxs + amount,
+		}
+	}
 }
 
 impl<T> Bounds3<T> {

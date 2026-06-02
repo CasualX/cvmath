@@ -127,6 +127,22 @@ impl<T> Bounds2<T> {
 	pub fn size(self) -> Vec2<T> where T: ops::Sub<Output = T> {
 		self.maxs - self.mins
 	}
+	/// Returns the bounds inflated by the given amount in all directions.
+	///
+	/// ```
+	/// use cvmath::{Bounds2, Point2, Vec2};
+	///
+	/// let bounds = Bounds2(Point2(1, 2), Point2(3, 1));
+	/// let inflated = bounds.inflate(Vec2(1, 2));
+	/// assert_eq!(Bounds2(Point2(0, 0), Point2(4, 3)), inflated);
+	/// ```
+	#[inline]
+	pub fn inflate(self, amount: Vec2<T>) -> Bounds2<T> where T: Copy + ops::Sub<Output = T> + ops::Add<Output = T> {
+		Bounds2 {
+			mins: self.mins - amount,
+			maxs: self.maxs + amount,
+		}
+	}
 }
 
 impl<T> Bounds2<T> {
@@ -392,22 +408,22 @@ impl<T> From<Bounds2<T>> for [Point2<T>; 2] {
 impl<T: Scalar> Bounds2<T> {
 	/// X coordinate of the left side.
 	#[inline]
-	pub fn left(&self) -> T {
+	pub const fn left(&self) -> T {
 		self.mins.x
 	}
 	/// X coordinate of the right side.
 	#[inline]
-	pub fn right(&self) -> T {
+	pub const fn right(&self) -> T {
 		self.maxs.x
 	}
 	/// Y coordinate of the top side.
 	#[inline]
-	pub fn top(&self) -> T {
+	pub const fn top(&self) -> T {
 		self.mins.y
 	}
 	/// Y coordinate of the bottom side.
 	#[inline]
-	pub fn bottom(&self) -> T {
+	pub const fn bottom(&self) -> T {
 		self.maxs.y
 	}
 	/// Width of the rectangle.
@@ -432,27 +448,27 @@ impl<T: Scalar> Bounds2<T> {
 	}
 	/// Top left corner of the rectangle.
 	#[inline]
-	pub fn top_left(&self) -> Point2<T> {
+	pub const fn top_left(&self) -> Point2<T> {
 		self.mins
 	}
 	/// Top right corner of the rectangle.
 	#[inline]
-	pub fn top_right(&self) -> Point2<T> {
+	pub const fn top_right(&self) -> Point2<T> {
 		Point2 { x: self.maxs.x, y: self.mins.y }
 	}
 	/// Bottom left corner of the rectangle.
 	#[inline]
-	pub fn bottom_left(&self) -> Point2<T> {
+	pub const fn bottom_left(&self) -> Point2<T> {
 		Point2 { x: self.mins.x, y: self.maxs.y }
 	}
 	/// Bottom right corner of the rectangle.
 	#[inline]
-	pub fn bottom_right(&self) -> Point2<T> {
+	pub const fn bottom_right(&self) -> Point2<T> {
 		self.maxs
 	}
 	/// Top side of the rectangle.
 	#[inline]
-	pub fn top_side(&self) -> Line2<T> {
+	pub const fn top_side(&self) -> Line2<T> {
 		Line2 {
 			start: self.top_left(),
 			end: self.top_right(),
@@ -460,7 +476,7 @@ impl<T: Scalar> Bounds2<T> {
 	}
 	/// Right side of the rectangle.
 	#[inline]
-	pub fn right_side(&self) -> Line2<T> {
+	pub const fn right_side(&self) -> Line2<T> {
 		Line2 {
 			start: self.top_right(),
 			end: self.bottom_right(),
@@ -468,7 +484,7 @@ impl<T: Scalar> Bounds2<T> {
 	}
 	/// Bottom side of the rectangle.
 	#[inline]
-	pub fn bottom_side(&self) -> Line2<T> {
+	pub const fn bottom_side(&self) -> Line2<T> {
 		Line2 {
 			start: self.bottom_right(),
 			end: self.bottom_left(),
@@ -476,7 +492,7 @@ impl<T: Scalar> Bounds2<T> {
 	}
 	/// Left side of the rectangle.
 	#[inline]
-	pub fn left_side(&self) -> Line2<T> {
+	pub const fn left_side(&self) -> Line2<T> {
 		Line2 {
 			start: self.bottom_left(),
 			end: self.top_left(),
@@ -495,6 +511,57 @@ impl<T: Scalar> Bounds2<T> {
 			Vec2(T::ZERO, self.height()),
 			self.mins,
 		)
+	}
+}
+
+impl<T: Scalar> Bounds2<T> {
+	/// Returns a new bounds with the left side set to `left`.
+	#[inline]
+	#[must_use]
+	pub const fn set_left(self, left: T) -> Bounds2<T> {
+		Bounds2 { mins: Point2 { x: left, ..self.mins }, ..self }
+	}
+	/// Returns a new bounds with the right side set to `right`.
+	#[inline]
+	#[must_use]
+	pub const fn set_right(self, right: T) -> Bounds2<T> {
+		Bounds2 { maxs: Point2 { x: right, ..self.maxs }, ..self }
+	}
+	/// Returns a new bounds with the top side set to `top`.
+	#[inline]
+	#[must_use]
+	pub const fn set_top(self, top: T) -> Bounds2<T> {
+		Bounds2 { mins: Point2 { y: top, ..self.mins }, ..self }
+	}
+	/// Returns a new bounds with the bottom side set to `bottom`.
+	#[inline]
+	#[must_use]
+	pub const fn set_bottom(self, bottom: T) -> Bounds2<T> {
+		Bounds2 { maxs: Point2 { y: bottom, ..self.maxs }, ..self }
+	}
+	/// Returns a new bounds with the top left corner set to `top_left`.
+	#[inline]
+	#[must_use]
+	pub const fn set_top_left(self, top_left: Point2<T>) -> Bounds2<T> {
+		Bounds2 { mins: top_left, ..self }
+	}
+	/// Returns a new bounds with the top right corner set to `top_right`.
+	#[inline]
+	#[must_use]
+	pub const fn set_top_right(self, top_right: Point2<T>) -> Bounds2<T> {
+		Bounds2 { mins: Point2 { y: top_right.y, ..self.mins }, maxs: Point2 { x: top_right.x, ..self.maxs }, ..self }
+	}
+	/// Returns a new bounds with the bottom left corner set to `bottom_left`.
+	#[inline]
+	#[must_use]
+	pub const fn set_bottom_left(self, bottom_left: Point2<T>) -> Bounds2<T> {
+		Bounds2 { mins: Point2 { x: bottom_left.x, ..self.mins }, maxs: Point2 { y: bottom_left.y, ..self.maxs }, ..self }
+	}
+	/// Returns a new bounds with the bottom right corner set to `bottom_right`.
+	#[inline]
+	#[must_use]
+	pub const fn set_bottom_right(self, bottom_right: Point2<T>) -> Bounds2<T> {
+		Bounds2 { maxs: bottom_right, ..self }
 	}
 }
 
