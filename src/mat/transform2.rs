@@ -725,6 +725,17 @@ impl<T: fmt::Debug> fmt::Debug for Transform2<T> {
 	}
 }
 
+impl<T: FromStr> FromStr for Transform2<T> {
+	type Err = ParseMatrixError<T::Err>;
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		let [
+			a11, a12, a13,
+			a21, a22, a23,
+		] = parse_matrix::<T, 6>(s, "Transform2", 0x23)?;
+		Ok(Transform2(a11, a12, a13, a21, a22, a23))
+	}
+}
+
 //----------------------------------------------------------------
 // Tests
 
@@ -773,4 +784,13 @@ fn test_projection_reflection() {
 	let zero = Plane2(Vec2d::ZERO, 4.0);
 	assert_eq!(Transform2::ZERO, Transform2::projection(zero));
 	assert_eq!(Transform2::scaling(-Vec2d::ONE), Transform2::reflection(zero));
+}
+
+#[test]
+fn test_fmt_parse() {
+	let mat = Transform2(1.0_f64, 2.0, 3.0, -4.0, 5.5, 6.0);
+	assert_eq!(format!("{mat}").parse::<Transform2<f64>>().unwrap(), mat);
+	assert_eq!(format!("{mat:?}").parse::<Transform2<f64>>().unwrap(), mat);
+	assert_eq!(format!("{mat:#}").parse::<Transform2<f64>>().unwrap(), mat);
+	assert_eq!("Transform2(1,2,3,4,5,6)".parse::<Transform2<i32>>().unwrap(), Transform2(1, 2, 3, 4, 5, 6));
 }

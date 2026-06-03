@@ -20,10 +20,10 @@ An overview of their implementations:
 ```
 use cvmath::{Vec2, Vec3};
 
-assert_eq!("Vec3(2, 3, 4)", format!("{}", Vec3(2, 3, 4)));
-assert_eq!("Vec2(2.300, 2.142)", format!("{:.3}", Vec2(2.3, 2.14159278)));
+assert_eq!("Vec3(2, 3, 4)", format!("{:#}", Vec3(2, 3, 4)));
+assert_eq!("2.300,2.142", format!("{:.3}", Vec2(2.3, 2.14159278)));
 assert_eq!("Vec2(16, 25)", format!("{:?}", Vec2(16, 25)));
-assert_eq!("Vec3(  2,   3,  14)", format!("{:>3}", Vec3(2, 3, 14)));
+assert_eq!("  2,  3, 14", format!("{:3}", Vec3(2, 3, 14)));
 
 assert_eq!(Vec2 { x: -5, y: 9 }, Vec2(-5, 9));
 assert!(Vec2(1, 9) > Vec2(1, -2));
@@ -475,12 +475,27 @@ macro_rules! fmt {
 		fmt!($ty { $($field),+ } fmt::LowerExp);
 		fmt!($ty { $($field),+ } fmt::UpperExp);
 	};
-	($ty:ident { $($field:ident),+ } $fmt:path) => {
-		impl<T: $fmt> $fmt for $ty<T> {
+	($ty:ident { $($field:ident),+ } fmt::Debug) => {
+		impl<T: fmt::Debug> fmt::Debug for $ty<T> {
 			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 				f.write_str(concat!(stringify!($ty), "("))?;
 				instmt!(f.write_str(", ")?; $(self.$field.fmt(f)?;)+);
 				f.write_str(")")
+			}
+		}
+	};
+	($ty:ident { $($field:ident),+ } $fmt:path) => {
+		impl<T: $fmt> $fmt for $ty<T> {
+			fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+				if f.alternate() {
+					f.write_str(concat!(stringify!($ty), "("))?;
+					instmt!(f.write_str(", ")?; $(self.$field.fmt(f)?;)+);
+					f.write_str(")")
+				}
+				else {
+					instmt!(f.write_str(",")?; $(self.$field.fmt(f)?;)+);
+					Ok(())
+				}
 			}
 		}
 	};
@@ -501,7 +516,7 @@ macro_rules! parse_vec_elems {
 			if $iter.next().is_some() {
 				return Err(ParseVecError::DimMismatch);
 			}
-			$s[$next..$s.len() - 1].trim_ascii().parse()?
+			$s[$next..].trim_ascii().parse()?
 		};
 	}};
 }
@@ -1484,14 +1499,19 @@ macro_rules! vec {
 		impl<T: FromStr> FromStr for $vec<T> {
 			type Err = ParseVecError<T::Err>;
 			fn from_str(s: &str) -> Result<$vec<T>, Self::Err> {
-				let bytes = s.as_bytes();
-				// Must be surrounded by parenthesis
-				if bytes.len() < 2 || bytes[0] != b'(' || bytes[bytes.len() - 1] != b')' {
-					return Err(ParseVecError::SyntaxError);
-				}
+				// Trim optional vector wrapper, then parse comma-delimited elements.
+				let s = match s.strip_prefix(concat!(stringify!($vec), "(")) {
+					Some(s) => {
+						let Some(s) = s.strip_suffix(")") else {
+							return Err(ParseVecError::SyntaxError);
+						};
+						s
+					}
+					None => s,
+				};
 				// Comma separated list of values
-				let mut iter = s.bytes().enumerate().filter_map(|(i, v)| if v == b',' { Some(i) } else { None });
-				let mut next = 1;
+				let mut iter = s.as_bytes().iter().enumerate().filter_map(|(i, &v)| if v == b',' { Some(i) } else { None });
+				let mut next = 0;
 				$(let $field;)+
 				parse_vec_elems!(s, iter, next; $($field),+);
 				Ok($vec { $($field),+ })
@@ -1820,17 +1840,38 @@ impl<E: Error + 'static> fmt::Display for ParseVecError<E> {
 impl<E: Error + 'static> Error for ParseVecError<E> {
 	fn description(&self) -> &str {
 		#[allow(deprecated)]
-		match *self {
+		match self {
 			ParseVecError::SyntaxError => "syntax error",
 			ParseVecError::DimMismatch => "dim mismatch",
-			ParseVecError::ParseValue(ref inner) => inner.description(),
+			ParseVecError::ParseValue(inner) => inner.description(),
 		}
 	}
 	fn source(&self) -> Option<&(dyn Error + 'static)> {
-		match *self {
+		match self {
 			ParseVecError::SyntaxError => None,
 			ParseVecError::DimMismatch => None,
-			ParseVecError::ParseValue(ref inner) => Some(inner),
+			ParseVecError::ParseValue(inner) => Some(inner),
 		}
 	}
+}
+
+#[test]
+fn test_fmt_parse() {
+	assert_eq!(format!("{}", Vec2(1, 2)).parse::<Vec2<i32>>().unwrap(), Vec2(1, 2));
+	assert_eq!(format!("{}", Vec3(-1, 0, 2)).parse::<Vec3<i32>>().unwrap(), Vec3(-1, 0, 2));
+	assert_eq!(format!("{}", Vec4(3, -4, 5, -6)).parse::<Vec4<i32>>().unwrap(), Vec4(3, -4, 5, -6));
+
+	let value = Vec3(1.25_f32, -2.5_f32, 0.125_f32);
+	let parsed: Vec3<f32> = format!("{value:E}").parse().unwrap();
+	assert_eq!(parsed, value);
+
+	assert_eq!("1,2".parse::<Vec2<i32>>().unwrap(), Vec2(1, 2));
+	assert_eq!("1, 2".parse::<Vec2<i32>>().unwrap(), Vec2(1, 2));
+	assert_eq!("Vec2(1,2)".parse::<Vec2<i32>>().unwrap(), Vec2(1, 2));
+	assert_eq!("Vec2(1, 2)".parse::<Vec2<i32>>().unwrap(), Vec2(1, 2));
+
+	assert_eq!("Vec2(1, 2".parse::<Vec2<i32>>(), Err(ParseVecError::SyntaxError));
+	let error = "Vec2 1".parse::<i32>().unwrap_err();
+	assert_eq!("Vec2 1, 2)".parse::<Vec2<i32>>(), Err(ParseVecError::ParseValue(error)));
+	assert_eq!("Vec2(".parse::<Vec2<i32>>(), Err(ParseVecError::SyntaxError));
 }

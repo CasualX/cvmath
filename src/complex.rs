@@ -532,15 +532,15 @@ impl<E: Error + 'static> fmt::Display for ParseComplexError<E> {
 impl<E: Error + 'static> Error for ParseComplexError<E> {
 	fn description(&self) -> &str {
 		#[allow(deprecated)]
-		match *self {
+		match self {
 			ParseComplexError::InvalidFormat => "invalid format",
-			ParseComplexError::ParseValue(ref inner) => inner.description(),
+			ParseComplexError::ParseValue(inner) => inner.description(),
 		}
 	}
 	fn source(&self) -> Option<&(dyn Error + 'static)> {
-		match *self {
+		match self {
 			ParseComplexError::InvalidFormat => None,
-			ParseComplexError::ParseValue(ref inner) => Some(inner),
+			ParseComplexError::ParseValue(inner) => Some(inner),
 		}
 	}
 }

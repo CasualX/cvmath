@@ -829,6 +829,18 @@ impl<T: fmt::Debug> fmt::Debug for Transform3<T> {
 	}
 }
 
+impl<T: FromStr> FromStr for Transform3<T> {
+	type Err = ParseMatrixError<T::Err>;
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		let [
+			a11, a12, a13, a14,
+			a21, a22, a23, a24,
+			a31, a32, a33, a34,
+		] = parse_matrix::<T, 12>(s, "Transform3", 0x34)?;
+		Ok(Transform3(a11, a12, a13, a14, a21, a22, a23, a24, a31, a32, a33, a34))
+	}
+}
+
 //----------------------------------------------------------------
 // Tests
 
@@ -909,4 +921,13 @@ fn test_projection_reflection() {
 	let reflected = Transform3::reflection(plane) * Vec3(2.0, 3.0, 7.0);
 	assert_eq!(Vec3(2.0, 3.0, 2.0), projected);
 	assert_eq!(Vec3(2.0, 3.0, -3.0), reflected);
+}
+
+#[test]
+fn test_fmt_parse() {
+	let mat = Transform3(1.0_f64, 2.0, 3.0, 4.0, -5.0, 6.5, 7.0, 8.0, 9.0, 10.0, -11.25, 12.0);
+	assert_eq!(format!("{mat}").parse::<Transform3<f64>>().unwrap(), mat);
+	assert_eq!(format!("{mat:?}").parse::<Transform3<f64>>().unwrap(), mat);
+	assert_eq!(format!("{mat:#}").parse::<Transform3<f64>>().unwrap(), mat);
+	assert_eq!("Transform3(1,2,3,4,5,6,7,8,9,10,11,12)".parse::<Transform3<i32>>().unwrap(), Transform3(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12));
 }

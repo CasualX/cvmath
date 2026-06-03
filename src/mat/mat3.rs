@@ -753,6 +753,18 @@ impl<T: fmt::Debug> fmt::Debug for Mat3<T> {
 	}
 }
 
+impl<T: FromStr> FromStr for Mat3<T> {
+	type Err = ParseMatrixError<T::Err>;
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		let [
+			a11, a12, a13,
+			a21, a22, a23,
+			a31, a32, a33,
+		] = parse_matrix::<T, 9>(s, "Mat3", 0x33)?;
+		Ok(Mat3(a11, a12, a13, a21, a22, a23, a31, a32, a33))
+	}
+}
+
 //----------------------------------------------------------------
 // Tests
 
@@ -835,4 +847,13 @@ fn test_neg() {
 	let expected = Mat3(-1, 2, -3, 4, -5, 6, -7, 8, -9);
 	assert_eq!(-value, expected);
 	assert_eq!(-&value, expected);
+}
+
+#[test]
+fn test_fmt_parse() {
+	let mat = Mat3(1.0_f64, 2.5, 3.0, -4.0, 5.25, 6.0, 7.0, 8.0, -9.5);
+	assert_eq!(format!("{mat}").parse::<Mat3<f64>>().unwrap(), mat);
+	assert_eq!(format!("{mat:?}").parse::<Mat3<f64>>().unwrap(), mat);
+	assert_eq!(format!("{mat:#}").parse::<Mat3<f64>>().unwrap(), mat);
+	assert_eq!("Mat3(1,2,3,4,5,6,7,8,9)".parse::<Mat3<i32>>().unwrap(), Mat3(1, 2, 3, 4, 5, 6, 7, 8, 9));
 }

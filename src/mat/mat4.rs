@@ -744,6 +744,19 @@ impl<T: fmt::Debug> fmt::Debug for Mat4<T> {
 	}
 }
 
+impl<T: FromStr> FromStr for Mat4<T> {
+	type Err = ParseMatrixError<T::Err>;
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		let [
+			a11, a12, a13, a14,
+			a21, a22, a23, a24,
+			a31, a32, a33, a34,
+			a41, a42, a43, a44,
+		] = parse_matrix::<T, 16>(s, "Mat4", 0x44)?;
+		Ok(Mat4(a11, a12, a13, a14, a21, a22, a23, a24, a31, a32, a33, a34, a41, a42, a43, a44))
+	}
+}
+
 //----------------------------------------------------------------
 // Tests
 
@@ -851,4 +864,13 @@ fn test_neg() {
 	let expected = Mat4(-1, 2, -3, 4, -5, 6, -7, 8, -9, 10, -11, 12, -13, 14, -15, 16);
 	assert_eq!(-value, expected);
 	assert_eq!(-&value, expected);
+}
+
+#[test]
+fn test_fmt_parse() {
+	let mat = Mat4(1.0_f64, 2.0, 3.0, 4.0, 5.0, -6.5, 7.0, 8.0, 9.0, 10.0, 11.25, 12.0, 13.0, 14.0, 15.0, -16.0);
+	assert_eq!(format!("{mat}").parse::<Mat4<f64>>().unwrap(), mat);
+	assert_eq!(format!("{mat:?}").parse::<Mat4<f64>>().unwrap(), mat);
+	assert_eq!(format!("{mat:#}").parse::<Mat4<f64>>().unwrap(), mat);
+	assert_eq!("Mat4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)".parse::<Mat4<i32>>().unwrap(), Mat4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
 }

@@ -672,6 +672,17 @@ impl<T: fmt::Debug> fmt::Debug for Mat2<T> {
 	}
 }
 
+impl<T: FromStr> FromStr for Mat2<T> {
+	type Err = ParseMatrixError<T::Err>;
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		let [
+			a11, a12,
+			a21, a22,
+		] = parse_matrix::<T, 4>(s, "Mat2", 0x22)?;
+		Ok(Mat2(a11, a12, a21, a22))
+	}
+}
+
 //----------------------------------------------------------------
 // Tests
 
@@ -722,6 +733,18 @@ fn test_fmt_width_behavior() {
 	let mat = Mat2(1.15, 2.0, 3.3, 4.4);
 	assert_eq!(format!("{mat:8.2}"), "Mat2([    1.15,     2.00], [    3.30,     4.40])");
 	assert_eq!(format!("{mat:#8.2}"), "Mat2(\n [1.15,    2],\n [ 3.3,  4.4])");
+}
+
+#[test]
+fn test_fmt_parse() {
+	let mat = Mat2(1.25_f64, 2.0, -3.5, 4.125);
+	assert_eq!(format!("{mat}").parse::<Mat2<f64>>().unwrap(), mat);
+	assert_eq!(format!("{mat:?}").parse::<Mat2<f64>>().unwrap(), mat);
+	assert_eq!(format!("{mat:#}").parse::<Mat2<f64>>().unwrap(), mat);
+	assert_eq!(format!("{mat:8.2}").parse::<Mat2<f64>>().unwrap(), Mat2(1.25, 2.0, -3.5, 4.12));
+	assert_eq!("Mat2([1,2], [3, 4])".parse::<Mat2<i32>>().unwrap(), Mat2(1, 2, 3, 4));
+	assert_eq!("Mat2(1,2,3,4)".parse::<Mat2<i32>>().unwrap(), Mat2(1, 2, 3, 4));
+	assert!(" Mat2([1, 2], [3, 4])".parse::<Mat2<i32>>().is_err());
 }
 
 #[test]

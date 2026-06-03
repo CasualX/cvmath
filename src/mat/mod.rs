@@ -14,6 +14,7 @@ mod mat4;
 mod transform2;
 mod transform3;
 
+mod parse;
 mod print;
 
 pub use self::mat2::Mat2;
@@ -22,6 +23,9 @@ pub use self::mat4::Mat4;
 
 pub use self::transform2::Transform2;
 pub use self::transform3::Transform3;
+
+pub use self::parse::ParseMatrixError;
+use self::parse::parse_matrix;
 
 /// Handedness of the coordinate system.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
