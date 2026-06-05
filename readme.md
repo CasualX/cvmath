@@ -11,8 +11,8 @@ Computer Vector Graphics Math Library
 ![Path Tracing Example](images/pathtracing.png)  
 *A path tracing scene using `cvmath`. See [pathtracing.rs](examples/pathtracing/main.rs).*
 
-🔍 What is this?
----------------
+What is this?
+-------------
 
 `cvmath` is a lightweight, graphics-oriented math library written in Rust. It focuses on **vector math and geometric primitives** commonly used in computer graphics. It is not a general-purpose numerical library.
 
@@ -21,8 +21,8 @@ If you're building 2D/3D renderers, ray tracers, or similar tools and want somet
 The API is lean, clear, and practical.
 
 
-✨ Features Overview
---------------------
+Features Overview
+-----------------
 
 All types are available at the crate root.
 
@@ -63,8 +63,15 @@ Types involved in ray casting and intersection:
 
 On Windows MSVC targets, [Natvis](https://code.visualstudio.com/docs/cpp/natvis) visualizers make common math types easier to inspect in the debugger.
 
-🔓 License
-----------
+Optional Dependencies
+---------------------
+
+- `dataview` — Implements `dataview::Pod` for all types, allowing zero-copy views into raw byte buffers.
+- `serde` — Enables serialization and deserialization of all types.
+- `urandom` — Provides random number generation for types that support it (e.g., `Vec3::random()`).
+
+License
+-------
 
 Licensed under the [MIT License](https://opensource.org/licenses/MIT), see [license.txt](license.txt) for details.
 
