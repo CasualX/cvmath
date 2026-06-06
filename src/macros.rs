@@ -36,18 +36,6 @@ macro_rules! specialized_type {
 		#[allow(non_snake_case)]
 		#[inline]
 		pub const fn $id($($c: $ty),+) -> $id { $base { $($c),+ } }
-
-		#[doc = stringify!($id)]
-		#[doc = "constructor."]
-		#[macro_export]
-		macro_rules! $id {
-			($value:expr) => {
-				$base { $($c: $value),+ }
-			};
-			() => {
-				$base::ZERO
-			};
-		}
 	};
 
 	($base:ident, $id:ident, $ty:ty, $($c:ident: $cty:ty),+) => {
@@ -62,17 +50,5 @@ macro_rules! specialized_type {
 		#[allow(non_snake_case)]
 		#[inline]
 		pub const fn $id($($c: $cty),+) -> $id { $base { $($c),+ } }
-
-		#[doc = stringify!($id)]
-		#[doc = "constructor."]
-		#[macro_export]
-		macro_rules! $id {
-			($value:expr) => {
-				$base { $($c: $value),+ }
-			};
-			() => {
-				$base::ZERO
-			};
-		}
 	};
 }

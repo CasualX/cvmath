@@ -55,14 +55,14 @@ mod shape3;
 use crate::num::*;
 
 pub use crate::angle::Angle;
-pub use crate::vec::{Vec2, Vec3, Vec4, X, Y, Z, W};
+pub use crate::vec::{Vec2, Vec3, Vec4, X, Y, Z, W, ParseVecError};
 pub use crate::bools::{Bool2, Bool3, Bool4};
 pub use crate::interval::Interval;
 pub use crate::lerp::*;
 pub use crate::ray::HitSide;
 pub use crate::complex::Complex;
 pub use crate::polar::Polar;
-pub use crate::mat::{Mat2, Mat3, Mat4, Transform2, Transform3, Hand, Clip};
+pub use crate::mat::{Mat2, Mat3, Mat4, Transform2, Transform3, Hand, Clip, ParseMatrixError};
 pub use crate::quat::Quat;
 pub use crate::rotvec::RotationVector;
 

@@ -29,7 +29,7 @@ impl<T> Capsule2<T> {
 
 	/// The second endpoint of the capsule segment.
 	#[inline]
-	pub fn end(self) -> Point2<T> where T: Copy + ops::Add<Output = T> {
+	pub fn end(&self) -> Point2<T> where T: Copy + ops::Add<Output = T> {
 		self.origin + self.axis
 	}
 }

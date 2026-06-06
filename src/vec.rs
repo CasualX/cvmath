@@ -1815,7 +1815,7 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Vec4<T> {
 
 //----------------------------------------------------------------
 
-/// An error which can be returned when parsing a VecN<T>.
+/// An error which can be returned when parsing a `VecN<T>`.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ParseVecError<E> {
 	/// Missing parentheses surrounding the vector elements.

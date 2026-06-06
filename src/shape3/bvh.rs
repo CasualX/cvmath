@@ -144,7 +144,7 @@ impl<T: Float> Bvh3<T> {
 
 	/// Returns whether the point lies inside any leaf accepted by the callback.
 	#[inline]
-	pub fn inside<F: FnMut(usize, Point3<T>) -> bool>(&self, pt: Point3<T>, mut f: F) -> bool {
+	pub fn inside<F>(&self, pt: Point3<T>, mut f: F) -> bool where F: FnMut(usize, Point3<T>) -> bool {
 		self.inside_node(0, pt, &mut f)
 	}
 
@@ -310,7 +310,7 @@ struct BuildItem<T> {
 	center: Point3<T>,
 }
 
-fn build<T>(mut items: Vec<BuildItem<T>>) -> Bvh3<T> where T: Float {
+fn build<T: Float>(mut items: Vec<BuildItem<T>>) -> Bvh3<T> {
 	if items.is_empty() {
 		return Bvh3 { nodes: Vec::new() };
 	}
