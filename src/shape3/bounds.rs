@@ -79,9 +79,32 @@ impl<T> Bounds3<T> {
 		Bounds3 { mins, maxs }
 	}
 	/// Creates a bounds at the given point with size.
+	///
+	/// ```
+	/// use cvmath::{Bounds3, Point3};
+	///
+	/// let p = Point3(3, -4, 5);
+	/// let size = Point3(1, 2, 3);
+	/// let bounds = Bounds3::point(p, size);
+	/// assert_eq!(bounds.mins, p - size);
+	/// assert_eq!(bounds.maxs, p + size);
+	/// ```
 	#[inline]
 	pub fn point(point: Point3<T>, size: Vec3<T>) -> Bounds3<T> where T: Copy + ops::Add<Output = T> + ops::Sub<Output = T> {
 		Bounds3 { mins: point - size, maxs: point + size }
+	}
+	/// Creates a bounds from its minimum point and dimensions.
+	///
+	/// ```
+	/// use cvmath::{Bounds3, Point3};
+	///
+	/// let bounds = Bounds3::cuboid(Point3(3, -4, 5), 6, 7, 8);
+	/// assert_eq!(bounds.mins, Point3(3, -4, 5));
+	/// assert_eq!(bounds.maxs, Point3(9, 3, 13));
+	/// ```
+	#[inline]
+	pub fn cuboid(point: Point3<T>, width: T, height: T, depth: T) -> Bounds3<T> where T: Copy + ops::Add<Output = T> {
+		Bounds3 { mins: point, maxs: point + Vec3(width, height, depth) }
 	}
 	/// Normalizes the min and max values ensuring that `self.mins <= self.maxs`.
 	///
@@ -118,6 +141,22 @@ impl<T> Bounds3<T> {
 		Bounds3 {
 			mins: self.mins - amount,
 			maxs: self.maxs + amount,
+		}
+	}
+	/// Returns the bounds inset by the given amount in all directions.
+	///
+	/// ```
+	/// use cvmath::{Bounds3, Point3};
+	///
+	/// let bounds = Bounds3(Point3(1, 2, 3), Point3(6, 8, 10));
+	/// let inset = bounds.inset(1);
+	/// assert_eq!(Bounds3(Point3(2, 3, 4), Point3(5, 7, 9)), inset);
+	/// ```
+	#[inline]
+	pub fn inset(self, amount: T) -> Bounds3<T> where T: Copy + ops::Sub<Output = T> + ops::Add<Output = T> {
+		Bounds3 {
+			mins: Point3(self.mins.x + amount, self.mins.y + amount, self.mins.z + amount),
+			maxs: Point3(self.maxs.x - amount, self.maxs.y - amount, self.maxs.z - amount),
 		}
 	}
 }

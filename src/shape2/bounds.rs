@@ -91,6 +91,19 @@ impl<T> Bounds2<T> {
 	pub fn point(point: Point2<T>, size: Vec2<T>) -> Bounds2<T> where T: Copy + ops::Add<Output = T> + ops::Sub<Output = T> {
 		Bounds2 { mins: point - size, maxs: point + size }
 	}
+	/// Creates a bounds from its minimum point and dimensions.
+	///
+	/// ```
+	/// use cvmath::{Bounds2, Point2};
+	///
+	/// let bounds = Bounds2::rect(Point2(3, -4), 5, 6);
+	/// assert_eq!(bounds.mins, Point2(3, -4));
+	/// assert_eq!(bounds.maxs, Point2(8, 2));
+	/// ```
+	#[inline]
+	pub fn rect(point: Point2<T>, width: T, height: T) -> Bounds2<T> where T: Copy + ops::Add<Output = T> {
+		Bounds2 { mins: point, maxs: point + Vec2(width, height) }
+	}
 	/// Casts the bounds to a different unit type.
 	#[inline]
 	pub fn cast<U>(self) -> Bounds2<U> where T: CastTo<U> {
@@ -141,6 +154,22 @@ impl<T> Bounds2<T> {
 		Bounds2 {
 			mins: self.mins - amount,
 			maxs: self.maxs + amount,
+		}
+	}
+	/// Returns the bounds inset by the given amount in all directions.
+	///
+	/// ```
+	/// use cvmath::{Bounds2, Point2};
+	///
+	/// let bounds = Bounds2(Point2(1, 2), Point2(5, 8));
+	/// let inset = bounds.inset(1);
+	/// assert_eq!(Bounds2(Point2(2, 3), Point2(4, 7)), inset);
+	/// ```
+	#[inline]
+	pub fn inset(self, amount: T) -> Bounds2<T> where T: Copy + ops::Sub<Output = T> + ops::Add<Output = T> {
+		Bounds2 {
+			mins: Point2(self.mins.x + amount, self.mins.y + amount),
+			maxs: Point2(self.maxs.x - amount, self.maxs.y - amount),
 		}
 	}
 }
