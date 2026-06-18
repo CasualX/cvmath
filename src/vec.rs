@@ -552,9 +552,26 @@ macro_rules! Vec2 {
 ///
 /// assert_eq!(splat, Vec3(3, 3, 3));
 /// assert_eq!(zero, Vec3::ZERO);
+///
+/// let red = cvmath::Vec3!(rgb(255, 0, 0));
+/// let premult = cvmath::Vec3!(rgba(255, 0, 0, 0.5));
+/// assert_eq!(red, Vec3 { x: 255, y: 0, z: 0 });
+/// assert_eq!(premult, Vec3 { x: 128, y: 0, z: 0 });
 /// ```
 #[macro_export]
 macro_rules! Vec3 {
+	(rgb($r:literal, $g:literal, $b:literal)) => {const {
+		let (x, y, z): (u8, u8, u8) = ($r, $g, $b);
+		$crate::Vec3 { x, y, z }
+	}};
+	(rgba($r:literal, $g:literal, $b:literal, $a:literal)) => {const {
+		let (r, g, b): (u8, u8, u8) = ($r, $g, $b);
+		let a = f32::round(f32::clamp($a as f32, 0.0, 1.0) * 255.0) as u8;
+		let x = (r as u16 * a as u16 / 255) as u8;
+		let y = (g as u16 * a as u16 / 255) as u8;
+		let z = (b as u16 * a as u16 / 255) as u8;
+		$crate::Vec3 { x, y, z }
+	}};
 	($value:expr) => {
 		$crate::Vec3 { x: $value, y: $value, z: $value }
 	};
@@ -573,9 +590,25 @@ macro_rules! Vec3 {
 ///
 /// assert_eq!(splat, Vec4(3, 3, 3, 3));
 /// assert_eq!(zero, Vec4::ZERO);
+///
+/// let red = cvmath::Vec4!(rgb(255, 0, 0));
+/// let semi = cvmath::Vec4!(rgba(255, 0, 0, 0.5));
+/// let transparent = cvmath::Vec4!(rgba(255, 0, 0, 0));
+/// assert_eq!(red, Vec4 { x: 255, y: 0, z: 0, w: 255 });
+/// assert_eq!(semi, Vec4 { x: 255, y: 0, z: 0, w: 128 });
+/// assert_eq!(transparent, Vec4 { x: 255, y: 0, z: 0, w: 0 });
 /// ```
 #[macro_export]
 macro_rules! Vec4 {
+	(rgb($r:literal, $g:literal, $b:literal)) => {const {
+		let (x, y, z): (u8, u8, u8) = ($r, $g, $b);
+		$crate::Vec4 { x, y, z, w: 255 }
+	}};
+	(rgba($r:literal, $g:literal, $b:literal, $a:literal)) => {const {
+		let (x, y, z): (u8, u8, u8) = ($r, $g, $b);
+		let w = f32::round(f32::clamp($a as f32, 0.0, 1.0) * 255.0) as u8;
+		$crate::Vec4 { x, y, z, w }
+	}};
 	($value:expr) => {
 		$crate::Vec4 { x: $value, y: $value, z: $value, w: $value }
 	};
