@@ -30,8 +30,7 @@ All types are available at the crate root.
 
 - `Vec2<T>`, `Vec3<T>`, `Vec4<T>` — 2D, 3D, and 4D vectors
 - `Bool2`, `Bool3`, `Bool4` — Boolean vector masks
-- `Angle<T>` — Angles in radians
-- `Complex<T>`, `Polar<T>`, `Quat<T>` — Complex numbers, polar coordinates, and quaternions
+- `Angle<T>`, `Complex<T>`, `Polar<T>`, `Quat<T>`, `RotationVector<T>` — Angles and rotations
 
 ### Matrices and Transformations
 
@@ -46,6 +45,7 @@ Shapes are available in 2D and 3D variants.
 - `Bounds2<T>`, `Bounds3<T>` — Axis-aligned bounding boxes
 - `Plane2<T>`, `Plane3<T>` — Infinite planes
 - `Circle<T>`, `Sphere<T>` — Defined by a center point and radius
+- `Capsule2<T>`, `Capsule3<T>` — Swept spheres/rounded line segments
 - `Line2<T>`, `Line3<T>` — Line segments defined by two points
 - `Triangle2<T>`, `Triangle3<T>` — Triangles defined by three points
 - `Shape2<T>`, `Shape3<T>` — Generic shape enums for flexible composition
