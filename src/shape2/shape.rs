@@ -6,6 +6,7 @@ use super::*;
 pub enum Shape2<T> {
 	Point(Point2<T>),
 	Bounds(Bounds2<T>),
+	Rect(Rect<T>),
 	Plane(Plane2<T>),
 	Circle(Circle<T>),
 	Capsule(Capsule2<T>),
@@ -22,6 +23,7 @@ impl<T: Scalar> Shape2<T> {
 		match self {
 			Shape2::Point(point) => Some(Bounds2(*point, *point)),
 			Shape2::Bounds(bounds) => Some(*bounds),
+			Shape2::Rect(rect) => Some(rect.bounds()),
 			Shape2::Plane(_) => None,
 			Shape2::Circle(circle) => Some(circle.bounds()),
 			Shape2::Capsule(capsule) => Some(capsule.bounds()),
@@ -36,6 +38,7 @@ impl<T: Float> Trace2<T> for Shape2<T> {
 		match self {
 			Shape2::Point(point) => point.inside(pt),
 			Shape2::Bounds(bounds) => bounds.inside(pt),
+			Shape2::Rect(rect) => rect.inside(pt),
 			Shape2::Plane(plane) => plane.inside(pt),
 			Shape2::Circle(circle) => circle.inside(pt),
 			Shape2::Capsule(capsule) => capsule.inside(pt),
@@ -48,6 +51,7 @@ impl<T: Float> Trace2<T> for Shape2<T> {
 		match self {
 			Shape2::Point(point) => point.trace(ray),
 			Shape2::Bounds(bounds) => bounds.trace(ray),
+			Shape2::Rect(rect) => rect.trace(ray),
 			Shape2::Plane(plane) => plane.trace(ray),
 			Shape2::Circle(circle) => circle.trace(ray),
 			Shape2::Capsule(capsule) => capsule.trace(ray),

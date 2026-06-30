@@ -22,6 +22,7 @@ struct State {
 	point3: Point3<f32>,
 	bounds2: Bounds2<i32>,
 	bounds3: Bounds3<f32>,
+	rect: Rect<i32>,
 	line2: Line2<f64>,
 	line3: Line3<f32>,
 	circle: Circle<f64>,
@@ -124,6 +125,7 @@ fn main() {
 			Point3(rng.value(), rng.value(), rng.value()),
 			Point3(rng.value(), rng.value(), rng.value()),
 		),
+		rect: Rect(rng.value(), rng.value(), rng.value(), rng.value()),
 		line2: Line2(
 			Point2(rng.value(), rng.value()),
 			Point2(rng.value(), rng.value()),
@@ -183,6 +185,7 @@ fn main() {
 		assert_eq!(state.point3, deserialized.point3);
 		assert_eq!(state.bounds2, deserialized.bounds2);
 		assert_eq!(state.bounds3, deserialized.bounds3);
+		assert_eq!(state.rect, deserialized.rect);
 		assert_eq!(state.line2, deserialized.line2);
 		assert_eq!(state.line3, deserialized.line3);
 		assert_eq!(state.circle, deserialized.circle);

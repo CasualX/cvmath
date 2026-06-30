@@ -4,6 +4,7 @@ use super::*;
 
 mod bounds;
 mod bvh;
+mod rect;
 mod line;
 mod plane;
 mod point;
@@ -15,6 +16,7 @@ mod shape;
 
 pub use self::bounds::Bounds2;
 pub use self::bvh::Bvh2;
+pub use self::rect::Rect;
 pub use self::point::Point2;
 pub use self::plane::Plane2;
 pub use self::line::Line2;
@@ -30,6 +32,8 @@ pub use self::point::{Point2f, Point2d, Point2i};
 pub use self::line::{Line2f, Line2d, Line2i};
 #[doc(hidden)]
 pub use self::bounds::{Bounds2f, Bounds2d, Bounds2i};
+#[doc(hidden)]
+pub use self::rect::{Rectf, Rectd, Recti};
 
 #[cfg(test)]
 mod tests;
