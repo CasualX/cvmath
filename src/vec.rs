@@ -1670,6 +1670,7 @@ vec!(Vec2 2 { x 0 T U X, y 1 T U Y } {
 		}
 	}
 });
+
 vec!(Vec3 3 { x 0 T U X, y 1 T U Y, z 2 T U Z } {
 	/// Calculates the 3D cross product.
 	///
@@ -1741,6 +1742,7 @@ vec!(Vec3 3 { x 0 T U X, y 1 T U Y, z 2 T U Z } {
 		else { self.xy() }
 	}
 });
+
 vec!(Vec4 4 { x 0 T U X, y 1 T U Y, z 2 T U Z, w 3 T U W } {
 	/// Homogeneous divide.
 	#[inline]

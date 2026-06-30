@@ -88,12 +88,14 @@ impl<T> AsMut<[T]> for Quat<T> {
 	}
 }
 
-impl<T: Float> Quat<T> {
+impl<T: Scalar> Quat<T> {
 	/// Computes the dot product.
 	#[inline]
 	pub fn dot(self, other: Quat<T>) -> T {
 		self.a * other.a + self.b * other.b + self.c * other.c + self.d * other.d
 	}
+}
+impl<T: Float> Quat<T> {
 	/// Computes the length of the quaternion.
 	#[inline]
 	pub fn len(self) -> T {
