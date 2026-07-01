@@ -1555,6 +1555,19 @@ macro_rules! vec {
 
 // vec!(Vec1 1 { x 0 T U X });
 vec!(Vec2 2 { x 0 T U X, y 1 T U Y } {
+	/// Reverses the component order.
+	///
+	/// ```
+	/// use cvmath::Vec2;
+	///
+	/// let this = Vec2 { x: 1, y: 2 };
+	/// assert_eq!(Vec2(2, 1), this.reverse());
+	/// ```
+	#[inline]
+	#[must_use]
+	pub fn reverse(self) -> Vec2<T> {
+		Vec2 { x: self.y, y: self.x }
+	}
 	/// Calculates the polar angle.
 	///
 	/// <!--POLAR_ANGLE-->
@@ -1672,6 +1685,19 @@ vec!(Vec2 2 { x 0 T U X, y 1 T U Y } {
 });
 
 vec!(Vec3 3 { x 0 T U X, y 1 T U Y, z 2 T U Z } {
+	/// Reverses the component order.
+	///
+	/// ```
+	/// use cvmath::Vec3;
+	///
+	/// let this = Vec3 { x: 1, y: 2, z: 3 };
+	/// assert_eq!(Vec3(3, 2, 1), this.reverse());
+	/// ```
+	#[inline]
+	#[must_use]
+	pub fn reverse(self) -> Vec3<T> {
+		Vec3 { x: self.z, y: self.y, z: self.x }
+	}
 	/// Calculates the 3D cross product.
 	///
 	/// Effectively calculates the vector perpendicular to both inputs with direction according to the [right-hand rule](https://en.wikipedia.org/wiki/Right-hand_rule).
@@ -1744,6 +1770,19 @@ vec!(Vec3 3 { x 0 T U X, y 1 T U Y, z 2 T U Z } {
 });
 
 vec!(Vec4 4 { x 0 T U X, y 1 T U Y, z 2 T U Z, w 3 T U W } {
+	/// Reverses the component order.
+	///
+	/// ```
+	/// use cvmath::Vec4;
+	///
+	/// let this = Vec4 { x: 1, y: 2, z: 3, w: 4 };
+	/// assert_eq!(Vec4(4, 3, 2, 1), this.reverse());
+	/// ```
+	#[inline]
+	#[must_use]
+	pub fn reverse(self) -> Vec4<T> {
+		Vec4 { x: self.w, y: self.z, z: self.y, w: self.x }
+	}
 	/// Homogeneous divide.
 	#[inline]
 	pub fn hdiv(self) -> Vec3<T> {

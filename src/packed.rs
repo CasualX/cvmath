@@ -7,6 +7,37 @@ use super::*;
 //----------------------------------------------------------------
 // Packed integers
 
+impl Vec2<u64> {
+	/// Unpacks `u128` into `u64 u64`.
+	///
+	/// ```
+	/// use cvmath::Vec2;
+	///
+	/// assert_eq!(
+	/// 	Vec2 { x: 0x01010101_01010101, y: 0xFEFEFEFE_FEFEFEFE },
+	/// 	Vec2::unpack64(0xFEFEFEFE_FEFEFEFE_01010101_01010101)
+	/// );
+	/// ```
+	#[inline]
+	pub const fn unpack64(v: u128) -> Vec2<u64> {
+		Vec2 {
+			x: ((v & 0x00000000_00000000_FFFFFFFF_FFFFFFFF) >> 0) as u64,
+			y: ((v & 0xFFFFFFFF_FFFFFFFF_00000000_00000000) >> 64) as u64,
+		}
+	}
+	/// Packs into `u128`.
+	///
+	/// ```
+	/// use cvmath::Vec2;
+	///
+	/// let this: Vec2<u64> = Vec2 { x: 0x01010101_01010101, y: 0xFEFEFEFE_FEFEFEFE };
+	/// assert_eq!(0xFEFEFEFE_FEFEFEFE_01010101_01010101, this.pack());
+	/// ```
+	#[inline]
+	pub const fn pack(self) -> u128 {
+		(self.y as u128) << 64 | (self.x as u128)
+	}
+}
 impl Vec2<u32> {
 	/// Unpacks `u64` into `u32 u32`.
 	///
@@ -131,6 +162,39 @@ impl Vec4<u16> {
 	#[inline]
 	pub const fn pack(self) -> u64 {
 		(self.w as u64) << 48 | (self.z as u64) << 32 | (self.y as u64) << 16 | (self.x as u64)
+	}
+}
+impl Vec4<u32> {
+	/// Unpacks `u128` into `u32 u32 u32 u32`.
+	///
+	/// ```
+	/// use cvmath::Vec4;
+	///
+	/// assert_eq!(
+	/// 	Vec4 { x: 0x01010101, y: 0x56565656, z: 0x9A9A9A9A, w: 0xFEFEFEFE },
+	/// 	Vec4::unpack32(0xFEFEFEFE_9A9A9A9A_56565656_01010101)
+	/// );
+	/// ```
+	#[inline]
+	pub const fn unpack32(v: u128) -> Vec4<u32> {
+		Vec4 {
+			x: ((v & 0x00000000_00000000_00000000_FFFFFFFF) >> 0) as u32,
+			y: ((v & 0x00000000_00000000_FFFFFFFF_00000000) >> 32) as u32,
+			z: ((v & 0x00000000_FFFFFFFF_00000000_00000000) >> 64) as u32,
+			w: ((v & 0xFFFFFFFF_00000000_00000000_00000000) >> 96) as u32,
+		}
+	}
+	/// Packs into `u128`.
+	///
+	/// ```
+	/// use cvmath::Vec4;
+	///
+	/// let this: Vec4<u32> = Vec4 { x: 0x01010101, y: 0x56565656, z: 0x9A9A9A9A, w: 0xFEFEFEFE };
+	/// assert_eq!(0xFEFEFEFE_9A9A9A9A_56565656_01010101, this.pack());
+	/// ```
+	#[inline]
+	pub const fn pack(self) -> u128 {
+		(self.w as u128) << 96 | (self.z as u128) << 64 | (self.y as u128) << 32 | (self.x as u128)
 	}
 }
 impl Vec4<u8> {
