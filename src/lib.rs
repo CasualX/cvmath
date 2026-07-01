@@ -37,7 +37,12 @@ mod macros;
 
 mod num;
 mod angle;
-pub mod scalar;
+
+// Compat shim
+#[doc(hidden)]
+pub mod scalar {
+	pub use crate::math::{lerp, step, smoothstep, smootherstep};
+}
 
 mod vec;
 mod bools;

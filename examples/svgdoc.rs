@@ -21,10 +21,10 @@ fn main() {
 	write_svg("src/vec.rs:NLERP", &nlerp());
 	write_svg("src/vec.rs:PROJECT_SCALAR", &project_scalar());
 	write_svg("src/vec.rs:REFLECT_2D", &reflect_2d());
-	write_svg("src/scalar.rs:SCALAR_LERP", &scalar_lerp());
-	write_svg("src/scalar.rs:SCALAR_STEP", &scalar_step());
-	write_svg("src/scalar.rs:SCALAR_SMOOTHSTEP", &scalar_smoothstep());
-	write_svg("src/scalar.rs:SCALAR_SMOOTHERSTEP", &scalar_smootherstep());
+	write_svg("src/math/lerp.rs:SCALAR_LERP", &scalar_lerp());
+	write_svg("src/math/scalar.rs:SCALAR_STEP", &scalar_step());
+	write_svg("src/math/scalar.rs:SCALAR_SMOOTHSTEP", &scalar_smoothstep());
+	write_svg("src/math/scalar.rs:SCALAR_SMOOTHERSTEP", &scalar_smootherstep());
 }
 
 fn write_svg(id: &str, svg: &str) {
@@ -264,8 +264,8 @@ fn reflect_2d() -> String {
 fn scalar_lerp() -> String {
 	let a = 40.0;
 	let b = 380.0;
-	let p1 = scalar::lerp(a, b, 0.25);
-	let p2 = scalar::lerp(a, b, 0.5);
+	let p1 = cvmath::lerp(a, b, 0.25);
+	let p2 = cvmath::lerp(a, b, 0.5);
 	let y = 40.0;
 
 	let mut svg = SvgWriter::new(420.0, 80.0);
@@ -321,8 +321,8 @@ fn scalar_smoothstep() -> String {
 	svg.line(Line2(Point2(x1, y1), Point2(edge0, y1))).stroke("white");
 	// svg.line(Line2(Point2(edge0, y1), Point2(edge1, y2))).stroke("white");
 	svg.polyline((0..=100).map(|i| Point2(
-		scalar::lerp(edge0, edge1, i as f32 / 100.0),
-		scalar::lerp(y1, y2, scalar::smoothstep(0.0, 1.0, i as f32 / 100.0))
+		cvmath::lerp(edge0, edge1, i as f32 / 100.0),
+		cvmath::lerp(y1, y2, smoothstep(0.0, 1.0, i as f32 / 100.0))
 	))).stroke("white").fill("none").stroke_width(1.5);
 	svg.line(Line2(Point2(edge1, y2), Point2(x2, y2))).stroke("white");
 	svg.text(Point2(edge0 - 20.0, y1 + 15.0), "edge0").fill("white");
@@ -346,8 +346,8 @@ fn scalar_smootherstep() -> String {
 	svg.line(Line2(Point2(x1, y1), Point2(edge0, y1))).stroke("white");
 	// svg.line(Line2(Point2(edge0, y1), Point2(edge1, y2))).stroke("white");
 	svg.polyline((0..=100).map(|i| Point2(
-		scalar::lerp(edge0, edge1, i as f32 / 100.0),
-		scalar::lerp(y1, y2, scalar::smootherstep(0.0, 1.0, i as f32 / 100.0))
+		cvmath::lerp(edge0, edge1, i as f32 / 100.0),
+		cvmath::lerp(y1, y2, smootherstep(0.0, 1.0, i as f32 / 100.0))
 	))).stroke("white").fill("none").stroke_width(1.5);
 	svg.line(Line2(Point2(edge1, y2), Point2(x2, y2))).stroke("white");
 	svg.text(Point2(edge0 - 20.0, y1 + 15.0), "edge0").fill("white");
