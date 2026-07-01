@@ -138,6 +138,7 @@ impl<T: Float> Mat4<T> {
 	/// - `flags`: Projection handedness and clip space settings.
 	#[inline]
 	pub fn ortho_perspective(focus_depth: T, fov_y: Angle<T>, aspect_ratio: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
+		debug_assert!(focus_depth > T::ZERO, "focus_depth must be strictly positive");
 		debug_assert!(fov_y > Angle::ZERO && fov_y < Angle::PI, "fov_y must be in (0, 180)");
 		debug_assert!(aspect_ratio > T::ZERO, "aspect_ratio must be strictly positive");
 		debug_assert!(T::ZERO < near && near < far);
@@ -156,9 +157,19 @@ impl<T: Float> Mat4<T> {
 		let np = near + near;
 
 		let a11 = np / (right - left);
-		let a13 = (right + left) / (right - left);
 		let a22 = np / (top - bottom);
+
+		let a13 = (right + left) / (right - left);
+		let a13 = match hand {
+			Hand::LH => -a13,
+			Hand::RH =>  a13,
+		};
+
 		let a23 = (top + bottom) / (top - bottom);
+		let a23 = match hand {
+			Hand::LH => -a23,
+			Hand::RH =>  a23,
+		};
 
 		let a33 = match clip {
 			Clip::ZO => far / nf,
@@ -217,24 +228,24 @@ impl<T: Float> Mat4<T> {
 	/// - `aspect_ratio`: Width over height of the viewport.
 	/// - `near`, `far`: Depth clipping planes.
 	/// - `flags`: Projection handedness and clip space settings.
+	#[inline]
 	pub fn blend_ortho_perspective(blend: T, focus_depth: T, fov_y: Angle<T>, aspect_ratio: T, near: T, far: T, flags: (Hand, Clip)) -> Mat4<T> {
+		debug_assert!(blend >= T::ZERO && blend <= T::ONE, "fraction must be in [0, 1]");
+		debug_assert!(focus_depth > T::ZERO, "focus_depth must be strictly positive");
 		debug_assert!(fov_y > Angle::ZERO && fov_y < Angle::PI, "fov_y must be in (0, 180)");
 		debug_assert!(aspect_ratio > T::ZERO, "aspect_ratio must be strictly positive");
 		debug_assert!(T::ZERO < near && near < far);
-		debug_assert!(blend >= T::ZERO && blend <= T::ONE, "fraction must be in [0, 1]");
 
-		let blend = blend.clamp(T::ZERO, T::ONE);
-		let blend = blend * blend;
-		let blend = blend * blend;
-
-		let half_height = (fov_y / T::TWO).tan() * focus_depth;
+		let half_fov_y_tan = (fov_y / T::TWO).tan();
 		if blend <= T::EPSILON {
+			let half_height = half_fov_y_tan * focus_depth;
 			let half_width = half_height * aspect_ratio;
 			return Mat4::ortho(-half_width, half_width, -half_height, half_height, near, far, flags);
 		}
 
-		let dz = (T::ONE - blend) / blend;
-		let adjusted_fov_y = Angle::atan(half_height / (focus_depth + dz)) * T::TWO;
+		let blend = blend.clamp(T::ZERO, T::ONE);
+		let dz = focus_depth * (T::ONE - blend) / blend;
+		let adjusted_fov_y = Angle::atan(half_fov_y_tan * blend) * T::TWO;
 
 		let projection = Mat4::perspective(adjusted_fov_y, aspect_ratio, near + dz, far + dz, flags);
 		let trans = Vec3(T::ZERO, T::ZERO, match flags.0 { Hand::LH => dz, Hand::RH => -dz });
