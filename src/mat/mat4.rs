@@ -776,7 +776,7 @@ fn test_inverse() {
 	let mut rng = urandom::seeded(42);
 
 	for _ in 0..1000 {
-		let fov_y = Angle::deg(rng.range(1.0..179.0));
+		let fov_y = deg(rng.range(1.0..179.0));
 
 		let aspect = rng.range(0.5..4.0);
 

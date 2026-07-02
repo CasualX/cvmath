@@ -102,9 +102,9 @@ impl Image {
 }
 
 fn rng_circle(rng: &mut urandom::Random<impl urandom::Rng>, radius: f32) -> Vec2<f32> {
-	let (s, c) = rng.range(0.0..std::f32::consts::PI * 2.0).sin_cos();
+	let v = deg(rng.range(0.0..360.0)).vec2();
 	let r = radius * (rng.next_f32() - 1.0).sqrt();
-	Vec2(r * c, r * s)
+	return v * r;
 }
 
 fn ray_setup(scene: &Scene, x: i32, y: i32, rng: &mut urandom::Random<impl urandom::Rng>) -> Ray3<f32> {

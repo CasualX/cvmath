@@ -17,6 +17,20 @@ pub const fn Angle<T>(radians: T) -> Angle<T> {
 	Angle { radians }
 }
 
+/// Angle constructor from degrees.
+#[inline]
+pub fn deg<T: Float>(degrees: T) -> Angle<T> {
+	Angle::deg(degrees)
+}
+
+/// Angle constructor from degrees.
+#[macro_export]
+macro_rules! deg {
+	($deg:expr) => {
+		$crate::Angle { radians: $deg * (6.28318530717958647692528676655900577 / 360.0) }
+	};
+}
+
 impl<T: Zero> Zero for Angle<T> {
 	const ZERO: Angle<T> = Angle { radians: T::ZERO };
 }
@@ -354,13 +368,17 @@ impl<'de, T: serde::Deserialize<'de> + 'static> serde::Deserialize<'de> for Angl
 mod tests {
 	use super::*;
 
-	fn deg<T: Float>(degrees: T) -> Angle<T> {
-		Angle::deg(degrees)
-	}
-
 	#[track_caller]
 	fn assert_eq<T: Float>(a: Angle<T>, b: Angle<T>) {
 		assert_eq!(format!("{:.4}", a), format!("{:.4}", b), "angles not equal: {} != {}", a, b);
+	}
+
+	#[test]
+	fn constructors() {
+		assert_eq(deg(180.0f32), Angle::deg(180.0f32));
+		assert_eq(deg(90.0f64), Angle::deg(90.0f64));
+		assert_eq(deg(45.0f32), deg!(45.0f32));
+		assert_eq(deg(30.0f64), deg!(30.0f64));
 	}
 
 	#[test]

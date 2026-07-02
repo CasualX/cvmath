@@ -61,7 +61,7 @@ mod shape3;
 
 use crate::num::*;
 
-pub use crate::angle::Angle;
+pub use crate::angle::{Angle, deg};
 pub use crate::vec::{Vec2, Vec3, Vec4, X, Y, Z, W, ParseVecError};
 pub use crate::bools::{Bool2, Bool3, Bool4};
 pub use crate::interval::Interval;

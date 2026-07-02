@@ -19,7 +19,7 @@ fn main() {
 	let ref_up = Vec3f(0.0, 1.0, 0.0);
 	let view = Transform3f::look_at(position, target, ref_up, Hand::RH);
 
-	let fov_y = Angle::deg(60.0);
+	let fov_y = deg(60.0);
 	let aspect_ratio = WIDTH / HEIGHT;
 	let proj = Mat4f::perspective(fov_y, aspect_ratio, 0.1, 1000.0, (Hand::RH, Clip::ZO));
 

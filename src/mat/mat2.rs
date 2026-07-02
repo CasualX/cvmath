@@ -91,7 +91,7 @@ impl<T: Float> Mat2<T> {
 	/// Rotates around the origin.
 	///
 	/// ```
-	/// let mat = cvmath::Mat2::rotation(cvmath::Angle::deg(90.0));
+	/// let mat = cvmath::Mat2::rotation(cvmath::deg(90.0));
 	/// let value = (mat * cvmath::Vec2(1.0f64, 1.0)).cast::<f32>();
 	/// let expected = cvmath::Vec2(-1.0f32, 1.0);
 	/// assert_eq!(expected, value);
@@ -455,7 +455,7 @@ impl<T: Scalar> Mat2<T> {
 	/// Applies the transformation around a given origin.
 	///
 	/// ```
-	/// let rotation = cvmath::Mat2::rotation(cvmath::Angle::deg(90.0));
+	/// let rotation = cvmath::Mat2::rotation(cvmath::deg(90.0));
 	/// let mat = rotation.around(cvmath::Vec2(2.0f64, 3.0));
 	/// let value = (mat * cvmath::Vec2(3.0, 3.0)).cast::<f32>();
 	/// let expected = cvmath::Vec2(2.0f32, 4.0);
@@ -476,9 +476,9 @@ impl<T: Float> Mat2<T> {
 	/// Raises the matrix to an integer power.
 	///
 	/// ```
-	/// let mat = cvmath::Mat2::rotation(cvmath::Angle::deg(45.0));
+	/// let mat = cvmath::Mat2::rotation(cvmath::deg(45.0));
 	/// let value = mat.powi(3).cast::<f32>();
-	/// let expected = cvmath::Mat2::rotation(cvmath::Angle::deg(45.0) * 3.0).cast::<f32>();
+	/// let expected = cvmath::Mat2::rotation(cvmath::deg(45.0) * 3.0).cast::<f32>();
 	/// assert_eq!(expected, value);
 	/// ```
 	pub fn powi(self, exp: i32) -> Mat2<T> {
@@ -797,7 +797,7 @@ fn test_neg() {
 
 #[test]
 fn test_rotation() {
-	let angle = Angle::deg(45.0);
+	let angle = deg(45.0);
 	let rot = Mat2::rotation(angle);
 	let v = Vec2(1.0, 0.0);
 	let value = (rot * v).angle(v).cast::<f32>();

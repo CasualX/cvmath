@@ -107,7 +107,7 @@ fn test_random_direction() {
 
 	fn draw(svg: &mut SvgWriter, origin: Point2f, base_dir: Vec2f, scale: f32) {
 		for i in 0..NRAYS {
-			let a = Angle::deg(i as f32 / NRAYS as f32 * 360.0);
+			let a = deg(i as f32 / NRAYS as f32 * 360.0);
 			let rdir = a.vec2();
 
 			let dir = (base_dir + rdir * scale).norm();

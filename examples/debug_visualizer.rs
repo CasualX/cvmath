@@ -5,20 +5,20 @@ use cvmath::*;
 
 #[allow(unused_variables)]
 fn main() {
-	let angle_f32 = Angle::deg(33.333f32);
-	let angle_f64 = Angle::deg(123.456f64);
+	let angle_f32 = deg(33.333f32);
+	let angle_f64 = deg(123.456f64);
 
 	let complex_f32 = Complex(0.75f32, -1.25f32);
 	let complex_f64 = Complex(-2.5f64, 3.75f64);
 
-	let polar_f32 = Polar(2.5f32, Angle::deg(30.0f32));
-	let polar_f64 = Polar(4.0f64, Angle::deg(-60.0f64));
+	let polar_f32 = Polar(2.5f32, deg(30.0f32));
+	let polar_f64 = Polar(4.0f64, deg(-60.0f64));
 
-	let quat_f32 = Quat::from_axis_angle(Vec3(0.0f32, 1.0, 0.0), Angle::deg(45.0f32));
-	let quat_f64 = Quat::from_axis_angle(Vec3(1.0f64, 0.0, 0.0), Angle::deg(120.0f64));
+	let quat_f32 = Quat::from_axis_angle(Vec3(0.0f32, 1.0, 0.0), deg(45.0f32));
+	let quat_f64 = Quat::from_axis_angle(Vec3(1.0f64, 0.0, 0.0), deg(120.0f64));
 
-	let rotvec_f32 = RotationVector::from((Vec3(0.0f32, 0.0, 1.0), Angle::deg(135.0f32)));
-	let rotvec_f64 = RotationVector::from((Vec3(0.0f64, 1.0, 0.0), Angle::deg(22.5f64)));
+	let rotvec_f32 = RotationVector::from((Vec3(0.0f32, 0.0, 1.0), deg(135.0f32)));
+	let rotvec_f64 = RotationVector::from((Vec3(0.0f64, 1.0, 0.0), deg(22.5f64)));
 	let rotvec_i32 = RotationVector(Vec3(1, 2, 3));
 
 	let vec2_f32 = Vec2(3.0f32, 4.0f32);
@@ -49,8 +49,8 @@ fn main() {
 		0.0f32, 0.0f32, 0.0f32, 1.0f32,
 	);
 
-	let transform2 = Transform2::translation(Vec2(5.0f32, -2.0f32)) * Transform2::rotation(Angle::deg(15.0f32));
-	let transform3 = Transform3::translation(Vec3(1.0f32, 2.0f32, 3.0f32)) * Transform3::rotation(Vec3::Y, Angle::deg(25.0f32));
+	let transform2 = Transform2::translation(Vec2(5.0f32, -2.0f32)) * Transform2::rotation(deg(15.0f32));
+	let transform3 = Transform3::translation(Vec3(1.0f32, 2.0f32, 3.0f32)) * Transform3::rotation(Vec3::Y, deg(25.0f32));
 
 	zzz();
 }

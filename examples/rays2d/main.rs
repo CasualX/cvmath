@@ -69,8 +69,8 @@ fn main() {
 		draw_shape(&mut svg, shape);
 	}
 
-	let start_angle = Angle::deg(rand.range(0.0..360.0));
-	let angle_step = Angle::deg(360.0f32) / NRAYS as f32;
+	let start_angle = deg(rand.range(0.0..360.0));
+	let angle_step = Angle::TAU / NRAYS as f32;
 
 	let origin = Point2(rand.range(10.0..WIDTH - 10.0), rand.range(10.0..HEIGHT - 10.0));
 

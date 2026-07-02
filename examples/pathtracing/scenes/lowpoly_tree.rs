@@ -119,7 +119,7 @@ fn add_tree(objects: &mut Vec<Object>) {
 	let target_origin = Vec3(5.0, 0.0, 4.0); // Position in the Cornell box
 	let target_scale = 8.5 / source_bounds.size().vmax(); // Uniform scale to fit
 	let transform = Transform3f::translation(target_origin) // Move tree to final location
-		// * Transform3f::rotation(Vec3::Y, Angle::deg(-45.0)) // Rotate tree for better view
+		// * Transform3f::rotation(Vec3::Y, deg(-45.0)) // Rotate tree for better view
 		* Transform3f::scaling(Vec3::dup(target_scale)) // Apply uniform scale
 		* Transform3f::translation(-source_origin); // Move pivot to origin for scaling
 
@@ -152,7 +152,7 @@ pub fn scene() -> (&'static str, Scene) {
 		origin: Vec3(5.0, 5.0, -5.0),
 		target: Vec3(5.0, 5.0, 5.0),
 		ref_up: Vec3(0.0, 1.0, 0.0),
-		fov_y: Angle::deg(90.0),
+		fov_y: deg(90.0),
 		dof_enabled: true,
 		aperture_radius: 0.08,
 		focus_distance: 10.0,

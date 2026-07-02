@@ -109,7 +109,7 @@ impl<T: Float> Transform3<T> {
 	/// Rotation matrix around an axis. See [Mat3::rotation] for details.
 	///
 	/// ```
-	/// let mat = cvmath::Transform3::rotation(cvmath::Vec3::Z, cvmath::Angle::deg(90.0));
+	/// let mat = cvmath::Transform3::rotation(cvmath::Vec3::Z, cvmath::deg(90.0));
 	/// let value = (mat * cvmath::Vec3(1.0f64, 1.0, 1.0)).cast::<f32>();
 	/// let expected = cvmath::Vec3(-1.0f32, 1.0, 1.0);
 	/// assert_eq!(expected, value);
@@ -645,7 +645,7 @@ impl<T: Scalar> Transform3<T> {
 	/// Applies the transformation around a given origin.
 	///
 	/// ```
-	/// let rotation = cvmath::Transform3::rotation(cvmath::Vec3::Z, cvmath::Angle::deg(90.0));
+	/// let rotation = cvmath::Transform3::rotation(cvmath::Vec3::Z, cvmath::deg(90.0));
 	/// let mat = rotation.around(cvmath::Vec3(2.0f64, 3.0, 4.0));
 	/// let value = (mat * cvmath::Vec3(3.0, 3.0, 4.0)).cast::<f32>();
 	/// let expected = cvmath::Vec3(2.0f32, 4.0, 4.0);
@@ -667,9 +667,9 @@ impl<T: Float> Transform3<T> {
 	///
 	/// ```
 	/// let axis = cvmath::Vec3(1.0, 2.0, 3.0).norm();
-	/// let mat = cvmath::Transform3::rotation(axis, cvmath::Angle::deg(60.0));
+	/// let mat = cvmath::Transform3::rotation(axis, cvmath::deg(60.0));
 	/// let value = mat.powi(-2).cast::<f32>();
-	/// let expected = cvmath::Transform3::rotation(axis, cvmath::Angle::deg(60.0) * -2.0).cast::<f32>();
+	/// let expected = cvmath::Transform3::rotation(axis, cvmath::deg(60.0) * -2.0).cast::<f32>();
 	/// assert_eq!(expected, value);
 	/// ```
 	pub fn powi(self, exp: i32) -> Transform3<T> {
